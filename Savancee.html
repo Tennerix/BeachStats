@@ -285,6 +285,26 @@ body{
 .tot-val span.b{color:var(--orange)}
 .tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 
+/* ── STATS PAR JOUEUR ── */
+.player-stats-section{margin-bottom:1rem}
+.player-stats-header{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:.3rem .5rem;border-radius:6px;margin-bottom:.4rem;
+  display:inline-block;
+}
+.player-stats-header.pa{background:rgba(59,130,246,.15);color:var(--blue)}
+.player-stats-header.pb{background:rgba(249,115,22,.15);color:var(--orange)}
+.player-stats-table{width:100%;border-collapse:collapse;margin-bottom:.3rem}
+.player-stats-table tr{border-bottom:1px solid var(--border)}
+.player-stats-table tr:last-child{border-bottom:none}
+.player-stats-table td{padding:.3rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;vertical-align:middle}
+.player-stats-table .td-lbl{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.player-stats-table .td-val{font-size:17px;font-weight:900;text-align:center;width:32px}
+.player-stats-table .td-val.pa{color:var(--blue)}
+.player-stats-table .td-val.pb{color:var(--orange)}
+.player-pair-divider{height:1px;background:var(--border);margin:.4rem 0 .6rem}
+
 @media(max-width:440px){
   .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
   .cell.point-cell{font-size:28px}
@@ -441,8 +461,11 @@ const ALL_SHOT_KEYS = [
   'rush_cd', 'rush_rev'
 ];
 
-// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+// ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
+const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
 const players = {
   j1: _p.get('j1') || 'Joueur 1',
   j2: _p.get('j2') || 'Joueur 2',
@@ -563,17 +586,20 @@ function winSet(player){
   if(player===1) s1++; else s2++;
   logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
 
+  // Si une équipe a 2 sets, elle gagne le match
   if(s1===2 || s2===2){
     winMatch(player); 
     return;
   }
 
+  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
   if(s1===1 && s2===1){
     inSuperTiebreak = true;
     document.getElementById('setPill').textContent = "Super Tie-Break";
     document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
     logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
   } else {
+    // Passage au set 2 normal
     document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
     document.getElementById('statusLabel').textContent = "En cours";
   }
@@ -684,7 +710,7 @@ function resetMatch() {
   updateDisplay();
 }
 
-// ── SHOT MODAL ──────────────────────────────────────────────────────────────
+// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
 let pendingPlayer = null;
 let pendingType = null;
 
@@ -705,20 +731,17 @@ function openShotModal(player, type) {
   BASE_SHOTS.forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
-    
     if (s === 'service' || s === 'smash') {
       group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
         <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
       </button>`;
-    } 
-    else {
+    } else {
       group.innerHTML = `
         <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
         <div class="shot-sub-row">
           <button class="shot-btn type-${type}" onclick="confirmShot('${s}_cd')">CD</button>
           <button class="shot-btn type-${type}" onclick="confirmShot('${s}_rev')">REV</button>
-        </div>
-      `;
+        </div>`;
     }
     grid.appendChild(group);
   });
@@ -736,8 +759,10 @@ function confirmShot(shotKey) {
   scorePoint(pendingPlayer, pendingType);
 }
 
-// ── RENDER STATS ─────────────────────────────────────────────────────────────
+// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
 function renderStats() {
+  if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
+
   const el = document.getElementById('statsContent');
   let html = '';
 
@@ -751,6 +776,7 @@ function renderStats() {
     return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
   };
 
+  // Section Winners
   html += `<div class="stats-section">
     <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
     <table class="stats-table">`;
@@ -767,6 +793,7 @@ function renderStats() {
   });
   html += '</table></div>';
 
+  // Section Fautes
   html += `<div class="stats-section">
     <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
     <table class="stats-table">`;
@@ -783,6 +810,75 @@ function renderStats() {
   });
   html += '</table></div>';
 
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function renderStatsParJoueur() {
+  const el = document.getElementById('statsContent');
+
+  // [nom, clé equipe A ou B, couleur CSS]
+  const playerDefs = [
+    { name: players.j1, team: 'A', cls: 'var(--blue)' },
+    { name: players.j2, team: 'A', cls: 'var(--blue)' },
+    { name: players.j3, team: 'B', cls: 'var(--orange)' },
+    { name: players.j4, team: 'B', cls: 'var(--orange)' },
+  ];
+
+  const buildPlayerRow = (p, type) => {
+    const tp = type === 'winner' ? 'w' : 'f';
+    const teamKey = tp + p.team; // wA / fA / wB / fB
+    const total = ALL_SHOT_KEYS.reduce((s, sh) => s + stats[teamKey + '_' + sh], 0);
+    const badges = ALL_SHOT_KEYS.map(sh => {
+      const v = stats[teamKey + '_' + sh];
+      return `<span style="
+        display:inline-flex;align-items:center;gap:3px;
+        background:rgba(255,255,255,.04);border:1px solid var(--border);
+        border-radius:6px;padding:2px 7px;
+        font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+        color:${v > 0 ? p.cls : 'var(--muted)'}">
+        <span style="font-size:10px;letter-spacing:1px;opacity:.7">${SHOT_LBL[sh].toUpperCase()}</span>
+        <span style="font-size:16px">${v}</span>
+      </span>`;
+    }).join('');
+
+    return `<div style="
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      padding:.55rem .8rem;margin-bottom:.45rem;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:14px">${total}</span></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${badges}</div>
+    </div>`;
+  };
+
+  let html = '';
+
+  // Section Winners
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
+  html += `</div>`;
+
+  // Section Fautes
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
+  html += `</div>`;
+
+  // Totaux
   html += `<div class="stats-totals">
     <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
     <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
