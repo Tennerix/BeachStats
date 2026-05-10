@@ -68,12 +68,19 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:f
     </div>
     <div class="btn-group">
       <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
-      <button type="button" class="btn-stat base"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
+      <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat avancees"><i class="ti ti-chart-dots"></i>Stats avancees<i class="ti ti-chevron-right arrow"></i></button>
     </div>
   </div>
 </div>
 <script>
+function goToSbase() {
+  const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
+  const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
+  const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
+  const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
+  window.location.href = `Sbase.html?j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}`;
+}
 function goToCDP() {
   const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
   const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
