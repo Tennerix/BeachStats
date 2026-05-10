@@ -563,9 +563,15 @@ function scorePoint(player){
 }
 
 function winGame(player){
+  const wasTiebreak=inTiebreak;
   p1=0; p2=0; inTiebreak=false;
   if(player===1) g1++; else g2++;
   logEvent(player===1?nameA:nameB,"remporte le jeu → "+g1+"-"+g2);
+
+  // Si c'était un tie-break, le set est gagné 7/6
+  if(wasTiebreak){
+    winSet(player); return;
+  }
 
   // Check set win
   const maxG=Math.max(g1,g2), minG=Math.min(g1,g2);
