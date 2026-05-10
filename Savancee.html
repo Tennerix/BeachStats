@@ -563,20 +563,17 @@ function winSet(player){
   if(player===1) s1++; else s2++;
   logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
 
-  // Si une équipe a 2 sets, elle gagne le match
   if(s1===2 || s2===2){
     winMatch(player); 
     return;
   }
 
-  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
   if(s1===1 && s2===1){
     inSuperTiebreak = true;
     document.getElementById('setPill').textContent = "Super Tie-Break";
     document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
     logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
   } else {
-    // Passage au set 2 normal
     document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
     document.getElementById('statusLabel').textContent = "En cours";
   }
@@ -687,7 +684,7 @@ function resetMatch() {
   updateDisplay();
 }
 
-// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
+// ── SHOT MODAL ──────────────────────────────────────────────────────────────
 let pendingPlayer = null;
 let pendingType = null;
 
@@ -709,13 +706,11 @@ function openShotModal(player, type) {
     const group = document.createElement('div');
     group.className = 'shot-group';
     
-    // Si c'est Service ou Smash, un seul bouton
     if (s === 'service' || s === 'smash') {
       group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
         <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
       </button>`;
     } 
-    // Sinon, on crée deux boutons (CD / REV)
     else {
       group.innerHTML = `
         <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
@@ -741,7 +736,7 @@ function confirmShot(shotKey) {
   scorePoint(pendingPlayer, pendingType);
 }
 
-// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
+// ── RENDER STATS ─────────────────────────────────────────────────────────────
 function renderStats() {
   const el = document.getElementById('statsContent');
   let html = '';
@@ -756,7 +751,6 @@ function renderStats() {
     return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
   };
 
-  // Section Winners
   html += `<div class="stats-section">
     <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
     <table class="stats-table">`;
@@ -773,7 +767,6 @@ function renderStats() {
   });
   html += '</table></div>';
 
-  // Section Fautes
   html += `<div class="stats-section">
     <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
     <table class="stats-table">`;
@@ -790,7 +783,6 @@ function renderStats() {
   });
   html += '</table></div>';
 
-  // Totaux
   html += `<div class="stats-totals">
     <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
     <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
