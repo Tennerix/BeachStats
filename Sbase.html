@@ -2,135 +2,104 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Score Tennis - No Ad & Undo</title>
+    <title>Score Tennis - 4 Joueurs</title>
     <style>
         body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
-        .scoreboard { background: #333; color: #fff; padding: 20px; border-radius: 10px; display: inline-block; margin-top: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .score-row { font-size: 24px; margin: 10px 0; }
-        .points { font-weight: bold; color: #00ff00; font-size: 32px; min-width: 60px; display: inline-block; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; border-radius: 5px; border: none; }
-        .btn-point { background-color: #007BFF; color: white; }
-        .btn-undo { background-color: #ff9800; color: white; }
+        .scoreboard {
+            background: #333; color: #fff; padding: 20px;
+            border-radius: 10px; display: inline-block;
+            margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .score-row {
+            font-size: 20px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .points { font-weight: bold; color: #00ff00; font-size: 28px; min-width: 50px; }
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 2px;
+            border-radius: 5px;
+            border: none;
+        }
+        .btn-win { background-color: #007BFF; color: white; }
+        .btn-fault { background-color: #dc3545; color: white; }
         .btn-reset { background-color: #ff4444; color: white; margin-top: 20px; }
-        .status { margin-top: 15px; color: #ffcc00; font-weight: bold; font-size: 1.2em; }
-        .controls { margin-top: 20px; border-top: 1px solid #555; padding-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="scoreboard">
-        <h2>Tennis Scoreboard</h2>
-        <div id="status" class="status">Set 1</div>
-        
-        <div class="score-row">
-            Joueur 1 : Sets <span id="s1">0</span> | Jeux <span id="j1">0</span> | <span id="p1" class="points">0</span>
-            <button class="btn-point" onclick="scorePoint(1)">+ Point J1</button>
-        </div>
+<div class="scoreboard">
+    <h2>Scoreboard - 4 Joueurs</h2>
 
-        <div class="score-row">
-            Joueur 2 : Sets <span id="s2">0</span> | Jeux <span id="j2">0</span> | <span id="p2" class="points">0</span>
-            <button class="btn-point" onclick="scorePoint(2)">+ Point J2</button>
-        </div>
-        
-        <div class="controls">
-            <button class="btn-undo" onclick="undo()">↩ Annuler</button>
-            <br>
-            <button class="btn-reset" onclick="reset()">Remise à zéro</button>
-        </div>
+    <div class="score-row">
+        Joueur 1 : <span id="p1" class="points">0</span>
+        <button class="btn-win" onclick="winPoint(1)">+ Point gagnant</button>
+        <button class="btn-fault" onclick="fault(1)">Faute directe</button>
     </div>
 
+    <div class="score-row">
+        Joueur 2 : <span id="p2" class="points">0</span>
+        <button class="btn-win" onclick="winPoint(2)">+ Point gagnant</button>
+        <button class="btn-fault" onclick="fault(2)">Faute directe</button>
+    </div>
+
+    <div class="score-row">
+        Joueur 3 : <span id="p3" class="points">0</span>
+        <button class="btn-win" onclick="winPoint(3)">+ Point gagnant</button>
+        <button class="btn-fault" onclick="fault(3)">Faute directe</button>
+    </div>
+
+    <div class="score-row">
+        Joueur 4 : <span id="p4" class="points">0</span>
+        <button class="btn-win" onclick="winPoint(4)">+ Point gagnant</button>
+        <button class="btn-fault" onclick="fault(4)">Faute directe</button>
+    </div>
+
+    <button class="btn-reset" onclick="reset()">Remise à zéro</button>
+</div>
+
 <script>
-    let p1 = 0, p2 = 0, j1 = 0, j2 = 0, s1 = 0, s2 = 0;
-    let history = []; // Stocke les états précédents
-    const tennisPoints = ["0", "15", "30", "40"];
+    let points = [0, 0, 0, 0]; // 4 joueurs
+    let history = [];
 
     function saveState() {
-        // On enregistre une copie des variables actuelles avant modification
-        history.push({
-            p1: p1, p2: p2,
-            j1: j1, j2: j2,
-            s1: s1, s2: s2,
-            status: document.getElementById('status').innerText
-        });
+        history.push([...points]);
     }
 
-    function scorePoint(player) {
-        saveState(); // On sauvegarde l'état AVANT de marquer le point
-
-        let isSuperTieBreak = (s1 === 1 && s2 === 1);
-        
-        if (isSuperTieBreak) {
-            if (player === 1) p1++; else p2++;
-            document.getElementById('status').innerText = "SUPER TIE-BREAK (3ème Set)";
-            
-            if (p1 >= 10 && p1 - p2 >= 2) winSet(1);
-            else if (p2 >= 10 && p2 - p1 >= 2) winSet(2);
-            
-        } else {
-            if (player === 1) p1++; else p2++;
-
-            // No-Ad (Point décisif à 40-40)
-            if (p1 === 4 || p2 === 4) {
-                if (player === 1) winGame(1); else winGame(2);
-            }
-        }
+    function winPoint(player) {
+        saveState();
+        points[player - 1] += 1;
         updateDisplay();
     }
 
-    function undo() {
-        if (history.length > 0) {
-            let lastState = history.pop(); // On récupère le dernier état
-            p1 = lastState.p1;
-            p2 = lastState.p2;
-            j1 = lastState.j1;
-            j2 = lastState.j2;
-            s1 = lastState.s1;
-            s2 = lastState.s2;
-            document.getElementById('status').innerText = lastState.status;
-            updateDisplay();
-        } else {
-            alert("Rien à annuler !");
-        }
-    }
+    function fault(player) {
+        saveState();
 
-    function winGame(player) {
-        p1 = 0; p2 = 0;
-        if (player === 1) j1++; else j2++;
-        
-        if (j1 >= 6 && j1 - j2 >= 2) winSet(1);
-        else if (j2 >= 6 && j2 - j1 >= 2) winSet(2);
-        else if (j1 === 6 && j2 === 6) {
-            // Ici on pourrait ajouter un tie-break normal, 
-            // mais on reste sur ta demande simplifiée.
+        // la faute donne un point aux autres joueurs
+        for (let i = 0; i < 4; i++) {
+            if (i !== player - 1) points[i] += 1;
         }
-    }
 
-    function winSet(player) {
-        p1 = 0; p2 = 0; j1 = 0; j2 = 0;
-        if (player === 1) s1++; else s2++;
-        
-        if (s1 === 2 || s2 === 2) {
-            alert("Match terminé ! Victoire Joueur " + player);
-            reset();
-        }
-        document.getElementById('status').innerText = "Set " + (s1 + s2 + 1);
+        updateDisplay();
     }
 
     function updateDisplay() {
-        let isSuperTieBreak = (s1 === 1 && s2 === 1);
-        document.getElementById('p1').innerText = isSuperTieBreak ? p1 : (tennisPoints[p1] || "0");
-        document.getElementById('p2').innerText = isSuperTieBreak ? p2 : (tennisPoints[p2] || "0");
-        document.getElementById('j1').innerText = j1;
-        document.getElementById('j2').innerText = j2;
-        document.getElementById('s1').innerText = s1;
-        document.getElementById('s2').innerText = s2;
+        document.getElementById('p1').innerText = points[0];
+        document.getElementById('p2').innerText = points[1];
+        document.getElementById('p3').innerText = points[2];
+        document.getElementById('p4').innerText = points[3];
     }
 
     function reset() {
-        if(confirm("Voulez-vous vraiment tout remettre à zéro ?")) {
-            p1 = 0; p2 = 0; j1 = 0; j2 = 0; s1 = 0; s2 = 0;
+        if (confirm("Remise à zéro ?")) {
+            points = [0, 0, 0, 0];
             history = [];
-            document.getElementById('status').innerText = "Set 1";
             updateDisplay();
         }
     }
