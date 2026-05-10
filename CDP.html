@@ -1,14 +1,573 @@
-// ── SCORE LOGIC (MAJ : Super Tie-break au 3ème set) ──────────────────────────
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach Tennis – Scoreboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#080f1e;
+  --surface:#0d1829;
+  --card:#111e35;
+  --border:#1e3560;
+  --gold:#f5c518;
+  --blue:#3b82f6;
+  --orange:#f97316;
+  --green:#22c55e;
+  --red:#ef4444;
+  --text:#e2eaf8;
+  --muted:#4a6494;
+}
+
+body{
+  font-family:Barlow,sans-serif;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 1rem 4rem;
+}
+
+/* ── HEADER ── */
+.header{
+  width:100%;
+  max-width:580px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1.2rem 0 1rem;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.4rem;
+}
+.header-logo{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--gold);
+}
+.header-logo span{color:var(--text);opacity:.5}
+.header-back{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  padding:6px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:all .18s;
+}
+.header-back:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  width:100%;
+  max-width:580px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:.85rem 1.4rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:1.2rem;
+}
+.status-pill{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--bg);
+  background:var(--gold);
+  padding:4px 14px;
+  border-radius:20px;
+}
+.status-label{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ── SCOREBOARD CARD ── */
+.scoreboard{
+  width:100%;
+  max-width:580px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,.5);
+  margin-bottom:1.2rem;
+}
+
+/* column header */
+.score-header{
+  display:grid;
+  grid-template-columns:1fr 44px 44px 44px 80px;
+  gap:0;
+  padding:.6rem 1.4rem;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.score-header span{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-align:center;
+}
+.score-header span:first-child{text-align:left}
+
+/* team rows */
+.team-row{
+  display:grid;
+  grid-template-columns:1fr 44px 44px 44px 80px;
+  align-items:center;
+  padding:1.1rem 1.4rem;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+}
+.team-row:last-child{border-bottom:none}
+.team-row.serving .team-info::before{
+  content:'●';
+  color:var(--gold);
+  margin-right:6px;
+  font-size:8px;
+  vertical-align:middle;
+}
+
+.team-info{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.team-name{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.team-players{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:500;
+}
+
+.cell{
+  text-align:center;
+  font-family:Barlow Condensed,sans-serif;
+  font-size:20px;
+  font-weight:900;
+}
+.cell.sets-cell span{
+  display:inline-block;
+  width:28px;
+  height:28px;
+  line-height:28px;
+  border-radius:50%;
+  font-size:14px;
+  font-weight:900;
+}
+.cell.sets-cell span.won{
+  background:var(--gold);
+  color:var(--bg);
+}
+
+.cell.point-cell{
+  font-size:36px;
+  color:var(--gold);
+  font-style:italic;
+}
+.cell.set-score{
+  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
+  text-align:center;color:var(--muted);
+}
+.cell.set-score.active{color:var(--text)}
+.cell.set-score.won{color:var(--gold)}
+.cell.point-cell.inactive{
+  color:var(--muted);
+  font-size:28px;
+}
+
+/* ── TEAM COLOR ACCENTS ── */
+.team-row.team-a .team-name{color:var(--blue)}
+.team-row.team-b .team-name{color:var(--orange)}
+
+/* ── CONTROLS ── */
+.controls{
+  width:100%;
+  max-width:580px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:1.2rem;
+}
+
+.btn-point{
+  padding:1.1rem;
+  border-radius:14px;
+  border:2px solid;
+  font-family:Barlow Condensed,sans-serif;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all .15s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  line-height:1;
+}
+.btn-point small{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:2px;
+  opacity:.7;
+}
+.btn-point.a{
+  background:rgba(59,130,246,.12);
+  border-color:var(--blue);
+  color:var(--blue);
+}
+.btn-point.a:hover{background:rgba(59,130,246,.25);transform:scale(1.02)}
+.btn-point.a:active{transform:scale(.97)}
+.btn-point.b{
+  background:rgba(249,115,22,.12);
+  border-color:var(--orange);
+  color:var(--orange);
+}
+.btn-point.b:hover{background:rgba(249,115,22,.25);transform:scale(1.02)}
+.btn-point.b:active{transform:scale(.97)}
+
+.actions{
+  width:100%;
+  max-width:580px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-bottom:1.2rem;
+}
+.btn-action{
+  padding:.75rem;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-family:Barlow Condensed,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all .15s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.btn-action:hover{background:#162040;border-color:var(--muted)}
+.btn-action.undo{border-color:#f59e0b;color:#f59e0b}
+.btn-action.undo:hover{background:rgba(245,158,11,.12)}
+.btn-action.reset{border-color:var(--red);color:var(--red)}
+.btn-action.reset:hover{background:rgba(239,68,68,.12)}
+.btn-action.pdf{border-color:var(--green);color:var(--green)}
+.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
+
+/* ── HISTORY LOG ── */
+.log-wrap{
+  width:100%;
+  max-width:580px;
+}
+.log-title{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.6rem;
+  padding-left:4px;
+}
+.log-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  max-height:180px;
+  overflow-y:auto;
+}
+.log-entry{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:.5rem 1rem;
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.log-entry .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-entry.dot-a .dot{background:var(--blue)}
+.log-entry.dot-b .dot{background:var(--orange)}
+.log-entry.event .dot{background:var(--gold)}
+
+/* ── WINNER OVERLAY ── */
+.winner-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(8,15,30,.92);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:1.5rem;
+  padding:2rem;
+}
+.winner-overlay.show{display:flex}
+.winner-box{
+  background:var(--card);
+  border:2px solid var(--gold);
+  border-radius:24px;
+  padding:2.5rem 2rem;
+  text-align:center;
+  max-width:380px;
+  width:100%;
+  box-shadow:0 0 80px rgba(245,197,24,.2);
+}
+.winner-trophy{font-size:60px;margin-bottom:1rem}
+.winner-label{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--gold);
+  opacity:.7;
+  margin-bottom:.5rem;
+}
+.winner-name{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:36px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:#fff;
+  margin-bottom:.4rem;
+}
+.winner-score{
+  font-family:Barlow Condensed,sans-serif;
+  font-size:18px;
+  color:var(--muted);
+  letter-spacing:1px;
+  margin-bottom:1.5rem;
+}
+.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.winner-btn{
+  padding:.7rem 1.4rem;
+  border-radius:10px;
+  border:1.5px solid;
+  font-family:Barlow Condensed,sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all .15s;
+}
+.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
+.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
+.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
+.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── TIMER ── */
+.timer-wrap{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:.9rem 1.4rem;margin-bottom:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.timer-display{
+  font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
+  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
+  min-width:110px;
+}
+.timer-display.running{color:#fff}
+.timer-btns{display:flex;gap:8px}
+.timer-btn{
+  padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+}
+.timer-btn:hover{background:#162040;border-color:var(--muted)}
+.timer-btn.start{border-color:var(--green);color:var(--green)}
+.timer-btn.start:hover{background:rgba(34,197,94,.12)}
+.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
+.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
+.timer-btn.stop{border-color:var(--red);color:var(--red)}
+.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+
+@media(max-width:440px){
+  .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
+  .cell.point-cell{font-size:28px}
+  .controls{grid-template-columns:1fr 1fr}
+  .btn-point{padding:.85rem;font-size:15px}
+  .actions{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Beach<span>/</span>Stats</div>
+  <button class="header-back" onclick="window.location.href='index.html'">← Accueil</button>
+</div>
+
+<div class="status-bar">
+  <div class="status-pill" id="setPill">Set 1</div>
+  <div class="status-label" id="statusLabel">En cours</div>
+</div>
+
+<div class="timer-wrap">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+  </div>
+</div>
+
+<div class="scoreboard">
+  <div class="score-header" id="scoreHeader">
+    <span>Équipe</span>
+    <span>S1</span>
+    <span>S2</span>
+    <span>S3</span>
+    <span>Points</span>
+  </div>
+
+  <div class="team-row team-a" id="rowA">
+    <div class="team-info">
+      <div class="team-name" id="nameA">Équipe A</div>
+      <div class="team-players" id="playersA">—</div>
+    </div>
+    <div class="cell set-score" id="setA1">—</div>
+    <div class="cell set-score" id="setA2">—</div>
+    <div class="cell set-score" id="setA3">—</div>
+    <div class="cell point-cell" id="ptA">0</div>
+  </div>
+
+  <div class="team-row team-b" id="rowB">
+    <div class="team-info">
+      <div class="team-name" id="nameB">Équipe B</div>
+      <div class="team-players" id="playersB">—</div>
+    </div>
+    <div class="cell set-score" id="setB1">—</div>
+    <div class="cell set-score" id="setB2">—</div>
+    <div class="cell set-score" id="setB3">—</div>
+    <div class="cell point-cell" id="ptB">0</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn-point a" onclick="scorePoint(1)">
+    <small>Point pour</small>
+    <span id="btnA">Équipe A</span>
+  </button>
+  <button class="btn-point b" onclick="scorePoint(2)">
+    <small>Point pour</small>
+    <span id="btnB">Équipe B</span>
+  </button>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()">⬇ Export PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+</div>
+
+<div class="log-wrap">
+  <div class="log-title">Journal du match</div>
+  <div class="log-list" id="logList"></div>
+</div>
+
+<!-- Winner Overlay -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Vainqueur du match</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div class="winner-score" id="winnerScore">—</div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[]; // [{a:g1,b:g2}, ...]
+let inTiebreak=false, inSuperTiebreak=false;
+let history=[];
+let matchLog=[];
+let matchOver=false;
+
+const TP=["0","15","30","40"];
+
+// Player names from URL params (?j1=Alice&j2=Bob&j3=Charlie&j4=David)
+const _p=new URLSearchParams(window.location.search);
+let players={
+  j1:_p.get('j1')||'Joueur 1',
+  j2:_p.get('j2')||'Joueur 2',
+  j3:_p.get('j3')||'Joueur 3',
+  j4:_p.get('j4')||'Joueur 4'
+};
+
+const nameA = players.j1 + " / " + players.j2;
+const nameB = players.j3 + " / " + players.j4;
+
+function initNames(){
+  document.getElementById('nameA').textContent = "Équipe A";
+  document.getElementById('playersA').textContent = nameA;
+  document.getElementById('nameB').textContent = "Équipe B";
+  document.getElementById('playersB').textContent = nameB;
+  document.getElementById('btnA').textContent = players.j1.split(' ')[0] + " & " + players.j2.split(' ')[0];
+  document.getElementById('btnB').textContent = players.j3.split(' ')[0] + " & " + players.j4.split(' ')[0];
+}
+
+// ── SAVE / RESTORE ───────────────────────────────────────────────────────────
+function saveState(){
+  history.push({p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory:JSON.parse(JSON.stringify(setHistory)),
+    status:document.getElementById('statusLabel').innerText,
+    pill:document.getElementById('setPill').innerText});
+}
+
+// ── SCORE LOGIC ──────────────────────────────────────────────────────────────
 function scorePoint(player){
   if(matchOver) return;
   saveState();
-
-  // Si on est à 1-1 en sets, on joue le Super Tie-break directement
-  if(s1 === 1 && s2 === 1){
-    inSuperTiebreak = true;
-    document.getElementById('setPill').textContent = "Super Tie-Break";
-    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-  }
 
   if(inSuperTiebreak){
     if(player===1) p1++; else p2++;
@@ -29,12 +588,21 @@ function scorePoint(player){
     updateDisplay(); return;
   }
 
-  // Jeu Normal — No-Ad
+  // Normal game — No-Ad rule
   if(player===1) p1++; else p2++;
 
+  // Check deuce / no-ad → at 3-3 (40-40) next point wins game
+  if(p1===3 && p2===3){
+    // both at 40 → next point wins (no-ad)
+    // fall through, will be caught below
+  }
   if(p1>3||p2>3){
+    // no-ad: whoever reaches "4" (i.e., got the deciding point) wins
     if(p1>p2) winGame(1); else winGame(2);
     return;
+  }
+  if(p1===3 && p2===3){
+    // just arrived at deuce; display handled in updateDisplay
   }
   updateDisplay();
 }
@@ -45,72 +613,276 @@ function winGame(player){
   if(player===1) g1++; else g2++;
   logEvent(player===1?nameA:nameB,"remporte le jeu → "+g1+"-"+g2);
 
+  // Si c'était un tie-break, le set est gagné 7/6
   if(wasTiebreak){
     winSet(player); return;
   }
 
+  // Check set win
   const maxG=Math.max(g1,g2), minG=Math.min(g1,g2);
   if(maxG>=6 && maxG-minG>=2){
     winSet(player); return;
   }
   if(g1===6 && g2===6){
-    inTiebreak=true;
-    p1=0; p2=0;
-    document.getElementById('setPill').textContent="Tie-Break";
-    document.getElementById('statusLabel').textContent="7 points, 2 d'écart";
-    logEvent("","🔀 Tie-Break !");
+    if(s1===1 && s2===1){
+      // 3rd set -> super tie-break
+      inSuperTiebreak=true;
+      p1=0; p2=0;
+      document.getElementById('setPill').textContent="Super Tie-Break";
+      document.getElementById('statusLabel').textContent="10 points, 2 d'écart";
+      logEvent("","⚡ Super Tie-Break (3e set) !");
+    } else {
+      // Regular tie-break
+      inTiebreak=true;
+      p1=0; p2=0;
+      document.getElementById('setPill').textContent="Tie-Break";
+      document.getElementById('statusLabel').textContent="7 points, 2 d'écart";
+      logEvent("","🔀 Tie-Break !");
+    }
   }
   updateDisplay();
 }
 
 function winSet(player){
   setHistory.push({a:g1,b:g2});
-  p1=0; p2=0; g1=0; g2=0; inTiebreak=false;
+  p1=0; p2=0; g1=0; g2=0; inTiebreak=false; inSuperTiebreak=false;
   if(player===1) s1++; else s2++;
   logEvent(player===1?nameA:nameB,"remporte le set "+s1+"-"+s2);
 
   if(s1===2||s2===2){
     winMatch(player); return;
   }
-  
-  // Transition vers le 3ème set (Super Tie-Break)
-  if(s1===1 && s2===1){
-      inSuperTiebreak = true;
-      document.getElementById('setPill').textContent="Super Tie-Break";
-      document.getElementById('statusLabel').textContent="10 points, 2 d'écart";
-      logEvent("","⚡ Début du Super Tie-Break (Décisif) !");
-  } else {
-      document.getElementById('setPill').textContent="Set "+(s1+s2+1);
-      document.getElementById('statusLabel').textContent="En cours";
-  }
+  // 3rd set
+  document.getElementById('setPill').textContent="Set "+(s1+s2+1);
+  document.getElementById('statusLabel').textContent="En cours";
   updateDisplay();
 }
 
-// ── RESET (MAJ : Remise à zéro totale) ───────────────────────────────────────
+function winMatch(player){
+  matchOver=true;
+  // Stop timer when match ends
+  if(timerRunning) timerToggle();
+  const winner=player===1?nameA:nameB;
+  const scoreStr=`Sets ${s1}-${s2}`;
+  document.getElementById('winnerName').textContent=winner;
+  document.getElementById('winnerScore').textContent=scoreStr+' — '+formatDuration(timerSeconds);
+  document.getElementById('winnerOverlay').classList.add('show');
+  logEvent(winner,"🏆 VAINQUEUR DU MATCH !");
+  updateDisplay();
+}
+
+// ── UNDO ─────────────────────────────────────────────────────────────────────
+function undo(){
+  if(matchOver){matchOver=false;document.getElementById('winnerOverlay').classList.remove('show');}
+  if(history.length===0){alert("Rien à annuler !");return;}
+  const last=history.pop();
+  p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
+  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  setHistory=last.setHistory||[];
+  document.getElementById('statusLabel').innerText=last.status;
+  document.getElementById('setPill').innerText=last.pill;
+  updateDisplay();
+}
+
+// ── DISPLAY ──────────────────────────────────────────────────────────────────
+function updateDisplay(){
+  // Points display
+  let ptA,ptB;
+  if(inSuperTiebreak||inTiebreak){
+    ptA=p1; ptB=p2;
+  } else {
+    ptA=TP[p1]||"0"; ptB=TP[p2]||"0";
+    if(p1===3&&p2===3){ptA="AD"; ptB="AD";} // deuce display
+  }
+  document.getElementById('ptA').textContent=ptA;
+  document.getElementById('ptB').textContent=ptB;
+
+  // Per-set scores display
+  for(let i=1;i<=3;i++){
+    const cellA=document.getElementById('setA'+i);
+    const cellB=document.getElementById('setB'+i);
+    if(i-1 < setHistory.length){
+      // completed set
+      const sh=setHistory[i-1];
+      cellA.textContent=sh.a;
+      cellB.textContent=sh.b;
+      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
+      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
+    } else if(i-1 === setHistory.length){
+      // current set in progress
+      cellA.textContent=g1;
+      cellB.textContent=g2;
+      cellA.className='cell set-score active';
+      cellB.className='cell set-score active';
+    } else {
+      // future set
+      cellA.textContent='—';
+      cellB.textContent='—';
+      cellA.className='cell set-score';
+      cellB.className='cell set-score';
+    }
+  }
+}
+
+// ── LOG ──────────────────────────────────────────────────────────────────────
+function logEvent(team,msg){
+  const isA=(team===nameA);
+  const isB=(team===nameB);
+  const entry={team,msg,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+  matchLog.unshift(entry);
+  const list=document.getElementById('logList');
+  const div=document.createElement('div');
+  div.className='log-entry '+(isA?'dot-a':isB?'dot-b':'event');
+  div.innerHTML=`<span class="dot"></span><span>${entry.time} — ${team?'<strong>'+team+'</strong> ':''} ${msg}</span>`;
+  list.prepend(div);
+}
+
+// ── RESET ────────────────────────────────────────────────────────────────────
 function resetMatch(){
-  if(!confirm("Remettre le match à zéro (scores et sets compris) ?")) return;
-  // Reset Variables
-  p1=0; p2=0; g1=0; g2=0; s1=0; s2=0;
-  inTiebreak=false; inSuperTiebreak=false;
-  history=[]; setHistory=[]; matchLog=[]; matchOver=false;
-  
-  // Reset Timer
+  if(!confirm("Remettre le match à zéro ?")) return;
+  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
+  inTiebreak=false;inSuperTiebreak=false;
+  history=[];matchLog=[];matchOver=false;
   timerReset();
-  
-  // Reset UI
   document.getElementById('setPill').textContent="Set 1";
   document.getElementById('statusLabel').textContent="En cours";
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
-  
-  // Forcer l'effacement visuel des scores de sets
-  for(let i=1; i<=3; i++){
-    document.getElementById('setA'+i).textContent = '—';
-    document.getElementById('setB'+i).textContent = '—';
-    document.getElementById('setA'+i).className = 'cell set-score';
-    document.getElementById('setB'+i).className = 'cell set-score';
-  }
-  
   updateDisplay();
-  logEvent("","🎾 Match réinitialisé — "+nameA+" vs "+nameB);
 }
+
+// ── PDF EXPORT ───────────────────────────────────────────────────────────────
+function formatDuration(secs){
+  const h=Math.floor(secs/3600);
+  const m=Math.floor((secs%3600)/60);
+  const s=secs%60;
+  if(h>0) return h+'h '+String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
+  return String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
+}
+
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  const W=210, M=20;
+  let y=M;
+
+  // Title
+  doc.setFillColor(8,15,30);
+  doc.rect(0,0,W,297,'F');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(28);
+  doc.setTextColor(245,197,24);
+  doc.text("BEACH TENNIS",W/2,y+8,{align:'center'});
+  doc.setFontSize(12);
+  doc.setTextColor(74,100,148);
+  doc.text("RÉSUMÉ DU MATCH",W/2,y+16,{align:'center'});
+  y+=28;
+
+  // Date
+  doc.setFontSize(10);
+  doc.setTextColor(74,100,148);
+  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,y,{align:'center'});
+  y+=6;
+  doc.setFontSize(10);
+  doc.setTextColor(245,197,24);
+  doc.text('Durée du match : '+formatDuration(timerSeconds),W/2,y+4,{align:'center'});
+  y+=12;
+
+  // Divider
+  doc.setDrawColor(30,53,96);
+  doc.line(M,y,W-M,y);
+  y+=10;
+
+  // Teams
+  const teams=[
+    {label:"ÉQUIPE A",color:[59,130,246],players:nameA,sets:s1,games:g1},
+    {label:"ÉQUIPE B",color:[249,115,22],players:nameB,sets:s2,games:g2}
+  ];
+  teams.forEach(t=>{
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...t.color);
+    doc.text(t.label,M,y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(13);
+    doc.setTextColor(226,234,248);
+    doc.text(t.players,M,y+7);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(20);
+    doc.setTextColor(245,197,24);
+    doc.text(`Sets : ${t.sets}`,W-M,y+4,{align:'right'});
+    y+=18;
+    doc.setDrawColor(30,53,96);
+    doc.line(M,y,W-M,y);
+    y+=8;
+  });
+
+  // Match log
+  y+=4;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(245,197,24);
+  doc.text("JOURNAL DU MATCH",M,y);
+  y+=8;
+
+  const logsToShow=[...matchLog].reverse().slice(0,30);
+  logsToShow.forEach(entry=>{
+    if(y>270){doc.addPage();y=M;}
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(74,100,148);
+    doc.text(`${entry.time}`,M,y);
+    doc.setTextColor(180,200,230);
+    doc.text(`${entry.team?entry.team+' — ':''}${entry.msg}`,M+18,y);
+    y+=6;
+  });
+
+  doc.save(`BeachTennis_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+// ── TIMER ────────────────────────────────────────────────────────────────────
+let timerSeconds = 0;
+let timerInterval = null;
+let timerRunning = false;
+
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+    document.getElementById('timerDisplay').classList.remove('running');
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    document.getElementById('timerDisplay').classList.add('running');
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+
+function timerReset() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  document.getElementById('timerDisplay').textContent = '00:00';
+  document.getElementById('timerDisplay').classList.remove('running');
+  document.getElementById('timerStartBtn').textContent = '▶ Start';
+  document.getElementById('timerStartBtn').className = 'timer-btn start';
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+initNames();
+updateDisplay();
+logEvent("","🎾 Match démarré — "+nameA+" vs "+nameB);
+</script>
+
+</body>
+</html>
