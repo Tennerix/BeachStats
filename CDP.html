@@ -450,6 +450,14 @@ body{
   <div class="status-label" id="statusLabel">En cours</div>
 </div>
 
+<div class="timer-wrap">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+    <button class="timer-btn stop" onclick="timerReset()">■ Reset</button>
+  </div>
+</div>
+
 <div class="scoreboard">
   <div class="score-header" id="scoreHeader">
     <span>Équipe</span>
