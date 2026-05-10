@@ -661,10 +661,12 @@ function winSet(player){
 
 function winMatch(player){
   matchOver=true;
+  // Stop timer when match ends
+  if(timerRunning) timerToggle();
   const winner=player===1?nameA:nameB;
   const scoreStr=`Sets ${s1}-${s2}`;
   document.getElementById('winnerName').textContent=winner;
-  document.getElementById('winnerScore').textContent=scoreStr;
+  document.getElementById('winnerScore').textContent=scoreStr+' — '+formatDuration(timerSeconds);
   document.getElementById('winnerOverlay').classList.add('show');
   logEvent(winner,"🏆 VAINQUEUR DU MATCH !");
   updateDisplay();
@@ -750,6 +752,14 @@ function resetMatch(){
 }
 
 // ── PDF EXPORT ───────────────────────────────────────────────────────────────
+function formatDuration(secs){
+  const h=Math.floor(secs/3600);
+  const m=Math.floor((secs%3600)/60);
+  const s=secs%60;
+  if(h>0) return h+'h '+String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
+  return String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
+}
+
 function exportPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -774,7 +784,11 @@ function exportPDF(){
   doc.setFontSize(10);
   doc.setTextColor(74,100,148);
   doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,y,{align:'center'});
-  y+=10;
+  y+=6;
+  doc.setFontSize(10);
+  doc.setTextColor(245,197,24);
+  doc.text('Durée du match : '+formatDuration(timerSeconds),W/2,y+4,{align:'center'});
+  y+=12;
 
   // Divider
   doc.setDrawColor(30,53,96);
