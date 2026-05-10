@@ -265,7 +265,6 @@ body{
   <div class="status-label" id="statusLabel">En cours</div>
 </div>
 
-<!-- Timer -->
 <div class="timer-wrap">
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
@@ -273,7 +272,6 @@ body{
   </div>
 </div>
 
-<!-- Scoreboard -->
 <div class="scoreboard">
   <div class="score-header" id="scoreHeader">
     <span>Équipe</span>
@@ -304,46 +302,14 @@ body{
   </div>
 </div>
 
-<!-- Point buttons -->
-<div class="team-controls">
-  <div class="team-ctrl-label a" id="lblA">Équipe A</div>
-  <div class="ctrl-row">
-    <button class="btn-winner a" onclick="scorePoint(1,'winner')">
-      <span class="btn-icon">🎯</span>
-      <span class="btn-main" id="btnWA">Point gagnant</span>
-      <span class="btn-sub">Coup gagnant</span>
-    </button>
-    <button class="btn-faute a" onclick="scorePoint(2,'faute')">
-      <span class="btn-icon">💥</span>
-      <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à A</span>
-    </button>
-  </div>
-</div>
+<div id="dynamicControls"></div>
 
-<div class="team-controls">
-  <div class="team-ctrl-label b" id="lblB">Équipe B</div>
-  <div class="ctrl-row">
-    <button class="btn-winner b" onclick="scorePoint(2,'winner')">
-      <span class="btn-icon">🎯</span>
-      <span class="btn-main" id="btnWB">Point gagnant</span>
-      <span class="btn-sub">Coup gagnant</span>
-    </button>
-    <button class="btn-faute b" onclick="scorePoint(1,'faute')">
-      <span class="btn-icon">💥</span>
-      <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à B</span>
-    </button>
-  </div>
-</div>
-
-<div class="actions">
+<div class="actions" style="margin-top:1rem">
   <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
   <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
   <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
 </div>
 
-<!-- Stats live -->
 <div class="stats-card">
   <div class="stats-title">Stats en direct</div>
 
@@ -377,13 +343,11 @@ body{
 
 
 
-<!-- Log -->
 <div class="log-wrap">
   <div class="log-title">Journal du match</div>
   <div class="log-list" id="logList"></div>
 </div>
 
-<!-- Winner overlay -->
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-trophy">🏆</div>
@@ -408,7 +372,7 @@ body{
 </div>
 
 <script>
-// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+// ── PLAYER NAMES & MODE ──────────────────────────────────────────────────────
 const _p = new URLSearchParams(window.location.search);
 const players = {
   j1: _p.get('j1') || 'Joueur 1',
@@ -416,31 +380,61 @@ const players = {
   j3: _p.get('j3') || 'Joueur 3',
   j4: _p.get('j4') || 'Joueur 4'
 };
+const mode = _p.get('mode') || 'equipe'; // 'joueur' ou 'equipe'
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
 
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
-  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
-  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
-  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
-  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
-  // update "Point à X" sub-labels
-  document.querySelectorAll('.btn-faute.a .btn-sub')[0].textContent = 'Point à A';
-  document.querySelectorAll('.btn-faute.b .btn-sub')[0].textContent = 'Point à B';
+  
+  const container = document.getElementById('dynamicControls');
+  container.innerHTML = '';
+
+  if (mode === 'joueur') {
+    // Mode Stats par Joueur : 4 blocs (J1, J2, J3, J4)
+    container.innerHTML += createControlBlock('a', players.j1, 1);
+    container.innerHTML += createControlBlock('a', players.j2, 1);
+    container.innerHTML += createControlBlock('b', players.j3, 2);
+    container.innerHTML += createControlBlock('b', players.j4, 2);
+  } else {
+    // Mode Stats par Équipe : 2 blocs
+    const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+    const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+    container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1);
+    container.innerHTML += createControlBlock('b', 'Équipe B — ' + shortB, 2);
+  }
+}
+
+function createControlBlock(teamClass, label, teamId) {
+  const opponentId = teamId === 1 ? 2 : 1;
+  const subLabel = teamId === 1 ? 'Point à A' : 'Point à B';
+  return `
+    <div class="team-controls">
+      <div class="team-ctrl-label ${teamClass}">${label}</div>
+      <div class="ctrl-row">
+        <button class="btn-winner ${teamClass}" onclick="scorePoint(${teamId},'winner', '${label}')">
+          <span class="btn-icon">🎯</span>
+          <span class="btn-main">Point gagnant</span>
+          <span class="btn-sub">Coup gagnant</span>
+        </button>
+        <button class="btn-faute ${teamClass}" onclick="scorePoint(${opponentId},'faute', '${label}')">
+          <span class="btn-icon">💥</span>
+          <span class="btn-main">Faute directe</span>
+          <span class="btn-sub">${subLabel}</span>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
-let setHistory=[]; // [{a:g1,b:g2}, ...]
+let setHistory=[]; 
 let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-// Stats
 let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
-
 let history = [];
 let matchLog = [];
-
 const TP = ['0','15','30','40'];
 
 // ── SAVE STATE ────────────────────────────────────────────────────────────────
@@ -454,28 +448,24 @@ function saveState() {
 }
 
 // ── SCORE LOGIC ───────────────────────────────────────────────────────────────
-function scorePoint(player, type) {
+function scorePoint(player, type, entityName) {
   if (matchOver) return;
   saveState();
 
-  // Record stats
-  // player = team that WINS the point
-  // type='winner' → that team hit a winner ; type='faute' → the OTHER team made a fault
   if (player === 1) {
     stats.pA++;
-    if (type === 'winner') stats.wA++; else stats.fB++; // faute committed by B
+    if (type === 'winner') stats.wA++; else stats.fB++; 
   } else {
     stats.pB++;
-    if (type === 'winner') stats.wB++; else stats.fA++; // faute committed by A
+    if (type === 'winner') stats.wB++; else stats.fA++; 
   }
 
-  const teamName = player === 1 ? nameA : nameB;
-  logPoint(teamName, type);
+  // On utilise l'entité qui a déclenché l'action pour le log
+  logPoint(entityName || (player === 1 ? nameA : nameB), type);
 
   if (inSuperTiebreak) {
     if (player === 1) p1++; else p2++;
     if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
-      logEvent(teamName, 'remporte le Super Tie-Break et le match !');
       winMatch(player); return;
     }
     updateDisplay(); return;
@@ -484,13 +474,11 @@ function scorePoint(player, type) {
   if (inTiebreak) {
     if (player === 1) p1++; else p2++;
     if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
-      logEvent(teamName, 'remporte le Tie-Break !');
       winGame(player);
     }
     updateDisplay(); return;
   }
 
-  // Normal game (No-Ad)
   if (player === 1) p1++; else p2++;
   if (p1 > 3 || p2 > 3) {
     if (p1 > p2) winGame(1); else winGame(2);
@@ -529,36 +517,28 @@ function winGame(player) {
 function winSet(player){
   setHistory.push({a:g1,b:g2});
   p1=0; p2=0; g1=0; g2=0; 
-  inTiebreak=false; 
-  inSuperTiebreak=false;
-
+  inTiebreak=false; inSuperTiebreak=false;
   if(player===1) s1++; else s2++;
   logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
 
-  // Si une équipe a 2 sets, elle gagne le match
   if(s1===2 || s2===2){
     winMatch(player); 
     return;
   }
 
-  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
   if(s1===1 && s2===1){
     inSuperTiebreak = true;
     document.getElementById('setPill').textContent = "Super Tie-Break";
     document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-    logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
   } else {
-    // Passage au set 2 normal
     document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
     document.getElementById('statusLabel').textContent = "En cours";
   }
-  
   updateDisplay();
 }
 
 function winMatch(player) {
   matchOver = true;
-  // Stop timer when match ends
   if(timerRunning) timerToggle();
   const winner = player === 1 ? nameA : nameB;
   document.getElementById('winnerName').textContent = winner;
@@ -575,7 +555,7 @@ function winMatch(player) {
 // ── UNDO ──────────────────────────────────────────────────────────────────────
 function undo() {
   if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
-  if (history.length === 0) { alert('Rien à annuler !'); return; }
+  if (history.length === 0) return;
   const last = history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
@@ -583,7 +563,6 @@ function undo() {
   stats = {...last.stats};
   document.getElementById('setPill').innerText = last.pill;
   document.getElementById('statusLabel').innerText = last.status;
-  // Remove last log entry
   const list = document.getElementById('logList');
   if (list.firstChild) list.removeChild(list.firstChild);
   matchLog.shift();
@@ -619,7 +598,6 @@ function updateDisplay() {
     }
   }
 
-  // Update live stats
   document.getElementById('st-wA').textContent = stats.wA;
   document.getElementById('st-wB').textContent = stats.wB;
   document.getElementById('st-fA').textContent = stats.fA;
@@ -639,23 +617,21 @@ function updateBar(idA, idB, vA, vB) {
 }
 
 // ── LOG ───────────────────────────────────────────────────────────────────────
-function logPoint(winnerTeam, type) {
-  const isA = winnerTeam === nameA;
+function logPoint(entity, type) {
+  const isA = (entity === players.j1 || entity === players.j2 || entity.includes('Équipe A'));
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  let label, dotClass, displayTeam;
+  let label, dotClass;
   if (type === 'winner') {
-    label = '🎯 Point gagnant'; dotClass = isA ? 'dot-a' : 'dot-b'; displayTeam = winnerTeam;
+    label = '🎯 Point gagnant'; dotClass = isA ? 'dot-a' : 'dot-b';
   } else {
-    // fault by the OTHER team
-    const faulter = isA ? nameB : nameA;
-    label = '💥 Faute directe'; dotClass = isA ? 'dot-b' : 'dot-a'; displayTeam = faulter;
+    label = '💥 Faute directe'; dotClass = isA ? 'dot-a' : 'dot-b';
   }
-  const entry = {team: displayTeam, type, time, msg: label};
+  const entry = {team: entity, type, time, msg: label};
   matchLog.unshift(entry);
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry ' + dotClass;
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong></span><span class="log-tag ${type}">${label}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${entity}</strong></span><span class="log-tag ${type}">${label}</span>`;
   list.prepend(div);
 }
 
@@ -721,7 +697,6 @@ function exportPDF() {
   doc.line(M,y,W-M,y);
   y+=10;
 
-  // Teams
   [{label:'ÉQUIPE A',color:[59,130,246],name:nameA,sets:s1},
    {label:'ÉQUIPE B',color:[249,115,22],name:nameB,sets:s2}].forEach(t => {
     doc.setFont('helvetica','bold');
@@ -743,7 +718,6 @@ function exportPDF() {
   });
 
   y+=4;
-  // Stats table
   doc.setFont('helvetica','bold');
   doc.setFontSize(13);
   doc.setTextColor(245,197,24);
@@ -756,7 +730,6 @@ function exportPDF() {
     ['Points gagnés', stats.pA, stats.pB],
   ];
 
-  // header
   doc.setFontSize(10);
   doc.setTextColor(74,100,148);
   doc.text('Statistique', M, y);
@@ -785,7 +758,6 @@ function exportPDF() {
   doc.line(M,y,W-M,y);
   y+=10;
 
-  // Log
   doc.setFont('helvetica','bold');
   doc.setFontSize(12);
   doc.setTextColor(245,197,24);
