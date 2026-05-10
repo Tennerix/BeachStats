@@ -65,13 +65,13 @@ body{
   box-shadow:0 8px 48px rgba(0,0,0,.5);margin-bottom:1rem;
 }
 .score-header{
-  display:grid;grid-template-columns:1fr 60px 60px 80px;
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;
   padding:.6rem 1.4rem;background:var(--surface);border-bottom:1px solid var(--border);
 }
 .score-header span{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center}
 .score-header span:first-child{text-align:left}
 .team-row{
-  display:grid;grid-template-columns:1fr 60px 60px 80px;align-items:center;
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;align-items:center;
   padding:1rem 1.4rem;border-bottom:1px solid var(--border);transition:background .15s;
 }
 .team-row:last-child{border-bottom:none}
@@ -83,6 +83,12 @@ body{
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
+.cell.set-score{
+  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
+  text-align:center;color:var(--muted);
+}
+.cell.set-score.active{color:var(--text)}
+.cell.set-score.won{color:var(--gold)}
 .cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
 
 /* ── STATS CARD ── */
@@ -233,8 +239,14 @@ body{
 .timer-btn.stop:hover{background:rgba(239,68,68,.12)}
 
 @media(max-width:440px){
-  .score-header,.team-row{grid-template-columns:1fr 48px 48px 68px;padding:.8rem 1rem}
-  .cell.point-cell{font-size:28px}
+  .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
+  .cell.set-score{
+  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
+  text-align:center;color:var(--muted);
+}
+.cell.set-score.active{color:var(--text)}
+.cell.set-score.won{color:var(--gold)}
+.cell.point-cell{font-size:28px}
   .shot-btn{font-size:14px;padding:.9rem .6rem}
   .shot-btn .shot-icon{font-size:24px}
   .actions{grid-template-columns:1fr 1fr 1fr}
@@ -264,10 +276,11 @@ body{
 
 <!-- Scoreboard -->
 <div class="scoreboard">
-  <div class="score-header">
+  <div class="score-header" id="scoreHeader">
     <span>Équipe</span>
-    <span>Sets</span>
-    <span>Jeux</span>
+    <span>S1</span>
+    <span>S2</span>
+    <span>S3</span>
     <span>Points</span>
   </div>
   <div class="team-row team-a" id="rowA">
@@ -275,8 +288,9 @@ body{
       <div class="team-name" id="nameA">Équipe A</div>
       <div class="team-players" id="playersA">—</div>
     </div>
-    <div class="cell sets-cell"><span id="s1d">0</span></div>
-    <div class="cell" id="gamesA">0</div>
+    <div class="cell set-score" id="setA1">—</div>
+    <div class="cell set-score" id="setA2">—</div>
+    <div class="cell set-score" id="setA3">—</div>
     <div class="cell point-cell" id="ptA">0</div>
   </div>
   <div class="team-row team-b" id="rowB">
@@ -284,8 +298,9 @@ body{
       <div class="team-name" id="nameB">Équipe B</div>
       <div class="team-players" id="playersB">—</div>
     </div>
-    <div class="cell sets-cell"><span id="s2d">0</span></div>
-    <div class="cell" id="gamesB">0</div>
+    <div class="cell set-score" id="setB1">—</div>
+    <div class="cell set-score" id="setB2">—</div>
+    <div class="cell set-score" id="setB3">—</div>
     <div class="cell point-cell" id="ptB">0</div>
   </div>
 </div>
@@ -419,6 +434,7 @@ function initNames() {
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[]; // [{a:g1,b:g2}, ...]
 let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
 // Stats
 let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
@@ -512,6 +528,7 @@ function winGame(player) {
 }
 
 function winSet(player) {
+  setHistory.push({a:g1,b:g2});
   p1=0; p2=0; g1=0; g2=0; inTiebreak=false; inSuperTiebreak=false;
   if (player === 1) s1++; else s2++;
   logEvent(player===1 ? nameA : nameB, 'remporte le set ' + s1 + '-' + s2);
@@ -542,6 +559,7 @@ function undo() {
   const last = history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  setHistory=last.setHistory||[];
   stats = {...last.stats};
   document.getElementById('setPill').innerText = last.pill;
   document.getElementById('statusLabel').innerText = last.status;
@@ -563,12 +581,23 @@ function updateDisplay() {
   }
   document.getElementById('ptA').textContent = ptA;
   document.getElementById('ptB').textContent = ptB;
-  document.getElementById('gamesA').textContent = g1;
-  document.getElementById('gamesB').textContent = g2;
-  document.getElementById('s1d').textContent = s1;
-  document.getElementById('s2d').textContent = s2;
-  document.getElementById('s1d').className = s1>s2?'won':'';
-  document.getElementById('s2d').className = s2>s1?'won':'';
+  for(let i=1;i<=3;i++){
+    const cellA=document.getElementById('setA'+i);
+    const cellB=document.getElementById('setB'+i);
+    if(i-1 < setHistory.length){
+      const sh=setHistory[i-1];
+      cellA.textContent=sh.a; cellB.textContent=sh.b;
+      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
+      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
+    } else if(i-1 === setHistory.length){
+      cellA.textContent=g1; cellB.textContent=g2;
+      cellA.className='cell set-score active';
+      cellB.className='cell set-score active';
+    } else {
+      cellA.textContent='—'; cellB.textContent='—';
+      cellA.className='cell set-score'; cellB.className='cell set-score';
+    }
+  }
 
   // Update live stats
   document.getElementById('st-wA').textContent = stats.wA;
@@ -626,6 +655,7 @@ function resetMatch() {
   if (!confirm('Remettre le match à zéro ?')) return;
   p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
+  setHistory=[];
   stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
   history=[];matchLog=[];
   document.getElementById('setPill').textContent='Set 1';
