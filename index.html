@@ -31,6 +31,53 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:f
 .vs-divider{display:flex;align-items:center;gap:12px;margin:4px 0 12px}
 .vs-divider::before,.vs-divider::after{content:"";flex:1;height:1px;background:#1e3560}
 .vs-divider span{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:#3b5280;letter-spacing:2px}
+
+/* --- STYLE DU BOUTON ON/OFF --- */
+.mode-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d1a2e;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #1e3560;
+  margin-bottom: 1.5rem;
+}
+.mode-label {
+  font-family: Barlow Condensed, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5c518;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #1e3560;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px; width: 18px;
+  left: 3px; bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider { background-color: #f5c518; }
+input:checked + .slider:before { transform: translateX(26px); }
+
 .btn-group{display:flex;flex-direction:column;gap:10px;margin-top:1.25rem}
 .btn-stat{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;border:1px solid #1e3560;background:#0d1a2e;color:#e0eaf8;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .18s;width:100%;text-align:left;text-decoration:none}
 .btn-stat:hover{background:#162040;transform:translateX(3px)}
@@ -66,6 +113,15 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:f
       <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" placeholder="Joueur 3"></div>
       <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" placeholder="Joueur 4"></div>
     </div>
+
+    <div class="mode-selector">
+      <span class="mode-label" id="modeText">Stats par Équipe</span>
+      <label class="switch">
+        <input type="checkbox" id="modeToggle" onchange="updateModeText()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
     <div class="btn-group">
       <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
@@ -74,26 +130,28 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:f
   </div>
 </div>
 <script>
-function goToSavancee() {
+function updateModeText() {
+  const isChecked = document.getElementById('modeToggle').checked;
+  document.getElementById('modeText').textContent = isChecked ? "Stats par Joueur" : "Stats par Équipe";
+}
+
+function getParams() {
   const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
   const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
   const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
   const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
-  window.location.href = `Savancee.html?j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}`;
+  const mode = document.getElementById('modeToggle').checked ? 'joueur' : 'equipe';
+  return `j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}&mode=${mode}`;
+}
+
+function goToSavancee() {
+  window.location.href = `Savancee.html?${getParams()}`;
 }
 function goToSbase() {
-  const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
-  const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
-  const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
-  const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
-  window.location.href = `Sbase.html?j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}`;
+  window.location.href = `Sbase.html?${getParams()}`;
 }
 function goToCDP() {
-  const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
-  const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
-  const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
-  const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
-  window.location.href = `CDP.html?j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}`;
+  window.location.href = `CDP.html?${getParams()}`;
 }
 </script>
 </body>
