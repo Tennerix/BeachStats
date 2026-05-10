@@ -8,153 +8,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-body{
-  font-family:Barlow,sans-serif;
-  min-height:100vh;
-  background:#0a1628;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:0 1rem 3rem;
-}
-
-/* Wrapper global centré, largeur max alignée sur la carte */
-.page-wrapper{
-  width:100%;
-  max-width:520px;
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-}
-
-/* Hero : même largeur que la carte */
-.hero{
-  width:100%;
-  position:relative;
-  border-radius:0 0 20px 20px;
-  overflow:hidden;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
-}
-.hero img{
-  width:100%;
-  display:block;
-  object-fit:cover;
-  max-height:260px;
-}
-.hero-badge{
-  position:absolute;
-  bottom:14px;
-  right:16px;
-  background:rgba(10,22,40,.78);
-  border:1.5px solid #f5c518;
-  color:#f5c518;
-  font-family:Barlow Condensed,sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:2px;
-  padding:4px 12px;
-  border-radius:20px;
-  text-transform:uppercase;
-}
-
-/* Carte */
-.bt-card{
-  width:100%;
-  background:#111e35;
-  border:1px solid #1e3560;
-  border-radius:20px;
-  padding:1.75rem 1.5rem;
-  margin-top:1.5rem;
-  box-shadow:0 4px 32px rgba(0,0,0,.45);
-}
-
-.bt-title{
-  font-family:Barlow Condensed,sans-serif;
-  font-size:20px;
-  font-weight:900;
-  color:#fff;
-  text-align:center;
-  text-transform:uppercase;
-  letter-spacing:3px;
-  margin-bottom:1.4rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-}
+body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:flex;flex-direction:column;align-items:center;padding:0 1rem 3rem}
+.page-wrapper{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:stretch}
+.hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.hero img{width:100%;display:block;object-fit:cover;max-height:260px}
+.hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid #f5c518;color:#f5c518;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
+.bt-card{width:100%;background:#111e35;border:1px solid #1e3560;border-radius:20px;padding:1.75rem 1.5rem;margin-top:1.5rem;box-shadow:0 4px 32px rgba(0,0,0,.45)}
+.bt-title{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:3px;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:center;gap:8px}
 .bt-title .hl{color:#f5c518}
 .bt-title i{font-size:20px;color:#f5c518}
-
-.team-label{
-  font-family:Barlow Condensed,sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:2px;
-  text-transform:uppercase;
-  margin-bottom:8px;
-  padding-left:4px;
-}
+.team-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-left:4px}
 .team-label.a{color:#3b82f6}
 .team-label.b{color:#f97316}
-
-.names-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:.75rem;
-}
-
-.player-slot{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  background:#0d1a2e;
-  border:1px solid #1e3560;
-  border-radius:10px;
-  padding:10px 12px;
-  transition:border-color .2s;
-}
+.names-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.player-slot{display:flex;align-items:center;gap:10px;background:#0d1a2e;border:1px solid #1e3560;border-radius:10px;padding:10px 12px;transition:border-color .2s}
 .player-slot:focus-within{border-color:#f5c518}
 .player-slot.team-b:focus-within{border-color:#f97316}
 .player-slot i{font-size:17px;color:#3b82f6;flex-shrink:0}
 .player-slot.team-b i{color:#f97316}
-.player-slot input{
-  background:none;
-  border:none;
-  outline:none;
-  font-family:Barlow,sans-serif;
-  font-size:14px;
-  color:#e0eaf8;
-  width:100%;
-  min-width:0;
-}
+.player-slot input{background:none;border:none;outline:none;font-family:Barlow,sans-serif;font-size:14px;color:#e0eaf8;width:100%;min-width:0}
 .player-slot input::placeholder{color:#3b5280}
-
 .vs-divider{display:flex;align-items:center;gap:12px;margin:4px 0 12px}
 .vs-divider::before,.vs-divider::after{content:"";flex:1;height:1px;background:#1e3560}
 .vs-divider span{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:#3b5280;letter-spacing:2px}
-
 .btn-group{display:flex;flex-direction:column;gap:10px;margin-top:1.25rem}
-.btn-stat{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:13px 16px;
-  border-radius:10px;
-  border:1px solid #1e3560;
-  background:#0d1a2e;
-  color:#e0eaf8;
-  font-family:Barlow Condensed,sans-serif;
-  font-size:15px;
-  font-weight:700;
-  letter-spacing:1.5px;
-  text-transform:uppercase;
-  cursor:pointer;
-  transition:all .18s;
-  width:100%;
-  text-align:left;
-}
+.btn-stat{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;border:1px solid #1e3560;background:#0d1a2e;color:#e0eaf8;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .18s;width:100%;text-align:left;text-decoration:none}
 .btn-stat:hover{background:#162040;transform:translateX(3px)}
 .btn-stat:active{transform:scale(.98)}
 .btn-stat i{font-size:19px}
@@ -166,48 +44,46 @@ body{
 .btn-stat.base i{color:#3b82f6}
 .btn-stat.avancees{border-left:3px solid #f97316}
 .btn-stat.avancees i{color:#f97316}
-
-/* Responsive tres petits ecrans */
-@media(max-width:380px){
-  .names-grid{grid-template-columns:1fr}
-  .bt-title{font-size:17px;letter-spacing:2px}
-  .btn-stat{font-size:13px;padding:11px 12px}
-  .hero img{max-height:180px}
-}
+@media(max-width:380px){.names-grid{grid-template-columns:1fr}.bt-title{font-size:17px;letter-spacing:2px}.btn-stat{font-size:13px;padding:11px 12px}.hero img{max-height:180px}}
 </style>
 </head>
 <body>
 <div class="page-wrapper">
-
   <div class="hero">
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
     <div class="hero-badge">Interface Stats v1.0</div>
   </div>
-
   <div class="bt-card">
     <p class="bt-title"><i class="ti ti-users"></i>Equipes &amp; <span class="hl">Joueurs</span></p>
-
     <div class="team-label a">Equipe A</div>
     <div class="names-grid">
-      <div class="player-slot"><i class="ti ti-user"></i><input type="text" placeholder="Joueur 1"></div>
-      <div class="player-slot"><i class="ti ti-user"></i><input type="text" placeholder="Joueur 2"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" placeholder="Joueur 1"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" placeholder="Joueur 2"></div>
     </div>
-
     <div class="vs-divider"><span>VS</span></div>
-
     <div class="team-label b">Equipe B</div>
     <div class="names-grid">
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input type="text" placeholder="Joueur 3"></div>
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input type="text" placeholder="Joueur 4"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" placeholder="Joueur 3"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" placeholder="Joueur 4"></div>
     </div>
-
     <div class="btn-group">
-      <button type="button" class="btn-stat points"><i class="ti ti-trophy"></i><a href="https://tennerix.github.io/BeachStats/CDP.html">Comptage de points</a><i class="ti ti-chevron-right arrow"></i></button>
+      <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat base"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat avancees"><i class="ti ti-chart-dots"></i>Stats avancees<i class="ti ti-chevron-right arrow"></i></button>
     </div>
   </div>
-
 </div>
+<script>
+function goToCDP() {
+  const players = {
+    j1: document.getElementById('j1').value || 'Joueur 1',
+    j2: document.getElementById('j2').value || 'Joueur 2',
+    j3: document.getElementById('j3').value || 'Joueur 3',
+    j4: document.getElementById('j4').value || 'Joueur 4'
+  };
+  localStorage.setItem('bt_players', JSON.stringify(players));
+  window.location.href = 'CDP.html';
+}
+</script>
 </body>
 </html>
