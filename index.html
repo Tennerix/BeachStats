@@ -1,41 +1,239 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interface de Stats</title>
+    <title>Beach Tennis — Stats</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <style>
-        body { font-family: sans-serif; margin: 40px; line-height: 1.6; }
-        .container { max-width: 500px; }
-        .input-group { margin-bottom: 20px; }
-        input { display: block; margin-bottom: 10px; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
-        .button-section { margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #eee; }
-        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 4px; background-color: #007BFF; color: white; margin-right: 5px; margin-bottom: 5px; }
-        button:hover { background-color: #0056b3; }
-        .btn-stats { background-color: #28a745; }
-        .btn-stats:hover { background-color: #218838; }
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: #f0f4f8;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2.5rem 1rem 3rem;
+        }
+
+        .bt-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        /* Illustration */
+        .bt-hero {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 1.75rem;
+            border: 1px solid #dce3ea;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        /* Carte principale */
+        .bt-card {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #dce3ea;
+            border-radius: 16px;
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .bt-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a2536;
+            text-align: center;
+            margin: 0 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .bt-title i { font-size: 20px; color: #378ADD; }
+
+        /* Grille prénoms */
+        .names-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .names-grid input {
+            border: 1px solid #c8d0da;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 14px;
+            background: #f7f9fb;
+            color: #1a2536;
+            width: 100%;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .names-grid input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(55,138,221,0.2);
+            border-color: #378ADD;
+            background: #fff;
+        }
+        .names-grid input::placeholder { color: #9aa5b4; }
+
+        /* Séparateur */
+        .divider {
+            border: none;
+            border-top: 1px solid #eaecef;
+            margin: 0 0 1.25rem;
+        }
+
+        /* Boutons */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #dce3ea;
+            background: #ffffff;
+            color: #1a2536;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            width: 100%;
+            text-align: left;
+        }
+        .btn-stat:hover { background: #f2f6fb; }
+        .btn-stat:active { transform: scale(0.98); }
+        .btn-stat i { font-size: 18px; }
+
+        .btn-stat.points i  { color: #1D9E75; }
+        .btn-stat.base i    { color: #378ADD; }
+        .btn-stat.avancees i{ color: #D4537E; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Configuration</h2>
-        
-        <!-- Champs pour les 4 prénoms -->
-        <div class="input-group">
-            <input type="text" placeholder="Prénom 1">
-            <input type="text" placeholder="Prénom 2">
-            <input type="text" placeholder="Prénom 3">
-            <input type="text" placeholder="Prénom 4">
+<div class="bt-wrap">
+
+    <!-- Illustration SVG Beach Tennis -->
+    <div class="bt-hero">
+        <svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" aria-label="Illustration beach tennis">
+            <!-- Ciel -->
+            <rect width="480" height="200" fill="#E6F1FB"/>
+            <!-- Soleil -->
+            <circle cx="420" cy="48" r="34" fill="#FAC775" opacity="0.9"/>
+            <circle cx="420" cy="48" r="26" fill="#EF9F27"/>
+            <!-- Rayons -->
+            <g stroke="#FAC775" stroke-width="2" opacity="0.7">
+                <line x1="420" y1="8"  x2="420" y2="2"/>
+                <line x1="449" y1="19" x2="453" y2="15"/>
+                <line x1="460" y1="48" x2="466" y2="48"/>
+                <line x1="449" y1="77" x2="453" y2="81"/>
+                <line x1="420" y1="88" x2="420" y2="94"/>
+                <line x1="391" y1="77" x2="387" y2="81"/>
+                <line x1="380" y1="48" x2="374" y2="48"/>
+                <line x1="391" y1="19" x2="387" y2="15"/>
+            </g>
+            <!-- Nuages -->
+            <ellipse cx="80"  cy="42" rx="38" ry="18" fill="white" opacity="0.75"/>
+            <ellipse cx="110" cy="36" rx="28" ry="14" fill="white" opacity="0.75"/>
+            <ellipse cx="58"  cy="38" rx="22" ry="12" fill="white" opacity="0.75"/>
+            <ellipse cx="220" cy="30" rx="30" ry="14" fill="white" opacity="0.6"/>
+            <ellipse cx="245" cy="24" rx="22" ry="12" fill="white" opacity="0.6"/>
+            <!-- Mer -->
+            <rect x="0" y="120" width="480" height="40" fill="#378ADD" opacity="0.6"/>
+            <rect x="0" y="130" width="480" height="30" fill="#185FA5" opacity="0.4"/>
+            <!-- Vagues -->
+            <path d="M0,124 Q40,116 80,124 Q120,132 160,124 Q200,116 240,124 Q280,132 320,124 Q360,116 400,124 Q440,132 480,124"
+                  stroke="white" stroke-width="1.5" fill="none" opacity="0.6"/>
+            <!-- Sable -->
+            <rect x="0" y="155" width="480" height="45" fill="#FAC775" opacity="0.7"/>
+            <rect x="0" y="162" width="480" height="38" fill="#EF9F27" opacity="0.35"/>
+            <!-- Poteaux filet -->
+            <line x1="180" y1="88" x2="180" y2="158" stroke="#3C3489" stroke-width="2.5"/>
+            <line x1="300" y1="88" x2="300" y2="158" stroke="#3C3489" stroke-width="2.5"/>
+            <!-- Bande haute -->
+            <line x1="180" y1="108" x2="300" y2="108" stroke="#3C3489" stroke-width="2"/>
+            <!-- Grillage filet -->
+            <g stroke="#3C3489" stroke-width="0.8" opacity="0.5">
+                <line x1="195" y1="108" x2="195" y2="155"/>
+                <line x1="210" y1="108" x2="210" y2="155"/>
+                <line x1="225" y1="108" x2="225" y2="155"/>
+                <line x1="240" y1="108" x2="240" y2="155"/>
+                <line x1="255" y1="108" x2="255" y2="155"/>
+                <line x1="270" y1="108" x2="270" y2="155"/>
+                <line x1="285" y1="108" x2="285" y2="155"/>
+                <line x1="180" y1="120" x2="300" y2="120"/>
+                <line x1="180" y1="133" x2="300" y2="133"/>
+                <line x1="180" y1="145" x2="300" y2="145"/>
+            </g>
+            <!-- Balle -->
+            <circle cx="240" cy="78" r="10" fill="#9FE1CB" stroke="#0F6E56" stroke-width="1.5"/>
+            <path d="M233,73 Q240,68 247,73" stroke="#0F6E56" stroke-width="1.2" fill="none"/>
+            <path d="M233,83 Q240,88 247,83" stroke="#0F6E56" stroke-width="1.2" fill="none"/>
+            <!-- Raquette gauche -->
+            <ellipse cx="118" cy="95" rx="22" ry="28" fill="#D4537E" opacity="0.85"/>
+            <ellipse cx="118" cy="95" rx="16" ry="21" fill="none" stroke="#4B1528" stroke-width="1.5" opacity="0.5"/>
+            <line x1="118" y1="122" x2="118" y2="148" stroke="#3C3489" stroke-width="4" stroke-linecap="round"/>
+            <!-- Raquette droite -->
+            <ellipse cx="362" cy="95" rx="22" ry="28" fill="#D4537E" opacity="0.85"/>
+            <ellipse cx="362" cy="95" rx="16" ry="21" fill="none" stroke="#4B1528" stroke-width="1.5" opacity="0.5"/>
+            <line x1="362" y1="122" x2="362" y2="148" stroke="#3C3489" stroke-width="4" stroke-linecap="round"/>
+            <!-- Palmier -->
+            <line x1="30" y1="160" x2="38" y2="90" stroke="#633806" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="25" cy="88" rx="22" ry="10" fill="#3B6D11" transform="rotate(-20,25,88)"/>
+            <ellipse cx="42" cy="82" rx="22" ry="10" fill="#639922" transform="rotate(15,42,82)"/>
+            <ellipse cx="38" cy="92" rx="18" ry="8"  fill="#3B6D11" transform="rotate(-35,38,92)"/>
+        </svg>
+    </div>
+
+    <!-- Carte de configuration -->
+    <div class="bt-card">
+        <p class="bt-title">
+            <i class="ti ti-beach"></i>
+            Beach Tennis — Configuration
+        </p>
+
+        <!-- 4 prénoms en grille 2×2 -->
+        <div class="names-grid">
+            <input type="text" placeholder="Joueur 1">
+            <input type="text" placeholder="Joueur 2">
+            <input type="text" placeholder="Joueur 3">
+            <input type="text" placeholder="Joueur 4">
         </div>
 
-        <!-- Groupe de boutons de statistiques -->
-        <div class="button-section">
-            <button type="button" class="btn-stats">Comptage de points</button>
-            <button type="button" class="btn-stats">Stats de base</button>
-            <button type="button" class="btn-stats">Stats avancées</button>
+        <hr class="divider">
+
+        <!-- Boutons stats -->
+        <div class="btn-group">
+            <button type="button" class="btn-stat points">
+                <i class="ti ti-trophy"></i> Comptage de points
+            </button>
+            <button type="button" class="btn-stat base">
+                <i class="ti ti-chart-bar"></i> Stats de base
+            </button>
+            <button type="button" class="btn-stat avancees">
+                <i class="ti ti-chart-dots"></i> Stats avancées
+            </button>
         </div>
     </div>
+
+</div>
 
 </body>
 </html>
