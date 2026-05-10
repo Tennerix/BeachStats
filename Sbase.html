@@ -204,6 +204,34 @@ body{
 .winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
 .winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
 
+/* ── TIMER ── */
+.timer-wrap{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:.9rem 1.4rem;margin-bottom:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.timer-display{
+  font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
+  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
+  min-width:110px;
+}
+.timer-display.running{color:#fff}
+.timer-btns{display:flex;gap:8px}
+.timer-btn{
+  padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+}
+.timer-btn:hover{background:#162040;border-color:var(--muted)}
+.timer-btn.start{border-color:var(--green);color:var(--green)}
+.timer-btn.start:hover{background:rgba(34,197,94,.12)}
+.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
+.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
+.timer-btn.stop{border-color:var(--red);color:var(--red)}
+.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+
 @media(max-width:440px){
   .score-header,.team-row{grid-template-columns:1fr 48px 48px 68px;padding:.8rem 1rem}
   .cell.point-cell{font-size:28px}
@@ -223,6 +251,15 @@ body{
 <div class="status-bar">
   <div class="status-pill" id="setPill">Set 1</div>
   <div class="status-label" id="statusLabel">En cours</div>
+</div>
+
+<!-- Timer -->
+<div class="timer-wrap">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+    <button class="timer-btn stop" onclick="timerReset()">■ Reset</button>
+  </div>
 </div>
 
 <!-- Scoreboard -->
@@ -706,6 +743,42 @@ function exportPDF() {
   });
 
   doc.save('BeachStats_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+// ── TIMER ────────────────────────────────────────────────────────────────────
+let timerSeconds = 0;
+let timerInterval = null;
+let timerRunning = false;
+
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+    document.getElementById('timerDisplay').classList.remove('running');
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    document.getElementById('timerDisplay').classList.add('running');
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+
+function timerReset() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  document.getElementById('timerDisplay').textContent = '00:00';
+  document.getElementById('timerDisplay').classList.remove('running');
+  document.getElementById('timerStartBtn').textContent = '▶ Start';
+  document.getElementById('timerStartBtn').className = 'timer-btn start';
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
