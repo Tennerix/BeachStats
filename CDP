@@ -1,1 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Score Tennis - No Ad</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+        .scoreboard { background: #333; color: #fff; padding: 20px; border-radius: 10px; display: inline-block; margin-top: 50px; }
+        .score-row { font-size: 24px; margin: 10px 0; }
+        .points { font-weight: bold; color: #00ff00; font-size: 32px; min-width: 60px; display: inline-block; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        .status { margin-top: 15px; color: #ffcc00; font-weight: bold; }
+    </style>
+</head>
+<body>
 
+    <div class="scoreboard">
+        <h2>Tennis Scoreboard</h2>
+        <div id="status" class="status">Set 1</div>
+        
+        <div class="score-row">
+            Joueur 1 : Sets <span id="s1">0</span> | Jeux <span id="j1">0</span> | <span id="p1" class="points">0</span>
+            <button onclick="scorePoint(1)">+ Point J1</button>
+        </div>
+
+        <div class="score-row">
+            Joueur 2 : Sets <span id="s2">0</span> | Jeux <span id="j2">0</span> | <span id="p2" class="points">0</span>
+            <button onclick="scorePoint(2)">+ Point J2</button>
+        </div>
+        
+        <button onclick="reset()" style="background:#ff4444; color:white; border:none; margin-top:20px;">Remise à zéro</button>
+    </div>
+
+<script>
+    let p1 = 0, p2 = 0, j1 = 0, j2 = 0, s1 = 0, s2 = 0;
+    const tennisPoints = ["0", "15", "30", "40"];
+
+    function scorePoint(player) {
+        let isSuperTieBreak = (s1 === 1 && s2 === 1);
+        
+        if (isSuperTieBreak) {
+            // Logique Super Tie-break (1er à 10 points, 2 d'écart)
+            if (player === 1) p1++; else p2++;
+            document.getElementById('status').innerText = "SUPER TIE-BREAK (3ème Set)";
+            
+            if (p1 >= 10 && p1 - p2 >= 2) winSet(1);
+            else if (p2 >= 10 && p2 - p1 >= 2) winSet(2);
+            
+        } else {
+            // Logique Set Normal
+            if (player === 1) p1++; else p2++;
+
+            // Point Décisif à 40-40 (40A)
+            if (p1 === 4 || p2 === 4) {
+                if (player === 1) winGame(1); else winGame(2);
+            }
+        }
+        updateDisplay();
+    }
+
+    function winGame(player) {
+        p1 = 0; p2 = 0;
+        if (player === 1) j1++; else j2++;
+        
+        // Un set se gagne en 6 jeux
+        if (j1 >= 6 && j1 - j2 >= 2) winSet(1);
+        else if (j2 >= 6 && j2 - j1 >= 2) winSet(2);
+        else if (j1 === 6 && j2 === 6) { /* Option Tie-break classique non incluse pour rester "très simple" */ }
+    }
+
+    function winSet(player) {
+        p1 = 0; p2 = 0; j1 = 0; j2 = 0;
+        if (player === 1) s1++; else s2++;
+        
+        if (s1 === 2 || s2 === 2) {
+            alert("Match terminé ! Victoire Joueur " + player);
+            reset();
+        }
+        document.getElementById('status').innerText = "Set " + (s1 + s2 + 1);
+    }
+
+    function updateDisplay() {
+        let isSuperTieBreak = (s1 === 1 && s2 === 1);
+        document.getElementById('p1').innerText = isSuperTieBreak ? p1 : (tennisPoints[p1] || "0");
+        document.getElementById('p2').innerText = isSuperTieBreak ? p2 : (tennisPoints[p2] || "0");
+        document.getElementById('j1').innerText = j1;
+        document.getElementById('j2').innerText = j2;
+        document.getElementById('s1').innerText = s1;
+        document.getElementById('s2').innerText = s2;
+    }
+
+    function reset() {
+        p1 = 0; p2 = 0; j1 = 0; j2 = 0; s1 = 0; s2 = 0;
+        document.getElementById('status').innerText = "Set 1";
+        updateDisplay();
+    }
+</script>
+
+</body>
+</html>
