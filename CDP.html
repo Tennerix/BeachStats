@@ -491,12 +491,14 @@ let matchOver=false;
 
 const TP=["0","15","30","40"];
 
-// Player names from localStorage
-let players={j1:"Joueur 1",j2:"Joueur 2",j3:"Joueur 3",j4:"Joueur 4"};
-try{
-  const stored=localStorage.getItem('bt_players');
-  if(stored) players=JSON.parse(stored);
-}catch(e){}
+// Player names from URL params (?j1=Alice&j2=Bob&j3=Charlie&j4=David)
+const _p=new URLSearchParams(window.location.search);
+let players={
+  j1:_p.get('j1')||'Joueur 1',
+  j2:_p.get('j2')||'Joueur 2',
+  j3:_p.get('j3')||'Joueur 3',
+  j4:_p.get('j4')||'Joueur 4'
+};
 
 const nameA = players.j1 + " / " + players.j2;
 const nameB = players.j3 + " / " + players.j4;
