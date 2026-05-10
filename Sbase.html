@@ -1,108 +1,163 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Score Tennis - 4 Joueurs</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
-        .scoreboard {
-            background: #333; color: #fff; padding: 20px;
-            border-radius: 10px; display: inline-block;
-            margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .score-row {
-            font-size: 20px;
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .points { font-weight: bold; color: #00ff00; font-size: 28px; min-width: 50px; }
-        button {
-            padding: 8px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 2px;
-            border-radius: 5px;
-            border: none;
-        }
-        .btn-win { background-color: #007BFF; color: white; }
-        .btn-fault { background-color: #dc3545; color: white; }
-        .btn-reset { background-color: #ff4444; color: white; margin-top: 20px; }
-    </style>
+<meta charset="UTF-8">
+<title>Beach Tennis - 2 vs 2</title>
+
+<style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+
+    .scoreboard {
+        background: #333;
+        color: white;
+        padding: 20px;
+        display: inline-block;
+        border-radius: 10px;
+        margin-top: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .team {
+        margin: 15px 0;
+        padding: 10px;
+        border-bottom: 1px solid #555;
+    }
+
+    .points {
+        font-size: 32px;
+        color: #00ff00;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+
+    button {
+        margin: 3px;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .win { background: #007BFF; color: white; }
+    .fault { background: #dc3545; color: white; }
+
+    .team-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-size: 18px;
+    }
+</style>
 </head>
+
 <body>
 
 <div class="scoreboard">
-    <h2>Scoreboard - 4 Joueurs</h2>
+    <h2>Beach Tennis - 2 vs 2</h2>
 
-    <div class="score-row">
-        Joueur 1 : <span id="p1" class="points">0</span>
-        <button class="btn-win" onclick="winPoint(1)">+ Point gagnant</button>
-        <button class="btn-fault" onclick="fault(1)">Faute directe</button>
+    <div>
+        Set: <span id="s1">0</span> - <span id="s2">0</span>
     </div>
 
-    <div class="score-row">
-        Joueur 2 : <span id="p2" class="points">0</span>
-        <button class="btn-win" onclick="winPoint(2)">+ Point gagnant</button>
-        <button class="btn-fault" onclick="fault(2)">Faute directe</button>
+    <hr>
+
+    <!-- ÉQUIPE 1 -->
+    <div class="team">
+        <div class="team-title">Équipe 1 (J1 + J2)</div>
+
+        Joueur 1
+        <button class="win" onclick="winPoint(1)">Point gagnant</button>
+        <button class="fault" onclick="fault(1)">Faute directe</button>
+
+        <br>
+
+        Joueur 2
+        <button class="win" onclick="winPoint(2)">Point gagnant</button>
+        <button class="fault" onclick="fault(2)">Faute directe</button>
+
+        <div>Points équipe : <span id="p1" class="points">0</span></div>
     </div>
 
-    <div class="score-row">
-        Joueur 3 : <span id="p3" class="points">0</span>
-        <button class="btn-win" onclick="winPoint(3)">+ Point gagnant</button>
-        <button class="btn-fault" onclick="fault(3)">Faute directe</button>
+    <!-- ÉQUIPE 2 -->
+    <div class="team">
+        <div class="team-title">Équipe 2 (J3 + J4)</div>
+
+        Joueur 3
+        <button class="win" onclick="winPoint(3)">Point gagnant</button>
+        <button class="fault" onclick="fault(3)">Faute directe</button>
+
+        <br>
+
+        Joueur 4
+        <button class="win" onclick="winPoint(4)">Point gagnant</button>
+        <button class="fault" onclick="fault(4)">Faute directe</button>
+
+        <div>Points équipe : <span id="p2" class="points">0</span></div>
     </div>
 
-    <div class="score-row">
-        Joueur 4 : <span id="p4" class="points">0</span>
-        <button class="btn-win" onclick="winPoint(4)">+ Point gagnant</button>
-        <button class="btn-fault" onclick="fault(4)">Faute directe</button>
-    </div>
-
-    <button class="btn-reset" onclick="reset()">Remise à zéro</button>
+    <br>
+    <button onclick="reset()" style="background:red;color:white;">Reset</button>
 </div>
 
 <script>
-    let points = [0, 0, 0, 0]; // 4 joueurs
-    let history = [];
+let team1 = 0;
+let team2 = 0;
+let sets1 = 0;
+let sets2 = 0;
 
-    function saveState() {
-        history.push([...points]);
+const format = ["0","15","30","40"];
+
+function winPoint(player) {
+    if (player === 1 || player === 2) {
+        team1++;
+    } else {
+        team2++;
+    }
+    checkGame();
+    update();
+}
+
+function fault(player) {
+    // faute = point pour équipe adverse
+    if (player === 1 || player === 2) {
+        team2++;
+    } else {
+        team1++;
+    }
+    checkGame();
+    update();
+}
+
+function checkGame() {
+
+    // jeu classique beach tennis (40 = 4 points simplifiés)
+    if (team1 >= 4 && team1 - team2 >= 2) {
+        sets1++;
+        team1 = 0;
+        team2 = 0;
     }
 
-    function winPoint(player) {
-        saveState();
-        points[player - 1] += 1;
-        updateDisplay();
+    if (team2 >= 4 && team2 - team1 >= 2) {
+        sets2++;
+        team1 = 0;
+        team2 = 0;
     }
+}
 
-    function fault(player) {
-        saveState();
+function update() {
+    document.getElementById("p1").innerText = format[team1] || "40+";
+    document.getElementById("p2").innerText = format[team2] || "40+";
 
-        // la faute donne un point aux autres joueurs
-        for (let i = 0; i < 4; i++) {
-            if (i !== player - 1) points[i] += 1;
-        }
+    document.getElementById("s1").innerText = sets1;
+    document.getElementById("s2").innerText = sets2;
+}
 
-        updateDisplay();
-    }
-
-    function updateDisplay() {
-        document.getElementById('p1').innerText = points[0];
-        document.getElementById('p2').innerText = points[1];
-        document.getElementById('p3').innerText = points[2];
-        document.getElementById('p4').innerText = points[3];
-    }
-
-    function reset() {
-        if (confirm("Remise à zéro ?")) {
-            points = [0, 0, 0, 0];
-            history = [];
-            updateDisplay();
-        }
-    }
+function reset() {
+    team1 = 0;
+    team2 = 0;
+    sets1 = 0;
+    sets2 = 0;
+    update();
+}
 </script>
 
 </body>
