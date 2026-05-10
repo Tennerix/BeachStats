@@ -2,163 +2,760 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Beach Tennis - 2 vs 2</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach Tennis – Stats de Base</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-    body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-    .scoreboard {
-        background: #333;
-        color: white;
-        padding: 20px;
-        display: inline-block;
-        border-radius: 10px;
-        margin-top: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
+:root{
+  --bg:#080f1e;
+  --surface:#0d1829;
+  --card:#111e35;
+  --border:#1e3560;
+  --gold:#f5c518;
+  --blue:#3b82f6;
+  --orange:#f97316;
+  --green:#22c55e;
+  --red:#ef4444;
+  --purple:#a855f7;
+  --text:#e2eaf8;
+  --muted:#4a6494;
+}
 
-    .team {
-        margin: 15px 0;
-        padding: 10px;
-        border-bottom: 1px solid #555;
-    }
+body{
+  font-family:Barlow,sans-serif;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 1rem 4rem;
+}
 
-    .points {
-        font-size: 32px;
-        color: #00ff00;
-        font-weight: bold;
-        margin-left: 10px;
-    }
+/* ── HEADER ── */
+.header{
+  width:100%;max-width:580px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 0 1rem;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.2rem;
+}
+.header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+.header-logo span{color:var(--text);opacity:.5}
+.header-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .18s}
+.header-back:hover{border-color:var(--gold);color:var(--gold)}
 
-    button {
-        margin: 3px;
-        padding: 6px 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+/* ── STATUS BAR ── */
+.status-bar{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:.75rem 1.4rem;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:1rem;
+}
+.status-pill{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:4px 14px;border-radius:20px}
+.status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 
-    .win { background: #007BFF; color: white; }
-    .fault { background: #dc3545; color: white; }
+/* ── SCOREBOARD ── */
+.scoreboard{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,.5);margin-bottom:1rem;
+}
+.score-header{
+  display:grid;grid-template-columns:1fr 60px 60px 80px;
+  padding:.6rem 1.4rem;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.score-header span{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center}
+.score-header span:first-child{text-align:left}
+.team-row{
+  display:grid;grid-template-columns:1fr 60px 60px 80px;align-items:center;
+  padding:1rem 1.4rem;border-bottom:1px solid var(--border);transition:background .15s;
+}
+.team-row:last-child{border-bottom:none}
+.team-info{display:flex;flex-direction:column;gap:3px}
+.team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.team-players{font-size:11px;color:var(--muted);font-weight:500}
+.team-row.team-a .team-name{color:var(--blue)}
+.team-row.team-b .team-name{color:var(--orange)}
+.cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
+.cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
+.cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
+.cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
 
-    .team-title {
-        font-weight: bold;
-        margin-bottom: 5px;
-        font-size: 18px;
-    }
+/* ── SHOT MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(8,15,30,.88);z-index:50;
+  align-items:flex-end;justify-content:center;
+  padding:1rem;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;
+  width:100%;max-width:520px;padding:1.5rem 1.4rem 2rem;
+  box-shadow:0 -8px 48px rgba(0,0,0,.6);
+}
+.modal-title{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;text-align:center;
+}
+.modal-team{
+  font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;letter-spacing:1px;
+  text-transform:uppercase;text-align:center;margin-bottom:1.2rem;
+}
+.modal-team.a{color:var(--blue)}
+.modal-team.b{color:var(--orange)}
+
+.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem}
+.shot-btn{
+  padding:1.1rem .8rem;border-radius:14px;border:2px solid;
+  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1;
+}
+.shot-btn .shot-icon{font-size:28px}
+.shot-btn .shot-label{font-size:11px;letter-spacing:2px;opacity:.75}
+
+.shot-btn.winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
+.shot-btn.winner:hover{background:rgba(34,197,94,.22);transform:scale(1.03)}
+.shot-btn.winner:active{transform:scale(.97)}
+
+.shot-btn.faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+.shot-btn.faute:hover{background:rgba(239,68,68,.22);transform:scale(1.03)}
+.shot-btn.faute:active{transform:scale(.97)}
+
+.modal-cancel{
+  width:100%;padding:.7rem;border-radius:10px;border:1px solid var(--border);
+  background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+}
+.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── STATS CARD ── */
+.stats-card{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:1.2rem 1.4rem;margin-bottom:1rem;
+}
+.stats-title{
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:1rem;display:flex;align-items:center;gap:8px;
+}
+.stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.7rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-val{
+  font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;
+}
+.stat-val.a{color:var(--blue);text-align:right}
+.stat-val.b{color:var(--orange);text-align:left}
+.stat-name{
+  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;
+  white-space:nowrap;
+}
+.stat-bar-wrap{grid-column:1/-1;display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--surface)}
+.stat-bar-a{background:var(--blue);transition:width .4s}
+.stat-bar-b{background:var(--orange);transition:width .4s}
+
+/* ── ACTIONS ── */
+.controls{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.btn-point{
+  padding:1rem;border-radius:14px;border:2px solid;
+  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1;
+}
+.btn-point small{font-size:10px;font-weight:600;letter-spacing:2px;opacity:.7}
+.btn-point.a{background:rgba(59,130,246,.12);border-color:var(--blue);color:var(--blue)}
+.btn-point.a:hover{background:rgba(59,130,246,.25);transform:scale(1.02)}
+.btn-point.b{background:rgba(249,115,22,.12);border-color:var(--orange);color:var(--orange)}
+.btn-point.b:hover{background:rgba(249,115,22,.25);transform:scale(1.02)}
+
+.actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
+.btn-action{
+  padding:.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-action:hover{background:#162040;border-color:var(--muted)}
+.btn-action.undo{border-color:#f59e0b;color:#f59e0b}
+.btn-action.undo:hover{background:rgba(245,158,11,.12)}
+.btn-action.reset{border-color:var(--red);color:var(--red)}
+.btn-action.reset:hover{background:rgba(239,68,68,.12)}
+.btn-action.pdf{border-color:var(--green);color:var(--green)}
+.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
+
+/* ── LOG ── */
+.log-wrap{width:100%;max-width:580px}
+.log-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:4px}
+.log-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.log-entry{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem 1rem;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;
+}
+.log-entry .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-entry.dot-a .dot{background:var(--blue)}
+.log-entry.dot-b .dot{background:var(--orange)}
+.log-entry.dot-w .dot{background:var(--green)}
+.log-entry.dot-f .dot{background:var(--red)}
+.log-entry.event .dot{background:var(--gold)}
+.log-tag{
+  margin-left:auto;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;
+}
+.log-tag.winner{background:rgba(34,197,94,.15);color:var(--green)}
+.log-tag.faute{background:rgba(239,68,68,.15);color:var(--red)}
+
+/* ── WINNER OVERLAY ── */
+.winner-overlay{
+  display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;
+  align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;
+}
+.winner-overlay.show{display:flex}
+.winner-box{
+  background:var(--card);border:2px solid var(--gold);border-radius:24px;
+  padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;
+  box-shadow:0 0 80px rgba(245,197,24,.2);
+}
+.winner-trophy{font-size:60px;margin-bottom:1rem}
+.winner-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.5rem}
+.winner-name{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:.4rem}
+.winner-score{font-family:Barlow Condensed,sans-serif;font-size:16px;color:var(--muted);letter-spacing:1px;margin-bottom:1.2rem}
+.winner-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.4rem}
+.ws-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem}
+.ws-val{font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900}
+.ws-val.a{color:var(--blue)}
+.ws-val.b{color:var(--orange)}
+.ws-lbl{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.winner-btn{padding:.7rem 1.4rem;border-radius:10px;border:1.5px solid;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
+.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
+.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
+.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
+
+@media(max-width:440px){
+  .score-header,.team-row{grid-template-columns:1fr 48px 48px 68px;padding:.8rem 1rem}
+  .cell.point-cell{font-size:28px}
+  .shot-btn{font-size:14px;padding:.9rem .6rem}
+  .shot-btn .shot-icon{font-size:24px}
+  .actions{grid-template-columns:1fr 1fr 1fr}
+}
 </style>
 </head>
-
 <body>
 
+<div class="header">
+  <div class="header-logo">Beach<span>/</span>Stats</div>
+  <button class="header-back" onclick="window.location.href='index.html'">← Accueil</button>
+</div>
+
+<div class="status-bar">
+  <div class="status-pill" id="setPill">Set 1</div>
+  <div class="status-label" id="statusLabel">En cours</div>
+</div>
+
+<!-- Scoreboard -->
 <div class="scoreboard">
-    <h2>Beach Tennis - 2 vs 2</h2>
-
-    <div>
-        Set: <span id="s1">0</span> - <span id="s2">0</span>
+  <div class="score-header">
+    <span>Équipe</span>
+    <span>Sets</span>
+    <span>Jeux</span>
+    <span>Points</span>
+  </div>
+  <div class="team-row team-a" id="rowA">
+    <div class="team-info">
+      <div class="team-name" id="nameA">Équipe A</div>
+      <div class="team-players" id="playersA">—</div>
     </div>
-
-    <hr>
-
-    <!-- ÉQUIPE 1 -->
-    <div class="team">
-        <div class="team-title">Équipe 1 (J1 + J2)</div>
-
-        Joueur 1
-        <button class="win" onclick="winPoint(1)">Point gagnant</button>
-        <button class="fault" onclick="fault(1)">Faute directe</button>
-
-        <br>
-
-        Joueur 2
-        <button class="win" onclick="winPoint(2)">Point gagnant</button>
-        <button class="fault" onclick="fault(2)">Faute directe</button>
-
-        <div>Points équipe : <span id="p1" class="points">0</span></div>
+    <div class="cell sets-cell"><span id="s1d">0</span></div>
+    <div class="cell" id="gamesA">0</div>
+    <div class="cell point-cell" id="ptA">0</div>
+  </div>
+  <div class="team-row team-b" id="rowB">
+    <div class="team-info">
+      <div class="team-name" id="nameB">Équipe B</div>
+      <div class="team-players" id="playersB">—</div>
     </div>
+    <div class="cell sets-cell"><span id="s2d">0</span></div>
+    <div class="cell" id="gamesB">0</div>
+    <div class="cell point-cell" id="ptB">0</div>
+  </div>
+</div>
 
-    <!-- ÉQUIPE 2 -->
-    <div class="team">
-        <div class="team-title">Équipe 2 (J3 + J4)</div>
+<!-- Stats live -->
+<div class="stats-card">
+  <div class="stats-title">Stats en direct</div>
 
-        Joueur 3
-        <button class="win" onclick="winPoint(3)">Point gagnant</button>
-        <button class="fault" onclick="fault(3)">Faute directe</button>
+  <div class="stat-row">
+    <div class="stat-val a" id="st-wA">0</div>
+    <div class="stat-name">Coups gagnants</div>
+    <div class="stat-val b" id="st-wB">0</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-wA" style="width:50%"></div><div class="stat-bar-b" id="bar-wB" style="width:50%"></div></div>
+  </div>
 
-        <br>
+  <div class="stat-row" style="margin-top:.6rem">
+    <div class="stat-val a" id="st-fA">0</div>
+    <div class="stat-name">Fautes directes</div>
+    <div class="stat-val b" id="st-fB">0</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-fA" style="width:50%"></div><div class="stat-bar-b" id="bar-fB" style="width:50%"></div></div>
+  </div>
 
-        Joueur 4
-        <button class="win" onclick="winPoint(4)">Point gagnant</button>
-        <button class="fault" onclick="fault(4)">Faute directe</button>
+  <div class="stat-row" style="margin-top:.6rem">
+    <div class="stat-val a" id="st-pA">0</div>
+    <div class="stat-name">Points gagnés</div>
+    <div class="stat-val b" id="st-pB">0</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-pA" style="width:50%"></div><div class="stat-bar-b" id="bar-pB" style="width:50%"></div></div>
+  </div>
+</div>
 
-        <div>Points équipe : <span id="p2" class="points">0</span></div>
+<!-- Point buttons -->
+<div class="controls">
+  <button class="btn-point a" onclick="openModal(1)">
+    <small>Point pour</small>
+    <span id="btnA">Équipe A</span>
+  </button>
+  <button class="btn-point b" onclick="openModal(2)">
+    <small>Point pour</small>
+    <span id="btnB">Équipe B</span>
+  </button>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+</div>
+
+<!-- Log -->
+<div class="log-wrap">
+  <div class="log-title">Journal du match</div>
+  <div class="log-list" id="logList"></div>
+</div>
+
+<!-- Shot qualifier modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Qualifier le point remporté par</div>
+    <div class="modal-team" id="modalTeamName">—</div>
+    <div class="shot-grid">
+      <button class="shot-btn winner" onclick="confirmPoint('winner')">
+        <span class="shot-icon">🎯</span>
+        <span>Coup gagnant</span>
+        <span class="shot-label">Winner</span>
+      </button>
+      <button class="shot-btn faute" onclick="confirmPoint('faute')">
+        <span class="shot-icon">💥</span>
+        <span>Faute directe</span>
+        <span class="shot-label">Unforced error</span>
+      </button>
     </div>
+    <button class="modal-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
 
-    <br>
-    <button onclick="reset()" style="background:red;color:white;">Reset</button>
+<!-- Winner overlay -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Vainqueur du match</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div class="winner-score" id="winnerScore">—</div>
+    <div class="winner-stats">
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
+        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
+      </div>
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
+        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
+      </div>
+    </div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+    </div>
+  </div>
 </div>
 
 <script>
-let team1 = 0;
-let team2 = 0;
-let sets1 = 0;
-let sets2 = 0;
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+const _p = new URLSearchParams(window.location.search);
+const players = {
+  j1: _p.get('j1') || 'Joueur 1',
+  j2: _p.get('j2') || 'Joueur 2',
+  j3: _p.get('j3') || 'Joueur 3',
+  j4: _p.get('j4') || 'Joueur 4'
+};
+const nameA = players.j1 + ' / ' + players.j2;
+const nameB = players.j3 + ' / ' + players.j4;
 
-const format = ["0","15","30","40"];
+function initNames() {
+  document.getElementById('playersA').textContent = nameA;
+  document.getElementById('playersB').textContent = nameB;
+  document.getElementById('btnA').textContent = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  document.getElementById('btnB').textContent = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+}
 
-function winPoint(player) {
-    if (player === 1 || player === 2) {
-        team1++;
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
+let pendingPlayer=null; // which team scored, waiting for shot type
+
+// Stats
+let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
+
+let history = [];
+let matchLog = [];
+
+const TP = ['0','15','30','40'];
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(player) {
+  if (matchOver) return;
+  pendingPlayer = player;
+  const el = document.getElementById('modalTeamName');
+  el.textContent = player === 1 ? nameA : nameB;
+  el.className = 'modal-team ' + (player === 1 ? 'a' : 'b');
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  pendingPlayer = null;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function confirmPoint(type) {
+  document.getElementById('modalOverlay').classList.remove('show');
+  if (pendingPlayer === null) return;
+  scorePoint(pendingPlayer, type);
+  pendingPlayer = null;
+}
+
+// ── SAVE STATE ────────────────────────────────────────────────────────────────
+function saveState() {
+  history.push({
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,
+    stats: {...stats},
+    pill: document.getElementById('setPill').innerText,
+    status: document.getElementById('statusLabel').innerText
+  });
+}
+
+// ── SCORE LOGIC ───────────────────────────────────────────────────────────────
+function scorePoint(player, type) {
+  saveState();
+
+  // Record stats
+  if (player === 1) {
+    stats.pA++;
+    if (type === 'winner') stats.wA++; else stats.fA++;
+  } else {
+    stats.pB++;
+    if (type === 'winner') stats.wB++; else stats.fB++;
+  }
+
+  const teamName = player === 1 ? nameA : nameB;
+  const typeLabel = type === 'winner' ? 'winner' : 'faute';
+  logPoint(teamName, type);
+
+  if (inSuperTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
+      logEvent(teamName, 'remporte le Super Tie-Break et le match !');
+      winMatch(player); return;
+    }
+    updateDisplay(); return;
+  }
+
+  if (inTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
+      logEvent(teamName, 'remporte le Tie-Break !');
+      winGame(player);
+    }
+    updateDisplay(); return;
+  }
+
+  // Normal game (No-Ad)
+  if (player === 1) p1++; else p2++;
+  if (p1 > 3 || p2 > 3) {
+    if (p1 > p2) winGame(1); else winGame(2);
+    return;
+  }
+  updateDisplay();
+}
+
+function winGame(player) {
+  const wasTiebreak = inTiebreak;
+  p1=0; p2=0; inTiebreak=false;
+  if (player === 1) g1++; else g2++;
+  logEvent(player===1 ? nameA : nameB, 'remporte le jeu → ' + g1 + '-' + g2);
+
+  if (wasTiebreak) { winSet(player); return; }
+
+  const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
+  if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
+
+  if (g1 === 6 && g2 === 6) {
+    if (s1 === 1 && s2 === 1) {
+      inSuperTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Super Tie-Break';
+      document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+      logEvent('', '⚡ Super Tie-Break (3e set) !');
     } else {
-        team2++;
+      inTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Tie-Break';
+      document.getElementById('statusLabel').textContent = "7 points, 2 d'écart";
+      logEvent('', '🔀 Tie-Break !');
     }
-    checkGame();
-    update();
+  }
+  updateDisplay();
 }
 
-function fault(player) {
-    // faute = point pour équipe adverse
-    if (player === 1 || player === 2) {
-        team2++;
-    } else {
-        team1++;
-    }
-    checkGame();
-    update();
+function winSet(player) {
+  p1=0; p2=0; g1=0; g2=0; inTiebreak=false; inSuperTiebreak=false;
+  if (player === 1) s1++; else s2++;
+  logEvent(player===1 ? nameA : nameB, 'remporte le set ' + s1 + '-' + s2);
+  if (s1 === 2 || s2 === 2) { winMatch(player); return; }
+  document.getElementById('setPill').textContent = 'Set ' + (s1+s2+1);
+  document.getElementById('statusLabel').textContent = 'En cours';
+  updateDisplay();
 }
 
-function checkGame() {
-
-    // jeu classique beach tennis (40 = 4 points simplifiés)
-    if (team1 >= 4 && team1 - team2 >= 2) {
-        sets1++;
-        team1 = 0;
-        team2 = 0;
-    }
-
-    if (team2 >= 4 && team2 - team1 >= 2) {
-        sets2++;
-        team1 = 0;
-        team2 = 0;
-    }
+function winMatch(player) {
+  matchOver = true;
+  const winner = player === 1 ? nameA : nameB;
+  document.getElementById('winnerName').textContent = winner;
+  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2;
+  document.getElementById('ws-wA').textContent = stats.wA;
+  document.getElementById('ws-wB').textContent = stats.wB;
+  document.getElementById('ws-fA').textContent = stats.fA;
+  document.getElementById('ws-fB').textContent = stats.fB;
+  document.getElementById('winnerOverlay').classList.add('show');
+  logEvent(winner, '🏆 VAINQUEUR DU MATCH !');
+  updateDisplay();
 }
 
-function update() {
-    document.getElementById("p1").innerText = format[team1] || "40+";
-    document.getElementById("p2").innerText = format[team2] || "40+";
-
-    document.getElementById("s1").innerText = sets1;
-    document.getElementById("s2").innerText = sets2;
+// ── UNDO ──────────────────────────────────────────────────────────────────────
+function undo() {
+  if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
+  if (history.length === 0) { alert('Rien à annuler !'); return; }
+  const last = history.pop();
+  p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
+  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  stats = {...last.stats};
+  document.getElementById('setPill').innerText = last.pill;
+  document.getElementById('statusLabel').innerText = last.status;
+  // Remove last log entry
+  const list = document.getElementById('logList');
+  if (list.firstChild) list.removeChild(list.firstChild);
+  matchLog.shift();
+  updateDisplay();
 }
 
-function reset() {
-    team1 = 0;
-    team2 = 0;
-    sets1 = 0;
-    sets2 = 0;
-    update();
+// ── DISPLAY ───────────────────────────────────────────────────────────────────
+function updateDisplay() {
+  let ptA, ptB;
+  if (inSuperTiebreak || inTiebreak) {
+    ptA=p1; ptB=p2;
+  } else {
+    ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
+    if (p1===3 && p2===3) { ptA='AD'; ptB='AD'; }
+  }
+  document.getElementById('ptA').textContent = ptA;
+  document.getElementById('ptB').textContent = ptB;
+  document.getElementById('gamesA').textContent = g1;
+  document.getElementById('gamesB').textContent = g2;
+  document.getElementById('s1d').textContent = s1;
+  document.getElementById('s2d').textContent = s2;
+  document.getElementById('s1d').className = s1>s2?'won':'';
+  document.getElementById('s2d').className = s2>s1?'won':'';
+
+  // Update live stats
+  document.getElementById('st-wA').textContent = stats.wA;
+  document.getElementById('st-wB').textContent = stats.wB;
+  document.getElementById('st-fA').textContent = stats.fA;
+  document.getElementById('st-fB').textContent = stats.fB;
+  document.getElementById('st-pA').textContent = stats.pA;
+  document.getElementById('st-pB').textContent = stats.pB;
+  updateBar('bar-wA','bar-wB', stats.wA, stats.wB);
+  updateBar('bar-fA','bar-fB', stats.fA, stats.fB);
+  updateBar('bar-pA','bar-pB', stats.pA, stats.pB);
 }
+
+function updateBar(idA, idB, vA, vB) {
+  const total = vA + vB;
+  const pct = total === 0 ? 50 : Math.round((vA/total)*100);
+  document.getElementById(idA).style.width = pct + '%';
+  document.getElementById(idB).style.width = (100-pct) + '%';
+}
+
+// ── LOG ───────────────────────────────────────────────────────────────────────
+function logPoint(team, type) {
+  const isA = team === nameA;
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const label = type === 'winner' ? '🎯 Winner' : '💥 Faute';
+  const entry = {team, type, time, msg: label};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + (isA ? 'dot-a' : 'dot-b');
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${team}</strong></span><span class="log-tag ${type}">${label}</span>`;
+  list.prepend(div);
+}
+
+function logEvent(team, msg) {
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const entry = {team, msg, time};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = 'log-entry event';
+  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+team+'</strong>':''} ${msg}</span>`;
+  list.prepend(div);
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+function resetMatch() {
+  if (!confirm('Remettre le match à zéro ?')) return;
+  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
+  inTiebreak=false;inSuperTiebreak=false;matchOver=false;
+  stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
+  history=[];matchLog=[];
+  document.getElementById('setPill').textContent='Set 1';
+  document.getElementById('statusLabel').textContent='En cours';
+  document.getElementById('logList').innerHTML='';
+  document.getElementById('winnerOverlay').classList.remove('show');
+  updateDisplay();
+  logEvent('','🎾 Match démarré — '+nameA+' vs '+nameB);
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────────
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, M=20;
+  let y=M;
+
+  doc.setFillColor(8,15,30);
+  doc.rect(0,0,W,297,'F');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(26);
+  doc.setTextColor(245,197,24);
+  doc.text('BEACH TENNIS — STATS DE BASE', W/2, y+8, {align:'center'});
+  doc.setFontSize(11);
+  doc.setTextColor(74,100,148);
+  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y+17, {align:'center'});
+  y+=28;
+
+  doc.setDrawColor(30,53,96);
+  doc.line(M,y,W-M,y);
+  y+=10;
+
+  // Teams
+  [{label:'ÉQUIPE A',color:[59,130,246],name:nameA,sets:s1},
+   {label:'ÉQUIPE B',color:[249,115,22],name:nameB,sets:s2}].forEach(t => {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...t.color);
+    doc.text(t.label, M, y);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(13);
+    doc.setTextColor(226,234,248);
+    doc.text(t.name, M, y+7);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(18);
+    doc.setTextColor(245,197,24);
+    doc.text('Sets : '+t.sets, W-M, y+4, {align:'right'});
+    y+=18;
+    doc.setDrawColor(30,53,96);
+    doc.line(M,y,W-M,y);
+    y+=8;
+  });
+
+  y+=4;
+  // Stats table
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(245,197,24);
+  doc.text('STATISTIQUES', M, y);
+  y+=8;
+
+  const rows = [
+    ['Coups gagnants (Winners)', stats.wA, stats.wB],
+    ['Fautes directes', stats.fA, stats.fB],
+    ['Points gagnés', stats.pA, stats.pB],
+  ];
+
+  // header
+  doc.setFontSize(10);
+  doc.setTextColor(74,100,148);
+  doc.text('Statistique', M, y);
+  doc.text('Équipe A', W/2-10, y, {align:'center'});
+  doc.text('Équipe B', W-M, y, {align:'right'});
+  y+=5;
+  doc.setDrawColor(30,53,96);
+  doc.line(M,y,W-M,y);
+  y+=7;
+
+  rows.forEach(r => {
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    doc.setTextColor(226,234,248);
+    doc.text(r[0], M, y);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(59,130,246);
+    doc.text(String(r[1]), W/2-10, y, {align:'center'});
+    doc.setTextColor(249,115,22);
+    doc.text(String(r[2]), W-M, y, {align:'right'});
+    y+=8;
+  });
+
+  y+=4;
+  doc.setDrawColor(30,53,96);
+  doc.line(M,y,W-M,y);
+  y+=10;
+
+  // Log
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.setTextColor(245,197,24);
+  doc.text('JOURNAL DU MATCH', M, y);
+  y+=8;
+
+  [...matchLog].reverse().slice(0,40).forEach(entry => {
+    if (y > 270) { doc.addPage(); y=M; }
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(74,100,148);
+    doc.text(entry.time, M, y);
+    doc.setTextColor(180,200,230);
+    const txt = (entry.team ? entry.team+' — ':'')+entry.msg;
+    doc.text(txt, M+16, y);
+    y+=6;
+  });
+
+  doc.save('BeachStats_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+initNames();
+updateDisplay();
+logEvent('', '🎾 Match démarré — '+nameA+' vs '+nameB);
 </script>
-
 </body>
 </html>
