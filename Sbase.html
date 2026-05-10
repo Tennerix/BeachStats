@@ -85,55 +85,6 @@ body{
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
 .cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
 
-/* ── SHOT MODAL ── */
-.modal-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(8,15,30,.88);z-index:50;
-  align-items:flex-end;justify-content:center;
-  padding:1rem;
-}
-.modal-overlay.show{display:flex}
-.modal{
-  background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;
-  width:100%;max-width:520px;padding:1.5rem 1.4rem 2rem;
-  box-shadow:0 -8px 48px rgba(0,0,0,.6);
-}
-.modal-title{
-  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;text-align:center;
-}
-.modal-team{
-  font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;letter-spacing:1px;
-  text-transform:uppercase;text-align:center;margin-bottom:1.2rem;
-}
-.modal-team.a{color:var(--blue)}
-.modal-team.b{color:var(--orange)}
-
-.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem}
-.shot-btn{
-  padding:1.1rem .8rem;border-radius:14px;border:2px solid;
-  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;
-  text-transform:uppercase;cursor:pointer;transition:all .15s;
-  display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1;
-}
-.shot-btn .shot-icon{font-size:28px}
-.shot-btn .shot-label{font-size:11px;letter-spacing:2px;opacity:.75}
-
-.shot-btn.winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
-.shot-btn.winner:hover{background:rgba(34,197,94,.22);transform:scale(1.03)}
-.shot-btn.winner:active{transform:scale(.97)}
-
-.shot-btn.faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
-.shot-btn.faute:hover{background:rgba(239,68,68,.22);transform:scale(1.03)}
-.shot-btn.faute:active{transform:scale(.97)}
-
-.modal-cancel{
-  width:100%;padding:.7rem;border-radius:10px;border:1px solid var(--border);
-  background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;
-  font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
-}
-.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
-
 /* ── STATS CARD ── */
 .stats-card{
   width:100%;max-width:580px;
@@ -164,18 +115,31 @@ body{
 .stat-bar-b{background:var(--orange);transition:width .4s}
 
 /* ── ACTIONS ── */
-.controls{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
-.btn-point{
-  padding:1rem;border-radius:14px;border:2px solid;
-  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1.5px;
-  text-transform:uppercase;cursor:pointer;transition:all .15s;
-  display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1;
+.team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
+.team-ctrl-label{
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
 }
-.btn-point small{font-size:10px;font-weight:600;letter-spacing:2px;opacity:.7}
-.btn-point.a{background:rgba(59,130,246,.12);border-color:var(--blue);color:var(--blue)}
-.btn-point.a:hover{background:rgba(59,130,246,.25);transform:scale(1.02)}
-.btn-point.b{background:rgba(249,115,22,.12);border-color:var(--orange);color:var(--orange)}
-.btn-point.b:hover{background:rgba(249,115,22,.25);transform:scale(1.02)}
+.team-ctrl-label.a{color:var(--blue)}
+.team-ctrl-label.b{color:var(--orange)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-winner,.btn-faute{
+  padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
+  transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;
+  font-family:Barlow Condensed,sans-serif;
+}
+.btn-winner:active,.btn-faute:active{transform:scale(.96)}
+.btn-icon{font-size:22px}
+.btn-main{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.btn-sub{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
+.btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.a:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.b:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.a:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+.btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.b:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
 
 .actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
 .btn-action{
@@ -289,6 +253,45 @@ body{
   </div>
 </div>
 
+<!-- Point buttons -->
+<div class="team-controls">
+  <div class="team-ctrl-label a" id="lblA">Équipe A</div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="scorePoint(1,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main" id="btnWA">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="scorePoint(2,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls">
+  <div class="team-ctrl-label b" id="lblB">Équipe B</div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="scorePoint(2,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main" id="btnWB">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="scorePoint(1,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+</div>
+
 <!-- Stats live -->
 <div class="stats-card">
   <div class="stats-title">Stats en direct</div>
@@ -321,49 +324,12 @@ body{
   </div>
 </div>
 
-<!-- Point buttons -->
-<div class="controls">
-  <button class="btn-point a" onclick="openModal(1)">
-    <small>Point pour</small>
-    <span id="btnA">Équipe A</span>
-  </button>
-  <button class="btn-point b" onclick="openModal(2)">
-    <small>Point pour</small>
-    <span id="btnB">Équipe B</span>
-  </button>
-</div>
 
-<div class="actions">
-  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
-  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
-  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
-</div>
 
 <!-- Log -->
 <div class="log-wrap">
   <div class="log-title">Journal du match</div>
   <div class="log-list" id="logList"></div>
-</div>
-
-<!-- Shot qualifier modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-title">Qualifier le point remporté par</div>
-    <div class="modal-team" id="modalTeamName">—</div>
-    <div class="shot-grid">
-      <button class="shot-btn winner" onclick="confirmPoint('winner')">
-        <span class="shot-icon">🎯</span>
-        <span>Coup gagnant</span>
-        <span class="shot-label">Winner</span>
-      </button>
-      <button class="shot-btn faute" onclick="confirmPoint('faute')">
-        <span class="shot-icon">💥</span>
-        <span>Faute directe</span>
-        <span class="shot-label">Unforced error</span>
-      </button>
-    </div>
-    <button class="modal-cancel" onclick="closeModal()">Annuler</button>
-  </div>
 </div>
 
 <!-- Winner overlay -->
@@ -405,15 +371,18 @@ const nameB = players.j3 + ' / ' + players.j4;
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
-  document.getElementById('btnA').textContent = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
-  document.getElementById('btnB').textContent = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
+  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
+  // update "Point à X" sub-labels
+  document.querySelectorAll('.btn-faute.a .btn-sub')[0].textContent = 'Point à A';
+  document.querySelectorAll('.btn-faute.b .btn-sub')[0].textContent = 'Point à B';
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
 let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-let pendingPlayer=null; // which team scored, waiting for shot type
-
 // Stats
 let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
 
@@ -421,28 +390,6 @@ let history = [];
 let matchLog = [];
 
 const TP = ['0','15','30','40'];
-
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-function openModal(player) {
-  if (matchOver) return;
-  pendingPlayer = player;
-  const el = document.getElementById('modalTeamName');
-  el.textContent = player === 1 ? nameA : nameB;
-  el.className = 'modal-team ' + (player === 1 ? 'a' : 'b');
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function closeModal() {
-  pendingPlayer = null;
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-function confirmPoint(type) {
-  document.getElementById('modalOverlay').classList.remove('show');
-  if (pendingPlayer === null) return;
-  scorePoint(pendingPlayer, type);
-  pendingPlayer = null;
-}
 
 // ── SAVE STATE ────────────────────────────────────────────────────────────────
 function saveState() {
@@ -456,19 +403,21 @@ function saveState() {
 
 // ── SCORE LOGIC ───────────────────────────────────────────────────────────────
 function scorePoint(player, type) {
+  if (matchOver) return;
   saveState();
 
   // Record stats
+  // player = team that WINS the point
+  // type='winner' → that team hit a winner ; type='faute' → the OTHER team made a fault
   if (player === 1) {
     stats.pA++;
-    if (type === 'winner') stats.wA++; else stats.fA++;
+    if (type === 'winner') stats.wA++; else stats.fB++; // faute committed by B
   } else {
     stats.pB++;
-    if (type === 'winner') stats.wB++; else stats.fB++;
+    if (type === 'winner') stats.wB++; else stats.fA++; // faute committed by A
   }
 
   const teamName = player === 1 ? nameA : nameB;
-  const typeLabel = type === 'winner' ? 'winner' : 'faute';
   logPoint(teamName, type);
 
   if (inSuperTiebreak) {
@@ -604,16 +553,23 @@ function updateBar(idA, idB, vA, vB) {
 }
 
 // ── LOG ───────────────────────────────────────────────────────────────────────
-function logPoint(team, type) {
-  const isA = team === nameA;
+function logPoint(winnerTeam, type) {
+  const isA = winnerTeam === nameA;
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const label = type === 'winner' ? '🎯 Winner' : '💥 Faute';
-  const entry = {team, type, time, msg: label};
+  let label, dotClass, displayTeam;
+  if (type === 'winner') {
+    label = '🎯 Point gagnant'; dotClass = isA ? 'dot-a' : 'dot-b'; displayTeam = winnerTeam;
+  } else {
+    // fault by the OTHER team
+    const faulter = isA ? nameB : nameA;
+    label = '💥 Faute directe'; dotClass = isA ? 'dot-b' : 'dot-a'; displayTeam = faulter;
+  }
+  const entry = {team: displayTeam, type, time, msg: label};
   matchLog.unshift(entry);
   const list = document.getElementById('logList');
   const div = document.createElement('div');
-  div.className = 'log-entry ' + (isA ? 'dot-a' : 'dot-b');
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${team}</strong></span><span class="log-tag ${type}">${label}</span>`;
+  div.className = 'log-entry ' + dotClass;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong></span><span class="log-tag ${type}">${label}</span>`;
   list.prepend(div);
 }
 
