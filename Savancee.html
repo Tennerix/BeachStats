@@ -809,8 +809,10 @@ function openShotModal(player, type, playerNum) {
   const isWinner = type === 'winner';
   const teamName = player === 1 ? nameA : nameB;
   const actionTeam = isWinner ? teamName : (player === 1 ? nameB : nameA);
-  
-  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${actionTeam}`;
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayName = playerNum ? playerNames[playerNum] : actionTeam;
+
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${displayName}`;
   
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
