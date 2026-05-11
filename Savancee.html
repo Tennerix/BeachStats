@@ -393,6 +393,38 @@ body{
   </div>
 </div>
 
+<div class="team-controls" id="joueurCtrlA" style="display:none">
+  <div class="team-ctrl-label a" id="lblJA"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlB" style="display:none">
+  <div class="team-ctrl-label b" id="lblJB"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
 <div class="actions">
   <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
   <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
@@ -482,6 +514,12 @@ function initNames() {
   const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
   document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
   document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
+  if (statsMode === 'joueur') {
+    document.getElementById('joueurCtrlA').style.display = '';
+    document.getElementById('joueurCtrlB').style.display = '';
+    document.getElementById('lblJA').textContent = players.j1 + ' / ' + players.j2;
+    document.getElementById('lblJB').textContent = players.j3 + ' / ' + players.j4;
+  }
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
