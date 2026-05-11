@@ -932,24 +932,25 @@ function renderStatsParJoueur() {
       const pct = Math.round(v / maxV * 100);
       if (v > 0) {
         rows += `<tr>
-          <td class="td-a" style="color:${p.cls}">${v}</td>
-          <td class="td-bar">
-            <div class="mini-bar"><div style="width:${pct}%;height:100%;background:${p.cls};transition:width .3s;border-radius:4px"></div></div>
-            <div class="td-lbl">${SHOT_LBL[sh]}</div>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:.28rem .5rem .28rem 0;width:1%">${SHOT_LBL[sh]}</td>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:${p.cls};text-align:right;padding:.28rem .5rem;white-space:nowrap;width:1%">${v}</td>
+          <td style="padding:.28rem 0;width:100%">
+            <div style="height:5px;border-radius:4px;background:var(--bg)">
+              <div style="width:${pct}%;height:100%;background:${p.cls};border-radius:4px;transition:width .3s"></div>
+            </div>
           </td>
-          <td style="width:36px"></td>
         </tr>`;
       }
     });
 
     if (!rows) return '';
 
-    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem;margin-bottom:.45rem;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
         <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
-        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:14px">${total}</span></span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:15px;margin-left:3px">${total}</span></span>
       </div>
-      <table class="stats-table">${rows}</table>
+      <table style="width:100%;border-collapse:collapse">${rows}</table>
     </div>`;
   };
 
