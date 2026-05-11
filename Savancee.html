@@ -924,28 +924,32 @@ function renderStatsParJoueur() {
     const tp = type === 'winner' ? 'w' : 'f';
     const key = tp + p.num + '_';
     const total = ALL_SHOT_KEYS.reduce((s, sh) => s + (stats[key + sh] || 0), 0);
-    const badges = ALL_SHOT_KEYS.map(sh => {
-      const v = stats[key + sh] || 0;
-      return `<span style="
-        display:inline-flex;align-items:center;gap:3px;
-        background:rgba(255,255,255,.04);border:1px solid var(--border);
-        border-radius:6px;padding:2px 7px;
-        font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
-        color:${v > 0 ? p.cls : 'var(--muted)'}">
-        <span style="font-size:10px;letter-spacing:1px;opacity:.7">${SHOT_LBL[sh].toUpperCase()}</span>
-        <span style="font-size:16px">${v}</span>
-      </span>`;
-    }).join('');
 
-    return `<div style="
-      background:var(--surface);border:1px solid var(--border);border-radius:10px;
-      padding:.55rem .8rem;margin-bottom:.45rem;
-    ">
+    let rows = '';
+    ALL_SHOT_KEYS.forEach(sh => {
+      const v = stats[key + sh] || 0;
+      const maxV = Math.max(1, ...[1,2,3,4].map(n => stats[tp+n+'_'+sh] || 0));
+      const pct = Math.round(v / maxV * 100);
+      if (v > 0) {
+        rows += `<tr>
+          <td class="td-a" style="color:${p.cls}">${v}</td>
+          <td class="td-bar">
+            <div class="mini-bar"><div style="width:${pct}%;height:100%;background:${p.cls};transition:width .3s;border-radius:4px"></div></div>
+            <div class="td-lbl">${SHOT_LBL[sh]}</div>
+          </td>
+          <td style="width:36px"></td>
+        </tr>`;
+      }
+    });
+
+    if (!rows) return '';
+
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem;margin-bottom:.45rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
         <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
         <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:14px">${total}</span></span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">${badges}</div>
+      <table class="stats-table">${rows}</table>
     </div>`;
   };
 
