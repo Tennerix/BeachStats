@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beach Tennis – Stats de Base</title>
+<title>Beach Tennis – Stats Individuelles</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -81,17 +81,12 @@ body{
 .team-row.team-a .team-name{color:var(--blue)}
 .team-row.team-b .team-name{color:var(--orange)}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
-.cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
-.cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
-.cell.set-score{
-  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
-  text-align:center;color:var(--muted);
-}
+.cell.set-score{font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-align:center;color:var(--muted);}
 .cell.set-score.active{color:var(--text)}
 .cell.set-score.won{color:var(--gold)}
 .cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
 
-/* ── STATS CARD ── */
+/* ── STATS CARD (MODIFIÉE) ── */
 .stats-card{
   width:100%;max-width:580px;
   background:var(--card);border:1px solid var(--border);border-radius:20px;
@@ -104,48 +99,38 @@ body{
 }
 .stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.7rem}
-.stat-row:last-child{margin-bottom:0}
-.stat-val{
-  font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;
+.stat-group-title{
+  font-family:Barlow Condensed,sans-serif; font-size:10px; color:var(--gold); 
+  text-align:center; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;
 }
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.5rem}
+.stat-val{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;}
 .stat-val.a{color:var(--blue);text-align:right}
 .stat-val.b{color:var(--orange);text-align:left}
 .stat-name{
-  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;
-  white-space:nowrap;
+  font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;
+  min-width:80px;
 }
-.stat-bar-wrap{grid-column:1/-1;display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--surface)}
-.stat-bar-a{background:var(--blue);transition:width .4s}
-.stat-bar-b{background:var(--orange);transition:width .4s}
 
 /* ── ACTIONS ── */
 .team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
-.team-ctrl-label{
-  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
-}
+.team-ctrl-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;padding-left:4px;}
 .team-ctrl-label.a{color:var(--blue)}
 .team-ctrl-label.b{color:var(--orange)}
 .ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
 .btn-winner,.btn-faute{
   padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
   transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;
   font-family:Barlow Condensed,sans-serif;
 }
-.btn-winner:active,.btn-faute:active{transform:scale(.96)}
-.btn-icon{font-size:22px}
-.btn-main{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
-.btn-sub{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
 .btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
-.btn-winner.a:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
 .btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
-.btn-winner.b:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
 .btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
-.btn-faute.a:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
 .btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
-.btn-faute.b:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+.btn-main{font-size:14px;font-weight:900;text-transform:uppercase}
+.btn-sub{font-size:9px;opacity:.7;text-transform:uppercase}
 
 .actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
 .btn-action{
@@ -153,104 +138,18 @@ body{
   font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;
   text-transform:uppercase;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
 }
-.btn-action:hover{background:#162040;border-color:var(--muted)}
-.btn-action.undo{border-color:#f59e0b;color:#f59e0b}
-.btn-action.undo:hover{background:rgba(245,158,11,.12)}
-.btn-action.reset{border-color:var(--red);color:var(--red)}
-.btn-action.reset:hover{background:rgba(239,68,68,.12)}
-.btn-action.pdf{border-color:var(--green);color:var(--green)}
-.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
 
-/* ── LOG ── */
+/* ── LOG & TIMER ── */
+.timer-wrap{width:100%;max-width:580px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:.9rem 1.4rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.timer-display{font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;letter-spacing:4px;color:var(--gold);min-width:110px;}
 .log-wrap{width:100%;max-width:580px}
-.log-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:4px}
 .log-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
-.log-entry{
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:.45rem 1rem;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;
-}
-.log-entry .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.log-entry.dot-a .dot{background:var(--blue)}
-.log-entry.dot-b .dot{background:var(--orange)}
-.log-entry.dot-w .dot{background:var(--green)}
-.log-entry.dot-f .dot{background:var(--red)}
-.log-entry.event .dot{background:var(--gold)}
-.log-tag{
-  margin-left:auto;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;
-}
-.log-tag.winner{background:rgba(34,197,94,.15);color:var(--green)}
-.log-tag.faute{background:rgba(239,68,68,.15);color:var(--red)}
+.log-entry{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.45rem 1rem;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
 
 /* ── WINNER OVERLAY ── */
-.winner-overlay{
-  display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;
-  align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;
-}
+.winner-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;}
 .winner-overlay.show{display:flex}
-.winner-box{
-  background:var(--card);border:2px solid var(--gold);border-radius:24px;
-  padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;
-  box-shadow:0 0 80px rgba(245,197,24,.2);
-}
-.winner-trophy{font-size:60px;margin-bottom:1rem}
-.winner-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.5rem}
-.winner-name{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:.4rem}
-.winner-score{font-family:Barlow Condensed,sans-serif;font-size:16px;color:var(--muted);letter-spacing:1px;margin-bottom:1.2rem}
-.winner-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.4rem}
-.ws-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem}
-.ws-val{font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900}
-.ws-val.a{color:var(--blue)}
-.ws-val.b{color:var(--orange)}
-.ws-lbl{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
-.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.winner-btn{padding:.7rem 1.4rem;border-radius:10px;border:1.5px solid;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
-.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
-.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
-.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
-.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
-
-/* ── TIMER ── */
-.timer-wrap{
-  width:100%;max-width:580px;
-  background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:.9rem 1.4rem;margin-bottom:1rem;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.timer-display{
-  font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
-  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
-  min-width:110px;
-}
-.timer-display.running{color:#fff}
-.timer-btns{display:flex;gap:8px}
-.timer-btn{
-  padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text);
-  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
-}
-.timer-btn:hover{background:#162040;border-color:var(--muted)}
-.timer-btn.start{border-color:var(--green);color:var(--green)}
-.timer-btn.start:hover{background:rgba(34,197,94,.12)}
-.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
-.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
-.timer-btn.stop{border-color:var(--red);color:var(--red)}
-.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
-
-@media(max-width:440px){
-  .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
-  .cell.set-score{
-  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
-  text-align:center;color:var(--muted);
-}
-.cell.set-score.active{color:var(--text)}
-.cell.set-score.won{color:var(--gold)}
-.cell.point-cell{font-size:28px}
-  .shot-btn{font-size:14px;padding:.9rem .6rem}
-  .shot-btn .shot-icon{font-size:24px}
-  .actions{grid-template-columns:1fr 1fr 1fr}
-}
+.winner-box{background:var(--card);border:2px solid var(--gold);border-radius:24px;padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;}
 </style>
 </head>
 <body>
@@ -268,21 +167,17 @@ body{
 <div class="timer-wrap">
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
-    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()" style="padding:.5rem 1rem; border-radius:8px; cursor:pointer; background:var(--surface); color:var(--green); border:1px solid var(--green)">▶ Start</button>
   </div>
 </div>
 
 <div class="scoreboard">
-  <div class="score-header" id="scoreHeader">
-    <span>Équipe</span>
-    <span>S1</span>
-    <span>S2</span>
-    <span>S3</span>
-    <span>Points</span>
+  <div class="score-header">
+    <span>Équipe</span><span>S1</span><span>S2</span><span>S3</span><span>Points</span>
   </div>
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
-      <div class="team-name" id="nameA">Équipe A</div>
+      <div class="team-name">Équipe A</div>
       <div class="team-players" id="playersA">—</div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
@@ -292,7 +187,7 @@ body{
   </div>
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
-      <div class="team-name" id="nameB">Équipe B</div>
+      <div class="team-name">Équipe B</div>
       <div class="team-players" id="playersB">—</div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
@@ -302,523 +197,216 @@ body{
   </div>
 </div>
 
-<div id="dynamicControls"></div>
+<div class="team-controls">
+  <div class="team-ctrl-label a" id="lblJ1">Joueur 1</div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="scorePoint(1, 1, 'winner')"><span class="btn-main">Winner</span></button>
+    <button class="btn-faute a" onclick="scorePoint(2, 1, 'faute')"><span class="btn-main">Faute</span></button>
+  </div>
+</div>
+<div class="team-controls" style="margin-bottom: 20px;">
+  <div class="team-ctrl-label a" id="lblJ2">Joueur 2</div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="scorePoint(1, 2, 'winner')"><span class="btn-main">Winner</span></button>
+    <button class="btn-faute a" onclick="scorePoint(2, 2, 'faute')"><span class="btn-main">Faute</span></button>
+  </div>
+</div>
 
-<div class="actions" style="margin-top:1rem">
-  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
-  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
-  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+<div class="team-controls">
+  <div class="team-ctrl-label b" id="lblJ3">Joueur 3</div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="scorePoint(2, 3, 'winner')"><span class="btn-main">Winner</span></button>
+    <button class="btn-faute b" onclick="scorePoint(1, 3, 'faute')"><span class="btn-main">Faute</span></button>
+  </div>
+</div>
+<div class="team-controls">
+  <div class="team-ctrl-label b" id="lblJ4">Joueur 4</div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="scorePoint(2, 4, 'winner')"><span class="btn-main">Winner</span></button>
+    <button class="btn-faute b" onclick="scorePoint(1, 4, 'faute')"><span class="btn-main">Faute</span></button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()" style="color:#f59e0b">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()" style="color:var(--green)">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()" style="color:var(--red)">⟳ Reset</button>
 </div>
 
 <div class="stats-card">
-  <div class="stats-title">Stats en direct</div>
-
+  <div class="stats-title">Stats individuelles</div>
+  
+  <div class="stat-group-title">Coups gagnants</div>
   <div class="stat-row">
-    <div class="stat-val a" id="st-wA">0</div>
-    <div class="stat-name">Coups gagnants</div>
-    <div class="stat-val b" id="st-wB">0</div>
+    <div class="stat-val a" id="st-wJ1">0</div>
+    <div class="stat-name" id="sn-J1">J1</div>
+    <div class="stat-val b" id="st-wJ3">0</div>
   </div>
   <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-wA" style="width:50%"></div><div class="stat-bar-b" id="bar-wB" style="width:50%"></div></div>
-  </div>
-
-  <div class="stat-row" style="margin-top:.6rem">
-    <div class="stat-val a" id="st-fA">0</div>
-    <div class="stat-name">Fautes directes</div>
-    <div class="stat-val b" id="st-fB">0</div>
-  </div>
-  <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-fA" style="width:50%"></div><div class="stat-bar-b" id="bar-fB" style="width:50%"></div></div>
+    <div class="stat-val a" id="st-wJ2">0</div>
+    <div class="stat-name" id="sn-J2">J2</div>
+    <div class="stat-val b" id="st-wJ4">0</div>
   </div>
 
-  <div class="stat-row" style="margin-top:.6rem">
-    <div class="stat-val a" id="st-pA">0</div>
-    <div class="stat-name">Points gagnés</div>
-    <div class="stat-val b" id="st-pB">0</div>
+  <div class="stat-group-title" style="margin-top:15px">Fautes directes</div>
+  <div class="stat-row">
+    <div class="stat-val a" id="st-fJ1" style="color:var(--red)">0</div>
+    <div class="stat-name" id="sn-fJ1">J1</div>
+    <div class="stat-val b" id="st-fJ3" style="color:var(--red)">0</div>
   </div>
   <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-pA" style="width:50%"></div><div class="stat-bar-b" id="bar-pB" style="width:50%"></div></div>
+    <div class="stat-val a" id="st-fJ2" style="color:var(--red)">0</div>
+    <div class="stat-name" id="sn-fJ2">J2</div>
+    <div class="stat-val b" id="st-fJ4" style="color:var(--red)">0</div>
   </div>
 </div>
 
-
-
 <div class="log-wrap">
-  <div class="log-title">Journal du match</div>
   <div class="log-list" id="logList"></div>
 </div>
 
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-trophy">🏆</div>
-    <div class="winner-label">Vainqueur du match</div>
     <div class="winner-name" id="winnerName">—</div>
     <div class="winner-score" id="winnerScore">—</div>
-    <div class="winner-stats">
-      <div class="ws-box">
-        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
-        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
-      </div>
-      <div class="ws-box">
-        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
-        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
-      </div>
-    </div>
-    <div class="winner-actions">
-      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
-      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
-    </div>
+    <button class="winner-btn primary" onclick="resetMatch()" style="padding:10px; border-radius:8px; cursor:pointer; background:var(--gold); color:black; font-weight:bold; border:none">Nouveau match</button>
   </div>
 </div>
 
 <script>
-// ── PLAYER NAMES & MODE ──────────────────────────────────────────────────────
 const _p = new URLSearchParams(window.location.search);
 const players = {
-  j1: _p.get('j1') || 'Joueur 1',
-  j2: _p.get('j2') || 'Joueur 2',
-  j3: _p.get('j3') || 'Joueur 3',
-  j4: _p.get('j4') || 'Joueur 4'
+  j1: _p.get('j1') || 'Joueur 1', j2: _p.get('j2') || 'Joueur 2',
+  j3: _p.get('j3') || 'Joueur 3', j4: _p.get('j4') || 'Joueur 4'
 };
-const mode = _p.get('mode') || 'equipe'; // 'joueur' ou 'equipe'
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
+
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[], history=[], matchLog=[], matchOver=false;
+let stats = { 
+    wJ1:0, wJ2:0, wJ3:0, wJ4:0, 
+    fJ1:0, fJ2:0, fJ3:0, fJ4:0,
+    pA:0, pB:0 
+};
+
+const TP = ['0','15','30','40'];
 
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
+  document.getElementById('lblJ1').textContent = players.j1;
+  document.getElementById('lblJ2').textContent = players.j2;
+  document.getElementById('lblJ3').textContent = players.j3;
+  document.getElementById('lblJ4').textContent = players.j4;
   
-  const container = document.getElementById('dynamicControls');
-  container.innerHTML = '';
-
-  if (mode === 'joueur') {
-    // Mode Stats par Joueur : 4 blocs (J1, J2, J3, J4)
-    container.innerHTML += createControlBlock('a', players.j1, 1);
-    container.innerHTML += createControlBlock('a', players.j2, 1);
-    container.innerHTML += createControlBlock('b', players.j3, 2);
-    container.innerHTML += createControlBlock('b', players.j4, 2);
-  } else {
-    // Mode Stats par Équipe : 2 blocs
-    const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
-    const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
-    container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1);
-    container.innerHTML += createControlBlock('b', 'Équipe B — ' + shortB, 2);
-  }
+  // Noms dans le bloc stats
+  document.getElementById('sn-J1').textContent = players.j1.split(' ')[0];
+  document.getElementById('sn-J2').textContent = players.j2.split(' ')[0];
+  document.getElementById('sn-J3').textContent = players.j3.split(' ')[0];
+  document.getElementById('sn-J4').textContent = players.j4.split(' ')[0];
+  document.getElementById('sn-fJ1').textContent = players.j1.split(' ')[0];
+  document.getElementById('sn-fJ2').textContent = players.j2.split(' ')[0];
+  document.getElementById('sn-fJ3').textContent = players.j3.split(' ')[0];
+  document.getElementById('sn-fJ4').textContent = players.j4.split(' ')[0];
 }
 
-function createControlBlock(teamClass, label, teamId) {
-  const opponentId = teamId === 1 ? 2 : 1;
-  const subLabel = teamId === 1 ? 'Point à A' : 'Point à B';
-  return `
-    <div class="team-controls">
-      <div class="team-ctrl-label ${teamClass}">${label}</div>
-      <div class="ctrl-row">
-        <button class="btn-winner ${teamClass}" onclick="scorePoint(${teamId},'winner', '${label}')">
-          <span class="btn-icon">🎯</span>
-          <span class="btn-main">Point gagnant</span>
-          <span class="btn-sub">Coup gagnant</span>
-        </button>
-        <button class="btn-faute ${teamClass}" onclick="scorePoint(${opponentId},'faute', '${label}')">
-          <span class="btn-icon">💥</span>
-          <span class="btn-main">Faute directe</span>
-          <span class="btn-sub">${subLabel}</span>
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
-let setHistory=[]; 
-let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
-let history = [];
-let matchLog = [];
-const TP = ['0','15','30','40'];
-
-// ── SAVE STATE ────────────────────────────────────────────────────────────────
-function saveState() {
-  history.push({
-    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,
-    stats: {...stats},
-    pill: document.getElementById('setPill').innerText,
-    status: document.getElementById('statusLabel').innerText
-  });
-}
-
-// ── SCORE LOGIC ───────────────────────────────────────────────────────────────
-function scorePoint(player, type, entityName) {
+function scorePoint(teamWin, playerIdx, type) {
   if (matchOver) return;
-  saveState();
+  history.push({p1,p2,g1,g2,s1,s2,stats:{...stats},setHistory:[...setHistory]});
 
-  if (player === 1) {
-    stats.pA++;
-    if (type === 'winner') stats.wA++; else stats.fB++; 
+  if (teamWin === 1) stats.pA++; else stats.pB++;
+
+  // Logique stats individuelles
+  if (type === 'winner') {
+      stats['wJ' + playerIdx]++;
   } else {
-    stats.pB++;
-    if (type === 'winner') stats.wB++; else stats.fA++; 
+      stats['fJ' + playerIdx]++;
   }
 
-  // On utilise l'entité qui a déclenché l'action pour le log
-  logPoint(entityName || (player === 1 ? nameA : nameB), type);
+  const pName = players['j'+playerIdx];
+  logEvent(pName, (type==='winner'?'🎯 Winner':'💥 Faute'));
 
-  if (inSuperTiebreak) {
-    if (player === 1) p1++; else p2++;
-    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
-      winMatch(player); return;
-    }
-    updateDisplay(); return;
-  }
-
-  if (inTiebreak) {
-    if (player === 1) p1++; else p2++;
-    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
-      winGame(player);
-    }
-    updateDisplay(); return;
-  }
-
-  if (player === 1) p1++; else p2++;
-  if (p1 > 3 || p2 > 3) {
-    if (p1 > p2) winGame(1); else winGame(2);
-    return;
-  }
+  // Logique Tennis No-Ad
+  if (teamWin === 1) p1++; else p2++;
+  if (p1 > 3 || p2 > 3) { winGame(teamWin); }
   updateDisplay();
 }
 
-function winGame(player) {
-  const wasTiebreak = inTiebreak;
-  p1=0; p2=0; inTiebreak=false;
-  if (player === 1) g1++; else g2++;
-  logEvent(player===1 ? nameA : nameB, 'remporte le jeu → ' + g1 + '-' + g2);
-
-  if (wasTiebreak) { winSet(player); return; }
-
-  const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
-  if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
-
-  if (g1 === 6 && g2 === 6) {
-    if (s1 === 1 && s2 === 1) {
-      inSuperTiebreak=true; p1=0; p2=0;
-      document.getElementById('setPill').textContent = 'Super Tie-Break';
-      document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-      logEvent('', '⚡ Super Tie-Break (3e set) !');
-    } else {
-      inTiebreak=true; p1=0; p2=0;
-      document.getElementById('setPill').textContent = 'Tie-Break';
-      document.getElementById('statusLabel').textContent = "7 points, 2 d'écart";
-      logEvent('', '🔀 Tie-Break !');
-    }
-  }
-  updateDisplay();
+function winGame(team) {
+  p1=0; p2=0;
+  if (team === 1) g1++; else g2++;
+  if (g1 >= 6 && Math.abs(g1-g2) >= 2) winSet(team);
+  else if (g1===6 && g2===6) winSet(team); // Simplifié pour l'exemple
 }
 
-function winSet(player){
-  setHistory.push({a:g1,b:g2});
-  p1=0; p2=0; g1=0; g2=0; 
-  inTiebreak=false; inSuperTiebreak=false;
-  if(player===1) s1++; else s2++;
-  logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
-
-  if(s1===2 || s2===2){
-    winMatch(player); 
-    return;
-  }
-
-  if(s1===1 && s2===1){
-    inSuperTiebreak = true;
-    document.getElementById('setPill').textContent = "Super Tie-Break";
-    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-  } else {
-    document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
-    document.getElementById('statusLabel').textContent = "En cours";
-  }
-  updateDisplay();
+function winSet(team) {
+  setHistory.push({a:g1, b:g2});
+  g1=0; g2=0;
+  if (team === 1) s1++; else s2++;
+  if (s1 === 2 || s2 === 2) winMatch(team);
 }
 
-function winMatch(player) {
+function winMatch(team) {
   matchOver = true;
-  if(timerRunning) timerToggle();
-  const winner = player === 1 ? nameA : nameB;
-  document.getElementById('winnerName').textContent = winner;
-  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
-  document.getElementById('ws-wA').textContent = stats.wA;
-  document.getElementById('ws-wB').textContent = stats.wB;
-  document.getElementById('ws-fA').textContent = stats.fA;
-  document.getElementById('ws-fB').textContent = stats.fB;
+  document.getElementById('winnerName').textContent = team === 1 ? nameA : nameB;
   document.getElementById('winnerOverlay').classList.add('show');
-  logEvent(winner, '🏆 VAINQUEUR DU MATCH !');
-  updateDisplay();
 }
 
-// ── UNDO ──────────────────────────────────────────────────────────────────────
+function updateDisplay() {
+  document.getElementById('ptA').textContent = TP[p1] || '0';
+  document.getElementById('ptB').textContent = TP[p2] || '0';
+  
+  // Update scores sets (Simplifié)
+  document.getElementById('setA1').textContent = g1;
+  document.getElementById('setB1').textContent = g2;
+
+  // UPDATE LIVE STATS INDIVIDUELLES
+  document.getElementById('st-wJ1').textContent = stats.wJ1;
+  document.getElementById('st-wJ2').textContent = stats.wJ2;
+  document.getElementById('st-wJ3').textContent = stats.wJ3;
+  document.getElementById('st-wJ4').textContent = stats.wJ4;
+  document.getElementById('st-fJ1').textContent = stats.fJ1;
+  document.getElementById('st-fJ2').textContent = stats.fJ2;
+  document.getElementById('st-fJ3').textContent = stats.fJ3;
+  document.getElementById('st-fJ4').textContent = stats.fJ4;
+}
+
+function logEvent(name, msg) {
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.innerHTML = `<span><strong>${name}</strong> : ${msg}</span>`;
+  list.prepend(div);
+}
+
 function undo() {
-  if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
   if (history.length === 0) return;
   const last = history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
-  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
-  setHistory=last.setHistory||[];
-  stats = {...last.stats};
-  document.getElementById('setPill').innerText = last.pill;
-  document.getElementById('statusLabel').innerText = last.status;
-  const list = document.getElementById('logList');
-  if (list.firstChild) list.removeChild(list.firstChild);
-  matchLog.shift();
+  stats={...last.stats}; setHistory=last.setHistory;
   updateDisplay();
 }
 
-// ── DISPLAY ───────────────────────────────────────────────────────────────────
-function updateDisplay() {
-  let ptA, ptB;
-  if (inSuperTiebreak || inTiebreak) {
-    ptA=p1; ptB=p2;
-  } else {
-    ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
-    if (p1===3 && p2===3) { ptA='AD'; ptB='AD'; }
-  }
-  document.getElementById('ptA').textContent = ptA;
-  document.getElementById('ptB').textContent = ptB;
-  for(let i=1;i<=3;i++){
-    const cellA=document.getElementById('setA'+i);
-    const cellB=document.getElementById('setB'+i);
-    if(i-1 < setHistory.length){
-      const sh=setHistory[i-1];
-      cellA.textContent=sh.a; cellB.textContent=sh.b;
-      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
-      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
-    } else if(i-1 === setHistory.length){
-      cellA.textContent=g1; cellB.textContent=g2;
-      cellA.className='cell set-score active';
-      cellB.className='cell set-score active';
-    } else {
-      cellA.textContent='—'; cellB.textContent='—';
-      cellA.className='cell set-score'; cellB.className='cell set-score';
-    }
-  }
+function resetMatch() { location.reload(); }
 
-  document.getElementById('st-wA').textContent = stats.wA;
-  document.getElementById('st-wB').textContent = stats.wB;
-  document.getElementById('st-fA').textContent = stats.fA;
-  document.getElementById('st-fB').textContent = stats.fB;
-  document.getElementById('st-pA').textContent = stats.pA;
-  document.getElementById('st-pB').textContent = stats.pB;
-  updateBar('bar-wA','bar-wB', stats.wA, stats.wB);
-  updateBar('bar-fA','bar-fB', stats.fA, stats.fB);
-  updateBar('bar-pA','bar-pB', stats.pA, stats.pB);
-}
-
-function updateBar(idA, idB, vA, vB) {
-  const total = vA + vB;
-  const pct = total === 0 ? 50 : Math.round((vA/total)*100);
-  document.getElementById(idA).style.width = pct + '%';
-  document.getElementById(idB).style.width = (100-pct) + '%';
-}
-
-// ── LOG ───────────────────────────────────────────────────────────────────────
-function logPoint(entity, type) {
-  const isA = (entity === players.j1 || entity === players.j2 || entity.includes('Équipe A'));
-  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  let label, dotClass;
-  if (type === 'winner') {
-    label = '🎯 Point gagnant'; dotClass = isA ? 'dot-a' : 'dot-b';
-  } else {
-    label = '💥 Faute directe'; dotClass = isA ? 'dot-a' : 'dot-b';
-  }
-  const entry = {team: entity, type, time, msg: label};
-  matchLog.unshift(entry);
-  const list = document.getElementById('logList');
-  const div = document.createElement('div');
-  div.className = 'log-entry ' + dotClass;
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${entity}</strong></span><span class="log-tag ${type}">${label}</span>`;
-  list.prepend(div);
-}
-
-function logEvent(team, msg) {
-  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const entry = {team, msg, time};
-  matchLog.unshift(entry);
-  const list = document.getElementById('logList');
-  const div = document.createElement('div');
-  div.className = 'log-entry event';
-  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+team+'</strong>':''} ${msg}</span>`;
-  list.prepend(div);
-}
-
-// ── RESET ─────────────────────────────────────────────────────────────────────
-function resetMatch() {
-  if (!confirm('Remettre le match à zéro ?')) return;
-  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
-  inTiebreak=false;inSuperTiebreak=false;matchOver=false;
-  setHistory=[];
-  timerReset();
-  stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
-  history=[];matchLog=[];
-  document.getElementById('setPill').textContent='Set 1';
-  document.getElementById('statusLabel').textContent='En cours';
-  document.getElementById('logList').innerHTML='';
-  document.getElementById('winnerOverlay').classList.remove('show');
-  updateDisplay();
-  logEvent('','🎾 Match démarré — '+nameA+' vs '+nameB);
-}
-
-// ── PDF EXPORT ────────────────────────────────────────────────────────────────
-function formatDuration(secs){
-  const h=Math.floor(secs/3600);
-  const m=Math.floor((secs%3600)/60);
-  const s=secs%60;
-  if(h>0) return h+'h '+String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
-  return String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
-}
-
-function exportPDF() {
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210, M=20;
-  let y=M;
-
-  doc.setFillColor(8,15,30);
-  doc.rect(0,0,W,297,'F');
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(26);
-  doc.setTextColor(245,197,24);
-  doc.text('BEACH TENNIS — STATS DE BASE', W/2, y+8, {align:'center'});
-  doc.setFontSize(11);
-  doc.setTextColor(74,100,148);
-  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y+17, {align:'center'});
-  doc.setFontSize(10);
-  doc.setTextColor(245,197,24);
-  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y+24, {align:'center'});
-  y+=34;
-
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=10;
-
-  [{label:'ÉQUIPE A',color:[59,130,246],name:nameA,sets:s1},
-   {label:'ÉQUIPE B',color:[249,115,22],name:nameB,sets:s2}].forEach(t => {
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...t.color);
-    doc.text(t.label, M, y);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(13);
-    doc.setTextColor(226,234,248);
-    doc.text(t.name, M, y+7);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);
-    doc.setTextColor(245,197,24);
-    doc.text('Sets : '+t.sets, W-M, y+4, {align:'right'});
-    y+=18;
-    doc.setDrawColor(30,53,96);
-    doc.line(M,y,W-M,y);
-    y+=8;
-  });
-
-  y+=4;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(13);
-  doc.setTextColor(245,197,24);
-  doc.text('STATISTIQUES', M, y);
-  y+=8;
-
-  const rows = [
-    ['Coups gagnants (Winners)', stats.wA, stats.wB],
-    ['Fautes directes', stats.fA, stats.fB],
-    ['Points gagnés', stats.pA, stats.pB],
-  ];
-
-  doc.setFontSize(10);
-  doc.setTextColor(74,100,148);
-  doc.text('Statistique', M, y);
-  doc.text('Équipe A', W/2-10, y, {align:'center'});
-  doc.text('Équipe B', W-M, y, {align:'right'});
-  y+=5;
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=7;
-
-  rows.forEach(r => {
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(11);
-    doc.setTextColor(226,234,248);
-    doc.text(r[0], M, y);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(59,130,246);
-    doc.text(String(r[1]), W/2-10, y, {align:'center'});
-    doc.setTextColor(249,115,22);
-    doc.text(String(r[2]), W-M, y, {align:'right'});
-    y+=8;
-  });
-
-  y+=4;
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=10;
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(12);
-  doc.setTextColor(245,197,24);
-  doc.text('JOURNAL DU MATCH', M, y);
-  y+=8;
-
-  [...matchLog].reverse().slice(0,40).forEach(entry => {
-    if (y > 270) { doc.addPage(); y=M; }
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(74,100,148);
-    doc.text(entry.time, M, y);
-    doc.setTextColor(180,200,230);
-    const txt = (entry.team ? entry.team+' — ':'')+entry.msg;
-    doc.text(txt, M+16, y);
-    y+=6;
-  });
-
-  doc.save('BeachStats_'+new Date().toISOString().slice(0,10)+'.pdf');
-}
-
-// ── TIMER ────────────────────────────────────────────────────────────────────
-let timerSeconds = 0;
-let timerInterval = null;
-let timerRunning = false;
-
+let timerSeconds = 0, timerInterval, timerRunning = false;
 function timerToggle() {
-  if (timerRunning) {
-    clearInterval(timerInterval);
-    timerRunning = false;
-    document.getElementById('timerStartBtn').textContent = '▶ Start';
-    document.getElementById('timerStartBtn').className = 'timer-btn start';
-    document.getElementById('timerDisplay').classList.remove('running');
-  } else {
-    timerRunning = true;
-    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
-    document.getElementById('timerStartBtn').className = 'timer-btn pause';
-    document.getElementById('timerDisplay').classList.add('running');
+  if (timerRunning) { clearInterval(timerInterval); timerRunning=false; }
+  else {
+    timerRunning=true;
     timerInterval = setInterval(() => {
       timerSeconds++;
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
-      const s = String(timerSeconds % 60).padStart(2,'0');
+      const m = String(Math.floor(timerSeconds/60)).padStart(2,'0');
+      const s = String(timerSeconds%60).padStart(2,'0');
       document.getElementById('timerDisplay').textContent = m + ':' + s;
     }, 1000);
   }
 }
 
-function timerReset() {
-  clearInterval(timerInterval);
-  timerRunning = false;
-  timerSeconds = 0;
-  document.getElementById('timerDisplay').textContent = '00:00';
-  document.getElementById('timerDisplay').classList.remove('running');
-  document.getElementById('timerStartBtn').textContent = '▶ Start';
-  document.getElementById('timerStartBtn').className = 'timer-btn start';
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
 initNames();
 updateDisplay();
-logEvent('', '🎾 Match démarré — '+nameA+' vs '+nameB);
 </script>
 </body>
 </html>
