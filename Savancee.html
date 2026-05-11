@@ -91,33 +91,6 @@ body{
 .cell.set-score.won{color:var(--gold)}
 .cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
 
-/* ── ACTIONS ── */
-.team-controls{width:100%;max-width:580px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:1.2rem;margin-bottom:1rem}
-.team-ctrl-label{
-  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05);
-}
-.team-ctrl-label.a{color:var(--blue)}
-.team-ctrl-label.b{color:var(--orange)}
-
-.player-row-ctrl{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
-.player-row-ctrl:last-child{margin-bottom:0}
-.player-name-tag{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding-left:4px}
-.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-.btn-winner,.btn-faute{
-  padding:.7rem .8rem;border-radius:12px;border:2px solid;cursor:pointer;
-  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
-  font-family:Barlow Condensed,sans-serif;
-}
-.btn-winner:active,.btn-faute:active{transform:scale(.96)}
-.btn-main{font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
-
-.btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
-.btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
-.btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
-.btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
-
 /* ── STATS CARD ── */
 .stats-card{
   width:100%;max-width:580px;
@@ -131,27 +104,48 @@ body{
 }
 .stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-.stats-section{margin-bottom:.8rem}
-.stats-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
-.stats-section-title.w{color:var(--green)}
-.stats-section-title.f{color:var(--red)}
-.stats-table{width:100%;border-collapse:collapse}
-.stats-table tr{border-bottom:1px solid var(--border)}
-.stats-table td{padding:.35rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;vertical-align:middle}
-.stats-table .td-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.1}
-.stats-table .td-a{color:var(--blue);text-align:right;font-size:18px;width:36px}
-.stats-table .td-b{color:var(--orange);text-align:left;font-size:18px;width:36px}
-.stats-table .td-bar{padding:0 .4rem}
-.mini-bar{height:5px;border-radius:4px;overflow:hidden;background:var(--surface);display:flex}
-.mini-bar-a{background:var(--blue);transition:width .3s}
-.mini-bar-b{background:var(--orange);transition:width .3s}
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.7rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-val{
+  font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;
+}
+.stat-val.a{color:var(--blue);text-align:right}
+.stat-val.b{color:var(--orange);text-align:left}
+.stat-name{
+  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;
+  white-space:nowrap;
+}
+.stat-bar-wrap{grid-column:1/-1;display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--surface)}
+.stat-bar-a{background:var(--blue);transition:width .4s}
+.stat-bar-b{background:var(--orange);transition:width .4s}
 
-.stats-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:.6rem}
-.tot-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem;text-align:center}
-.tot-val{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:900;display:flex;justify-content:center;gap:8px}
-.tot-val span.a{color:var(--blue)}
-.tot-val span.b{color:var(--orange)}
-.tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+/* ── ACTIONS ── */
+.team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
+.team-ctrl-label{
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
+}
+.team-ctrl-label.a{color:var(--blue)}
+.team-ctrl-label.b{color:var(--orange)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-winner,.btn-faute{
+  padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
+  transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;
+  font-family:Barlow Condensed,sans-serif;
+}
+.btn-winner:active,.btn-faute:active{transform:scale(.96)}
+.btn-icon{font-size:22px}
+.btn-main{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.btn-sub{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
+.btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.a:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.b:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.a:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+.btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.b:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
 
 .actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
 .btn-action{
@@ -161,8 +155,11 @@ body{
 }
 .btn-action:hover{background:#162040;border-color:var(--muted)}
 .btn-action.undo{border-color:#f59e0b;color:#f59e0b}
+.btn-action.undo:hover{background:rgba(245,158,11,.12)}
 .btn-action.reset{border-color:var(--red);color:var(--red)}
+.btn-action.reset:hover{background:rgba(239,68,68,.12)}
 .btn-action.pdf{border-color:var(--green);color:var(--green)}
+.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
 
 /* ── LOG ── */
 .log-wrap{width:100%;max-width:580px}
@@ -185,21 +182,7 @@ body{
 .log-tag.winner{background:rgba(34,197,94,.15);color:var(--green)}
 .log-tag.faute{background:rgba(239,68,68,.15);color:var(--red)}
 
-/* ── MODALS ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.88);z-index:50;align-items:flex-end;justify-content:center;padding:1rem}
-.modal-overlay.show{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;width:100%;max-width:520px;padding:1.4rem 1.2rem 1.8rem;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
-.modal-context{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:1rem;color:var(--text)}
-.modal-context span{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
-.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-.shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
-.shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
-.shot-sub-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.shot-btn{padding:.7rem .3rem;border-radius:12px;border:2px solid;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.2;text-align:center}
-.shot-btn.type-winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
-.shot-btn.type-faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
-.modal-cancel{width:100%;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
-
+/* ── WINNER OVERLAY ── */
 .winner-overlay{
   display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;
   align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;
@@ -208,8 +191,24 @@ body{
 .winner-box{
   background:var(--card);border:2px solid var(--gold);border-radius:24px;
   padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;
+  box-shadow:0 0 80px rgba(245,197,24,.2);
 }
+.winner-trophy{font-size:60px;margin-bottom:1rem}
+.winner-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.5rem}
 .winner-name{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:.4rem}
+.winner-score{font-family:Barlow Condensed,sans-serif;font-size:16px;color:var(--muted);letter-spacing:1px;margin-bottom:1.2rem}
+.winner-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.4rem}
+.ws-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem}
+.ws-val{font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900}
+.ws-val.a{color:var(--blue)}
+.ws-val.b{color:var(--orange)}
+.ws-lbl{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.winner-btn{padding:.7rem 1.4rem;border-radius:10px;border:1.5px solid;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
+.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
+.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
+.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
 
 /* ── TIMER ── */
 .timer-wrap{
@@ -220,18 +219,96 @@ body{
 }
 .timer-display{
   font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
-  letter-spacing:4px;color:var(--gold);min-width:110px;
+  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
+  min-width:110px;
 }
+.timer-display.running{color:#fff}
 .timer-btns{display:flex;gap:8px}
 .timer-btn{
   padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
   background:var(--surface);color:var(--text);
   font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
-  text-transform:uppercase;cursor:pointer;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
 }
+.timer-btn:hover{background:#162040;border-color:var(--muted)}
+.timer-btn.start{border-color:var(--green);color:var(--green)}
+.timer-btn.start:hover{background:rgba(34,197,94,.12)}
+.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
+.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
+.timer-btn.stop{border-color:var(--red);color:var(--red)}
+.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+
+/* ── SHOT MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.88);z-index:50;align-items:flex-end;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;width:100%;max-width:520px;padding:1.4rem 1.2rem 1.8rem;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
+.modal-context{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:1rem;color:var(--text)}
+.modal-context span{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+
+/* Shot Grid Layout */
+.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
+.shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
+.shot-sub-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+.shot-btn{padding:.7rem .3rem;border-radius:12px;border:2px solid;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.2;text-align:center}
+.shot-btn:active{transform:scale(.95)}
+.shot-btn .s-ico{font-size:20px}
+.shot-btn.type-winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
+.shot-btn.type-winner:hover{background:rgba(34,197,94,.2)}
+.shot-btn.type-faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+.shot-btn.type-faute:hover{background:rgba(239,68,68,.2)}
+
+.modal-cancel{width:100%;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── ADVANCED STATS TABLE ── */
+.stats-section{margin-bottom:.8rem}
+.stats-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.stats-section-title.w{color:var(--green)}
+.stats-section-title.f{color:var(--red)}
+.stats-table{width:100%;border-collapse:collapse}
+.stats-table tr{border-bottom:1px solid var(--border)}
+.stats-table tr:last-child{border-bottom:none}
+.stats-table td{padding:.35rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;vertical-align:middle}
+.stats-table .td-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.1}
+.stats-table .td-a{color:var(--blue);text-align:right;font-size:18px;width:36px}
+.stats-table .td-b{color:var(--orange);text-align:left;font-size:18px;width:36px}
+.stats-table .td-bar{padding:0 .4rem}
+.mini-bar{height:5px;border-radius:4px;overflow:hidden;background:var(--surface);display:flex}
+.mini-bar-a{background:var(--blue);transition:width .3s}
+.mini-bar-b{background:var(--orange);transition:width .3s}
+.stats-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:.6rem}
+.tot-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem;text-align:center}
+.tot-val{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:900;display:flex;justify-content:center;gap:8px}
+.tot-val span.a{color:var(--blue)}
+.tot-val span.b{color:var(--orange)}
+.tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* ── STATS PAR JOUEUR ── */
+.player-stats-section{margin-bottom:1rem}
+.player-stats-header{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:.3rem .5rem;border-radius:6px;margin-bottom:.4rem;
+  display:inline-block;
+}
+.player-stats-header.pa{background:rgba(59,130,246,.15);color:var(--blue)}
+.player-stats-header.pb{background:rgba(249,115,22,.15);color:var(--orange)}
+.player-stats-table{width:100%;border-collapse:collapse;margin-bottom:.3rem}
+.player-stats-table tr{border-bottom:1px solid var(--border)}
+.player-stats-table tr:last-child{border-bottom:none}
+.player-stats-table td{padding:.3rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;vertical-align:middle}
+.player-stats-table .td-lbl{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.player-stats-table .td-val{font-size:17px;font-weight:900;text-align:center;width:32px}
+.player-stats-table .td-val.pa{color:var(--blue)}
+.player-stats-table .td-val.pb{color:var(--orange)}
+.player-pair-divider{height:1px;background:var(--border);margin:.4rem 0 .6rem}
 
 @media(max-width:440px){
   .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
+  .cell.point-cell{font-size:28px}
+  .shot-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
@@ -255,16 +332,16 @@ body{
 </div>
 
 <div class="scoreboard">
-  <div class="score-header">
+  <div class="score-header" id="scoreHeader">
     <span>Équipe</span>
     <span>S1</span>
     <span>S2</span>
     <span>S3</span>
     <span>Points</span>
   </div>
-  <div class="team-row team-a">
+  <div class="team-row team-a" id="rowA">
     <div class="team-info">
-      <div class="team-name" id="nameADisplay">Équipe A</div>
+      <div class="team-name" id="nameA">Équipe A</div>
       <div class="team-players" id="playersA">—</div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
@@ -272,9 +349,9 @@ body{
     <div class="cell set-score" id="setA3">—</div>
     <div class="cell point-cell" id="ptA">0</div>
   </div>
-  <div class="team-row team-b">
+  <div class="team-row team-b" id="rowB">
     <div class="team-info">
-      <div class="team-name" id="nameBDisplay">Équipe B</div>
+      <div class="team-name" id="nameB">Équipe B</div>
       <div class="team-players" id="playersB">—</div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
@@ -286,53 +363,33 @@ body{
 
 <div class="team-controls">
   <div class="team-ctrl-label a" id="lblA">Équipe A</div>
-  <div class="player-row-ctrl">
-    <div class="player-name-tag" id="pName1">Joueur 1</div>
-    <div class="ctrl-row">
-      <button class="btn-winner a" onclick="openShotModal(1,'winner', 1)">
-        <span class="btn-main">Point G.</span>
-      </button>
-      <button class="btn-faute a" onclick="openShotModal(2,'faute', 1)">
-        <span class="btn-main">Faute D.</span>
-      </button>
-    </div>
-  </div>
-  <div class="player-row-ctrl">
-    <div class="player-name-tag" id="pName2">Joueur 2</div>
-    <div class="ctrl-row">
-      <button class="btn-winner a" onclick="openShotModal(1,'winner', 2)">
-        <span class="btn-main">Point G.</span>
-      </button>
-      <button class="btn-faute a" onclick="openShotModal(2,'faute', 2)">
-        <span class="btn-main">Faute D.</span>
-      </button>
-    </div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
   </div>
 </div>
 
 <div class="team-controls">
   <div class="team-ctrl-label b" id="lblB">Équipe B</div>
-  <div class="player-row-ctrl">
-    <div class="player-name-tag" id="pName3">Joueur 3</div>
-    <div class="ctrl-row">
-      <button class="btn-winner b" onclick="openShotModal(2,'winner', 3)">
-        <span class="btn-main">Point G.</span>
-      </button>
-      <button class="btn-faute b" onclick="openShotModal(1,'faute', 3)">
-        <span class="btn-main">Faute D.</span>
-      </button>
-    </div>
-  </div>
-  <div class="player-row-ctrl">
-    <div class="player-name-tag" id="pName4">Joueur 4</div>
-    <div class="ctrl-row">
-      <button class="btn-winner b" onclick="openShotModal(2,'winner', 4)">
-        <span class="btn-main">Point G.</span>
-      </button>
-      <button class="btn-faute b" onclick="openShotModal(1,'faute', 4)">
-        <span class="btn-main">Faute D.</span>
-      </button>
-    </div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
   </div>
 </div>
 
@@ -342,7 +399,7 @@ body{
   <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
 </div>
 
-<div class="stats-card">
+<div class="stats-card" id="statsCard">
   <div class="stats-title">Stats détaillées</div>
   <div id="statsContent"></div>
 </div>
@@ -362,14 +419,29 @@ body{
 
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
-    <div class="winner-trophy" style="font-size:60px">🏆</div>
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Vainqueur du match</div>
     <div class="winner-name" id="winnerName">—</div>
-    <button class="btn-action" onclick="resetMatch()" style="width:100%; margin-top:20px">Nouveau match</button>
+    <div class="winner-score" id="winnerScore">—</div>
+    <div class="winner-stats">
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
+        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
+      </div>
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
+        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
+      </div>
+    </div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+    </div>
   </div>
 </div>
 
 <script>
-// CONFIG
+// ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
 const BASE_SHOTS = ['service', 'smash', 'retour', 'amorti', 'lob', 'rush'];
 const SHOT_LBL = {
   service:'Service', smash:'Smash', 
@@ -379,178 +451,500 @@ const SHOT_LBL = {
   rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV'
 };
 const SHOT_ICO = {service:'🎾', smash:'💥', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
-const ALL_SHOT_KEYS = ['service', 'smash', 'retour_cd', 'retour_rev', 'amorti_cd', 'amorti_rev', 'lob_cd', 'lob_rev', 'rush_cd', 'rush_rev'];
 
-// PARAMS
+// Liste complète des clés pour les statistiques
+const ALL_SHOT_KEYS = [
+  'service', 'smash', 
+  'retour_cd', 'retour_rev', 
+  'amorti_cd', 'amorti_rev', 
+  'lob_cd', 'lob_rev', 
+  'rush_cd', 'rush_rev'
+];
+
+// ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
-const statsMode = _p.get('mode') || 'equipe';
+const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
 const players = {
-  j1: _p.get('j1') || 'Joueur 1', j2: _p.get('j2') || 'Joueur 2',
-  j3: _p.get('j3') || 'Joueur 3', j4: _p.get('j4') || 'Joueur 4'
+  j1: _p.get('j1') || 'Joueur 1',
+  j2: _p.get('j2') || 'Joueur 2',
+  j3: _p.get('j3') || 'Joueur 3',
+  j4: _p.get('j4') || 'Joueur 4'
 };
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
 
-// STATE
-let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0, setHistory=[], history=[], matchLog=[];
-let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-const TP = ['0','15','30','40'];
-
-function emptyStats(){
-  const base = {pA:0, pB:0};
-  ['A','B','J1','J2','J3','J4'].forEach(t => {
-    ['w','f'].forEach(tp => {
-      ALL_SHOT_KEYS.forEach(s => base[tp+t+'_'+s]=0);
-    });
-  });
-  return base;
-}
-let stats = emptyStats();
-
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
-  document.getElementById('pName1').textContent = players.j1;
-  document.getElementById('pName2').textContent = players.j2;
-  document.getElementById('pName3').textContent = players.j3;
-  document.getElementById('pName4').textContent = players.j4;
+  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
+  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
 }
 
-// LOGIQUE SCORE
-let pendingShot = null, pendingPlayerId = null, pendingType = null, pendingTeam = null;
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[];
+let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
 
-function openShotModal(teamNum, type, playerId) {
+function emptyStats(){
+  const base = {pA:0, pB:0};
+  for(const t of ['A','B']) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+t+'_'+s]=0;
+    }
+  }
+  return base;
+}
+let stats = emptyStats();
+let history = [];
+let matchLog = [];
+const TP = ['0','15','30','40'];
+
+// ── SAVE STATE ────────────────────────────────────────────────────────────────
+function saveState() {
+  history.push({
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory: JSON.parse(JSON.stringify(setHistory)),
+    stats: JSON.parse(JSON.stringify(stats)),
+    pill: document.getElementById('setPill').innerText,
+    status: document.getElementById('statusLabel').innerText
+  });
+}
+
+// ── SCORE LOGIC ───────────────────────────────────────────────────────────────
+let pendingShot = null;
+function scorePoint(player, type) {
   if (matchOver) return;
-  pendingTeam = teamNum;
+  saveState();
+
+  const shot = pendingShot || 'service';
+  pendingShot = null;
+
+  if (player === 1) {
+    stats.pA++;
+    if (type === 'winner') stats['wA_'+shot]++; else stats['fB_'+shot]++;
+  } else {
+    stats.pB++;
+    if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
+  }
+
+  const teamName = player === 1 ? nameA : nameB;
+  logPoint(teamName, type, shot);
+
+  if (inSuperTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) { winMatch(player); return; }
+    updateDisplay(); return;
+  }
+
+  if (inTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) { winGame(player); }
+    updateDisplay(); return;
+  }
+
+  if (player === 1) p1++; else p2++;
+  if (p1 > 3 || p2 > 3) {
+    if (p1 > p2) winGame(1); else winGame(2);
+    return;
+  }
+  updateDisplay();
+}
+
+function winGame(player) {
+  const wasTiebreak = inTiebreak;
+  p1=0; p2=0; inTiebreak=false;
+  if (player === 1) g1++; else g2++;
+  logEvent(player===1 ? nameA : nameB, 'remporte le jeu (' + g1 + '-' + g2 + ')');
+
+  if (wasTiebreak) { winSet(player); return; }
+  const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
+  if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
+
+  if (g1 === 6 && g2 === 6) {
+    if (s1 === 1 && s2 === 1) {
+      inSuperTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Super Tie-Break';
+      document.getElementById('statusLabel').textContent = "10 pts";
+    } else {
+      inTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Tie-Break';
+      document.getElementById('statusLabel').textContent = "7 pts";
+    }
+  }
+  updateDisplay();
+}
+
+function winSet(player){
+  setHistory.push({a:g1,b:g2});
+  p1=0; p2=0; g1=0; g2=0; 
+  inTiebreak=false; 
+  inSuperTiebreak=false;
+
+  if(player===1) s1++; else s2++;
+  logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
+
+  // Si une équipe a 2 sets, elle gagne le match
+  if(s1===2 || s2===2){
+    winMatch(player); 
+    return;
+  }
+
+  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
+  if(s1===1 && s2===1){
+    inSuperTiebreak = true;
+    document.getElementById('setPill').textContent = "Super Tie-Break";
+    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+    logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
+  } else {
+    // Passage au set 2 normal
+    document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
+    document.getElementById('statusLabel').textContent = "En cours";
+  }
+  
+  updateDisplay();
+}
+
+function winMatch(player) {
+  matchOver = true;
+  if(timerRunning) timerToggle();
+  const winner = player === 1 ? nameA : nameB;
+  document.getElementById('winnerName').textContent = winner;
+  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
+  
+  const _totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const _totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const _totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const _totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  
+  document.getElementById('ws-wA').textContent = _totWA;
+  document.getElementById('ws-wB').textContent = _totWB;
+  document.getElementById('ws-fA').textContent = _totFA;
+  document.getElementById('ws-fB').textContent = _totFB;
+  document.getElementById('winnerOverlay').classList.add('show');
+  logEvent(winner, '🏆 VICTOIRE !');
+  updateDisplay();
+}
+
+function undo() {
+  if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
+  if (history.length === 0) return;
+  const last = history.pop();
+  p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
+  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  setHistory=last.setHistory||[];
+  stats = JSON.parse(JSON.stringify(last.stats));
+  document.getElementById('setPill').innerText = last.pill;
+  document.getElementById('statusLabel').innerText = last.status;
+  const list = document.getElementById('logList');
+  if (list.firstChild) list.removeChild(list.firstChild);
+  matchLog.shift();
+  updateDisplay();
+}
+
+function updateDisplay() {
+  let ptA, ptB;
+  if (inSuperTiebreak || inTiebreak) {
+    ptA=p1; ptB=p2;
+  } else {
+    ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
+    if (p1===3 && p2===3) { ptA='40'; ptB='40'; }
+  }
+  document.getElementById('ptA').textContent = ptA;
+  document.getElementById('ptB').textContent = ptB;
+  for(let i=1;i<=3;i++){
+    const cellA=document.getElementById('setA'+i);
+    const cellB=document.getElementById('setB'+i);
+    if(i-1 < setHistory.length){
+      const sh=setHistory[i-1];
+      cellA.textContent=sh.a; cellB.textContent=sh.b;
+      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
+      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
+    } else if(i-1 === setHistory.length){
+      cellA.textContent=g1; cellB.textContent=g2;
+      cellA.className='cell set-score active';
+      cellB.className='cell set-score active';
+    } else {
+      cellA.textContent='—'; cellB.textContent='—';
+      cellA.className='cell set-score'; cellB.className='cell set-score';
+    }
+  }
+  renderStats();
+}
+
+function logPoint(winnerTeam, type, shot) {
+  const isA = winnerTeam === nameA;
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
+  const dotClass = type === 'winner' ? (isA ? 'dot-a' : 'dot-b') : (isA ? 'dot-b' : 'dot-a');
+  const displayTeam = type === 'winner' ? winnerTeam : (isA ? nameB : nameA);
+  
+  matchLog.unshift({team: displayTeam, type, shot, time, msg: label});
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + dotClass;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong></span><span class="log-tag ${type}">${label}</span>`;
+  list.prepend(div);
+}
+
+function logEvent(team, msg) {
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  matchLog.unshift({team, msg, time});
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = 'log-entry event';
+  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+team+'</strong>':''} ${msg}</span>`;
+  list.prepend(div);
+}
+
+function resetMatch() {
+  if (!confirm('Remettre à zéro ?')) return;
+  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
+  inTiebreak=false;inSuperTiebreak=false;matchOver=false;
+  setHistory=[]; timerReset(); stats=emptyStats(); history=[]; matchLog=[];
+  document.getElementById('setPill').textContent='Set 1';
+  document.getElementById('logList').innerHTML='';
+  document.getElementById('winnerOverlay').classList.remove('show');
+  updateDisplay();
+}
+
+// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
+let pendingPlayer = null;
+let pendingType = null;
+
+function openShotModal(player, type) {
+  if (matchOver) return;
+  pendingPlayer = player;
   pendingType = type;
-  pendingPlayerId = playerId;
   
   const isWinner = type === 'winner';
-  const playerName = players['j'+playerId];
-  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${playerName}`;
+  const teamName = player === 1 ? nameA : nameB;
+  const actionTeam = isWinner ? teamName : (player === 1 ? nameB : nameA);
+  
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${actionTeam}`;
   
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
+  
   BASE_SHOTS.forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
     if (s === 'service' || s === 'smash') {
-      group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')"><span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}</button>`;
+      group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
+        <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+      </button>`;
     } else {
-      group.innerHTML = `<div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div><div class="shot-sub-row"><button class="shot-btn type-${type}" onclick="confirmShot('${s}_cd')">CD</button><button class="shot-btn type-${type}" onclick="confirmShot('${s}_rev')">REV</button></div>`;
+      group.innerHTML = `
+        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+        <div class="shot-sub-row">
+          <button class="shot-btn type-${type}" onclick="confirmShot('${s}_cd')">CD</button>
+          <button class="shot-btn type-${type}" onclick="confirmShot('${s}_rev')">REV</button>
+        </div>`;
     }
     grid.appendChild(group);
   });
+  
   document.getElementById('shotModal').classList.add('show');
 }
 
-function closeShotModal() { document.getElementById('shotModal').classList.remove('show'); }
+function closeShotModal() {
+  document.getElementById('shotModal').classList.remove('show');
+}
 
 function confirmShot(shotKey) {
   pendingShot = shotKey;
   closeShotModal();
-  scorePoint(pendingTeam, pendingType);
+  scorePoint(pendingPlayer, pendingType);
 }
 
-function scorePoint(team, type) {
-  saveState();
-  const shot = pendingShot || 'service';
-  const statPrefix = type === 'winner' ? 'w' : 'f';
-
-  if (statsMode === 'joueur') {
-    stats[statPrefix + 'J' + pendingPlayerId + '_' + shot]++;
-    // On répercute aussi sur l'équipe pour les barres de progression
-    const teamKey = (pendingPlayerId <= 2) ? 'A' : 'B';
-    stats[statPrefix + teamKey + '_' + shot]++;
-  } else {
-    if (team === 1) {
-      if (type === 'winner') stats['wA_'+shot]++; else stats['fB_'+shot]++;
-    } else {
-      if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
-    }
-  }
-
-  if (team === 1) { stats.pA++; p1++; } else { stats.pB++; p2++; }
-  logPoint(players['j'+pendingPlayerId], type, shot);
-
-  // Logique de set/game simplifiée pour l'exemple
-  if (inSuperTiebreak) {
-    if ((p1>=10 || p2>=10) && Math.abs(p1-p2)>=2) winMatch(team);
-  } else if (inTiebreak) {
-    if ((p1>=7 || p2>=7) && Math.abs(p1-p2)>=2) winGame(team);
-  } else if (p1>3 || p2>3) {
-    winGame(p1 > p2 ? 1 : 2);
-  }
-  updateDisplay();
-}
-
-function winGame(t) {
-  p1=0; p2=0; t===1 ? g1++ : g2++;
-  if (g1>=6 && g1-g2>=2) winSet(1);
-  else if (g2>=6 && g2-g1>=2) winSet(2);
-  else if (g1===6 && g2===6) inTiebreak=true;
-  updateDisplay();
-}
-
-function winSet(t) {
-  setHistory.push({a:g1, b:g2}); g1=0; g2=0; inTiebreak=false;
-  t===1 ? s1++ : s2++;
-  if (s1===2 || s2===2) winMatch(t);
-  else if (s1===1 && s2===1) inSuperTiebreak=true;
-  updateDisplay();
-}
-
-function winMatch(t) {
-  matchOver=true;
-  document.getElementById('winnerName').textContent = (t===1 ? nameA : nameB);
-  document.getElementById('winnerOverlay').classList.add('show');
-}
-
-function updateDisplay() {
-  document.getElementById('ptA').textContent = inTiebreak||inSuperTiebreak ? p1 : TP[p1]||'AD';
-  document.getElementById('ptB').textContent = inTiebreak||inSuperTiebreak ? p2 : TP[p2]||'AD';
-  document.getElementById('setA1').textContent = g1; // Simplified view
-  document.getElementById('setB1').textContent = g2;
-  renderStats();
-}
-
+// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
 function renderStats() {
+  if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
+
   const el = document.getElementById('statsContent');
+  let html = '';
+
   const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
   const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
   const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
   const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
 
-  let html = `<div class="stats-section"><div class="stats-section-title w">🎯 Winners</div><table class="stats-table">`;
+  const bar = (a,b) => {
+    const t=a+b||1;
+    return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
+  };
+
+  // Section Winners
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
+    <table class="stats-table">`;
+  
   ALL_SHOT_KEYS.forEach(s => {
-    const a = stats['wA_'+s], b = stats['wB_'+s];
-    if(a+b > 0) html += `<tr><td class="td-a">${a}</td><td class="td-bar"><div class="mini-bar"><div class="mini-bar-a" style="width:${(a/(a+b))*100}%"></div></div><div class="td-lbl">${SHOT_LBL[s]}</div></td><td class="td-b">${b}</td></tr>`;
+    const vA=stats['wA_'+s], vB=stats['wB_'+s];
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
   });
-  html += `</table></div>`;
+  html += '</table></div>';
+
+  // Section Fautes
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
+    <table class="stats-table">`;
+  
+  ALL_SHOT_KEYS.forEach(s => {
+    const vA=stats['fA_'+s], vB=stats['fB_'+s];
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
+  });
+  html += '</table></div>';
+
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
   el.innerHTML = html;
 }
 
-function saveState() { history.push(JSON.parse(JSON.stringify({p1,p2,g1,g2,s1,s2,stats}))); }
-function undo() { if(history.length) { const last = history.pop(); p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2; stats=last.stats; updateDisplay(); } }
-function resetMatch() { location.reload(); }
+function renderStatsParJoueur() {
+  const el = document.getElementById('statsContent');
 
-function logPoint(p, type, shot) {
-  const list = document.getElementById('logList');
-  const div = document.createElement('div');
-  div.className = 'log-entry ' + (type==='winner'?'dot-w':'dot-f');
-  div.innerHTML = `<span class="dot"></span><span><strong>${p}</strong></span><span class="log-tag ${type}">${SHOT_LBL[shot]}</span>`;
-  list.prepend(div);
+  // [nom, clé equipe A ou B, couleur CSS]
+  const playerDefs = [
+    { name: players.j1, team: 'A', cls: 'var(--blue)' },
+    { name: players.j2, team: 'A', cls: 'var(--blue)' },
+    { name: players.j3, team: 'B', cls: 'var(--orange)' },
+    { name: players.j4, team: 'B', cls: 'var(--orange)' },
+  ];
+
+  const buildPlayerRow = (p, type) => {
+    const tp = type === 'winner' ? 'w' : 'f';
+    const teamKey = tp + p.team; // wA / fA / wB / fB
+    const total = ALL_SHOT_KEYS.reduce((s, sh) => s + stats[teamKey + '_' + sh], 0);
+    const badges = ALL_SHOT_KEYS.map(sh => {
+      const v = stats[teamKey + '_' + sh];
+      return `<span style="
+        display:inline-flex;align-items:center;gap:3px;
+        background:rgba(255,255,255,.04);border:1px solid var(--border);
+        border-radius:6px;padding:2px 7px;
+        font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+        color:${v > 0 ? p.cls : 'var(--muted)'}">
+        <span style="font-size:10px;letter-spacing:1px;opacity:.7">${SHOT_LBL[sh].toUpperCase()}</span>
+        <span style="font-size:16px">${v}</span>
+      </span>`;
+    }).join('');
+
+    return `<div style="
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      padding:.55rem .8rem;margin-bottom:.45rem;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:14px">${total}</span></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${badges}</div>
+    </div>`;
+  };
+
+  let html = '';
+
+  // Section Winners
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
+  html += `</div>`;
+
+  // Section Fautes
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
+  html += `</div>`;
+
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
+  el.innerHTML = html;
 }
 
-// TIMER
+// ── TIMER ────────────────────────────────────────────────────────────────────
 let timerSeconds = 0, timerInterval = null, timerRunning = false;
 function timerToggle() {
-  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; document.getElementById('timerStartBtn').textContent = '▶ Start'; }
-  else { timerRunning = true; document.getElementById('timerStartBtn').textContent = '⏸ Pause'; timerInterval = setInterval(() => { timerSeconds++; const m = String(Math.floor(timerSeconds/60)).padStart(2,'0'), s = String(timerSeconds%60).padStart(2,'0'); document.getElementById('timerDisplay').textContent = m + ':' + s; }, 1000); }
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+function timerReset() { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; document.getElementById('timerDisplay').textContent = '00:00'; }
+function formatDuration(secs){
+  const m=Math.floor(secs/60), s=secs%60;
+  return String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────────
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18); doc.text("Rapport Beach Tennis", 14, 20);
+  doc.setFontSize(12); doc.text(`${nameA} vs ${nameB}`, 14, 30);
+  doc.text(`Score Final: ${s1} - ${s2}`, 14, 38);
+  
+  let y = 50;
+  doc.text("Stats Winners:", 14, y); y+=7;
+  ALL_SHOT_KEYS.forEach(s => {
+    if(stats['wA_'+s] > 0 || stats['wB_'+s] > 0) {
+      doc.text(`${SHOT_LBL[s]}: A(${stats['wA_'+s]}) - B(${stats['wB_'+s]})`, 20, y);
+      y+=6;
+    }
+  });
+  
+  y+=10;
+  doc.text("Stats Fautes:", 14, y); y+=7;
+  ALL_SHOT_KEYS.forEach(s => {
+    if(stats['fA_'+s] > 0 || stats['fB_'+s] > 0) {
+      doc.text(`${SHOT_LBL[s]}: A(${stats['fA_'+s]}) - B(${stats['fB_'+s]})`, 20, y);
+      y+=6;
+    }
+  });
+  
+  doc.save(`Match_${new Date().getTime()}.pdf`);
 }
 
 initNames();
 updateDisplay();
+logEvent('', '🎾 Match démarré');
 </script>
 </body>
 </html>
