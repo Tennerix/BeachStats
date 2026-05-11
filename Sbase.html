@@ -310,38 +310,38 @@ body{
   <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
 </div>
 
-<div class="stats-card">
+<div class="stats-card" id="statsCard">
   <div class="stats-title">Stats en direct</div>
 
-  <div class="stat-row">
-    <div class="stat-val a" id="st-wA">0</div>
-    <div class="stat-name">Coups gagnants</div>
-    <div class="stat-val b" id="st-wB">0</div>
-  </div>
-  <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-wA" style="width:50%"></div><div class="stat-bar-b" id="bar-wB" style="width:50%"></div></div>
-  </div>
+  <div id="statsContent">
+    <div class="stat-row">
+      <div class="stat-val a" id="st-wA">0</div>
+      <div class="stat-name">Coups gagnants</div>
+      <div class="stat-val b" id="st-wB">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-wA" style="width:50%"></div><div class="stat-bar-b" id="bar-wB" style="width:50%"></div></div>
+    </div>
 
-  <div class="stat-row" style="margin-top:.6rem">
-    <div class="stat-val a" id="st-fA">0</div>
-    <div class="stat-name">Fautes directes</div>
-    <div class="stat-val b" id="st-fB">0</div>
-  </div>
-  <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-fA" style="width:50%"></div><div class="stat-bar-b" id="bar-fB" style="width:50%"></div></div>
-  </div>
+    <div class="stat-row" style="margin-top:.6rem">
+      <div class="stat-val a" id="st-fA">0</div>
+      <div class="stat-name">Fautes directes</div>
+      <div class="stat-val b" id="st-fB">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-fA" style="width:50%"></div><div class="stat-bar-b" id="bar-fB" style="width:50%"></div></div>
+    </div>
 
-  <div class="stat-row" style="margin-top:.6rem">
-    <div class="stat-val a" id="st-pA">0</div>
-    <div class="stat-name">Points gagnés</div>
-    <div class="stat-val b" id="st-pB">0</div>
-  </div>
-  <div class="stat-row">
-    <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-pA" style="width:50%"></div><div class="stat-bar-b" id="bar-pB" style="width:50%"></div></div>
+    <div class="stat-row" style="margin-top:.6rem">
+      <div class="stat-val a" id="st-pA">0</div>
+      <div class="stat-name">Points gagnés</div>
+      <div class="stat-val b" id="st-pB">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-bar-wrap"><div class="stat-bar-a" id="bar-pA" style="width:50%"></div><div class="stat-bar-b" id="bar-pB" style="width:50%"></div></div>
+    </div>
   </div>
 </div>
-
-
 
 <div class="log-wrap">
   <div class="log-title">Journal du match</div>
@@ -392,13 +392,28 @@ function initNames() {
   container.innerHTML = '';
 
   if (mode === 'joueur') {
-    // Mode Stats par Joueur : 4 blocs (J1, J2, J3, J4)
     container.innerHTML += createControlBlock('a', players.j1, 1);
     container.innerHTML += createControlBlock('a', players.j2, 1);
     container.innerHTML += createControlBlock('b', players.j3, 2);
     container.innerHTML += createControlBlock('b', players.j4, 2);
+
+    // Modifier l'affichage des stats en direct pour le mode individuel
+    let statsHTML = `<div class="stat-row" style="grid-template-columns: 1fr 60px 60px; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
+      <div class="stat-name" style="text-align:left">Joueur</div>
+      <div class="stat-name">W</div>
+      <div class="stat-name">F</div>
+    </div>`;
+    [players.j1, players.j2, players.j3, players.j4].forEach((p, index) => {
+      const colorClass = index < 2 ? 'var(--blue)' : 'var(--orange)';
+      statsHTML += `
+        <div class="stat-row" style="grid-template-columns: 1fr 60px 60px; align-items:center">
+          <div class="stat-name" style="text-align:left; color:var(--text); font-size:13px">${p}</div>
+          <div class="stat-val" id="st-w-${p}" style="text-align:center; color:var(--green); font-size:20px">0</div>
+          <div class="stat-val" id="st-f-${p}" style="text-align:center; color:var(--red); font-size:20px">0</div>
+        </div>`;
+    });
+    document.getElementById('statsContent').innerHTML = statsHTML;
   } else {
-    // Mode Stats par Équipe : 2 blocs
     const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
     const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
     container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1);
@@ -432,7 +447,7 @@ function createControlBlock(teamClass, label, teamId) {
 let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
 let setHistory=[]; 
 let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0 };
+let stats = { wA:0, wB:0, fA:0, fB:0, pA:0, pB:0, ind: {} };
 let history = [];
 let matchLog = [];
 const TP = ['0','15','30','40'];
@@ -441,7 +456,7 @@ const TP = ['0','15','30','40'];
 function saveState() {
   history.push({
     p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,
-    stats: {...stats},
+    stats: JSON.parse(JSON.stringify(stats)),
     pill: document.getElementById('setPill').innerText,
     status: document.getElementById('statusLabel').innerText
   });
@@ -452,6 +467,7 @@ function scorePoint(player, type, entityName) {
   if (matchOver) return;
   saveState();
 
+  // Stats Équipe
   if (player === 1) {
     stats.pA++;
     if (type === 'winner') stats.wA++; else stats.fB++; 
@@ -460,7 +476,16 @@ function scorePoint(player, type, entityName) {
     if (type === 'winner') stats.wB++; else stats.fA++; 
   }
 
-  // On utilise l'entité qui a déclenché l'action pour le log
+  // Stats Individuelles
+  if (mode === 'joueur' && entityName) {
+    if (!stats.ind[entityName]) stats.ind[entityName] = { w:0, f:0 };
+    if (type === 'winner') {
+      stats.ind[entityName].w++;
+    } else {
+      stats.ind[entityName].f++;
+    }
+  }
+
   logPoint(entityName || (player === 1 ? nameA : nameB), type);
 
   if (inSuperTiebreak) {
@@ -560,7 +585,7 @@ function undo() {
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
   setHistory=last.setHistory||[];
-  stats = {...last.stats};
+  stats = JSON.parse(JSON.stringify(last.stats));
   document.getElementById('setPill').innerText = last.pill;
   document.getElementById('statusLabel').innerText = last.status;
   const list = document.getElementById('logList');
@@ -598,15 +623,22 @@ function updateDisplay() {
     }
   }
 
-  document.getElementById('st-wA').textContent = stats.wA;
-  document.getElementById('st-wB').textContent = stats.wB;
-  document.getElementById('st-fA').textContent = stats.fA;
-  document.getElementById('st-fB').textContent = stats.fB;
-  document.getElementById('st-pA').textContent = stats.pA;
-  document.getElementById('st-pB').textContent = stats.pB;
-  updateBar('bar-wA','bar-wB', stats.wA, stats.wB);
-  updateBar('bar-fA','bar-fB', stats.fA, stats.fB);
-  updateBar('bar-pA','bar-pB', stats.pA, stats.pB);
+  if (mode === 'joueur') {
+    [players.j1, players.j2, players.j3, players.j4].forEach(p => {
+      document.getElementById(`st-w-${p}`).textContent = stats.ind[p]?.w || 0;
+      document.getElementById(`st-f-${p}`).textContent = stats.ind[p]?.f || 0;
+    });
+  } else {
+    document.getElementById('st-wA').textContent = stats.wA;
+    document.getElementById('st-wB').textContent = stats.wB;
+    document.getElementById('st-fA').textContent = stats.fA;
+    document.getElementById('st-fB').textContent = stats.fB;
+    document.getElementById('st-pA').textContent = stats.pA;
+    document.getElementById('st-pB').textContent = stats.pB;
+    updateBar('bar-wA','bar-wB', stats.wA, stats.wB);
+    updateBar('bar-fA','bar-fB', stats.fA, stats.fB);
+    updateBar('bar-pA','bar-pB', stats.pA, stats.pB);
+  }
 }
 
 function updateBar(idA, idB, vA, vB) {
@@ -653,7 +685,7 @@ function resetMatch() {
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
   setHistory=[];
   timerReset();
-  stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
+  stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0, ind: {}};
   history=[];matchLog=[];
   document.getElementById('setPill').textContent='Set 1';
   document.getElementById('statusLabel').textContent='En cours';
