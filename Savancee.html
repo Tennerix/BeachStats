@@ -244,7 +244,13 @@ body{
 .modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;width:100%;max-width:520px;padding:1.4rem 1.2rem 1.8rem;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
 .modal-context{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:1rem;color:var(--text)}
 .modal-context span{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
-.shot-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem}
+
+/* Shot Grid Layout */
+.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
+.shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
+.shot-sub-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
 .shot-btn{padding:.7rem .3rem;border-radius:12px;border:2px solid;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.2;text-align:center}
 .shot-btn:active{transform:scale(.95)}
 .shot-btn .s-ico{font-size:20px}
@@ -252,6 +258,7 @@ body{
 .shot-btn.type-winner:hover{background:rgba(34,197,94,.2)}
 .shot-btn.type-faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
 .shot-btn.type-faute:hover{background:rgba(239,68,68,.2)}
+
 .modal-cancel{width:100%;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
 .modal-cancel:hover{border-color:var(--muted);color:var(--text)}
 
@@ -264,7 +271,7 @@ body{
 .stats-table tr{border-bottom:1px solid var(--border)}
 .stats-table tr:last-child{border-bottom:none}
 .stats-table td{padding:.35rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;vertical-align:middle}
-.stats-table .td-lbl{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.stats-table .td-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.1}
 .stats-table .td-a{color:var(--blue);text-align:right;font-size:18px;width:36px}
 .stats-table .td-b{color:var(--orange);text-align:left;font-size:18px;width:36px}
 .stats-table .td-bar{padding:0 .4rem}
@@ -278,18 +285,30 @@ body{
 .tot-val span.b{color:var(--orange)}
 .tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 
+/* ── STATS PAR JOUEUR ── */
+.player-stats-section{margin-bottom:1rem}
+.player-stats-header{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:.3rem .5rem;border-radius:6px;margin-bottom:.4rem;
+  display:inline-block;
+}
+.player-stats-header.pa{background:rgba(59,130,246,.15);color:var(--blue)}
+.player-stats-header.pb{background:rgba(249,115,22,.15);color:var(--orange)}
+.player-stats-table{width:100%;border-collapse:collapse;margin-bottom:.3rem}
+.player-stats-table tr{border-bottom:1px solid var(--border)}
+.player-stats-table tr:last-child{border-bottom:none}
+.player-stats-table td{padding:.3rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;vertical-align:middle}
+.player-stats-table .td-lbl{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.player-stats-table .td-val{font-size:17px;font-weight:900;text-align:center;width:32px}
+.player-stats-table .td-val.pa{color:var(--blue)}
+.player-stats-table .td-val.pb{color:var(--orange)}
+.player-pair-divider{height:1px;background:var(--border);margin:.4rem 0 .6rem}
+
 @media(max-width:440px){
   .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
-  .cell.set-score{
-  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
-  text-align:center;color:var(--muted);
-}
-.cell.set-score.active{color:var(--text)}
-.cell.set-score.won{color:var(--gold)}
-.cell.point-cell{font-size:28px}
-  .shot-btn{font-size:14px;padding:.9rem .6rem}
-  .shot-btn .shot-icon{font-size:24px}
-  .actions{grid-template-columns:1fr 1fr 1fr}
+  .cell.point-cell{font-size:28px}
+  .shot-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
@@ -305,7 +324,6 @@ body{
   <div class="status-label" id="statusLabel">En cours</div>
 </div>
 
-<!-- Timer -->
 <div class="timer-wrap">
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
@@ -313,7 +331,6 @@ body{
   </div>
 </div>
 
-<!-- Scoreboard -->
 <div class="scoreboard">
   <div class="score-header" id="scoreHeader">
     <span>Équipe</span>
@@ -344,19 +361,18 @@ body{
   </div>
 </div>
 
-<!-- Point buttons -->
 <div class="team-controls">
   <div class="team-ctrl-label a" id="lblA">Équipe A</div>
   <div class="ctrl-row">
     <button class="btn-winner a" onclick="openShotModal(1,'winner')">
       <span class="btn-icon">🎯</span>
       <span class="btn-main">Point gagnant</span>
-      <span class="btn-sub">Choisir le coup</span>
+      <span class="btn-sub">Coup gagnant</span>
     </button>
     <button class="btn-faute a" onclick="openShotModal(2,'faute')">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Choisir le coup</span>
+      <span class="btn-sub">Point à A</span>
     </button>
   </div>
 </div>
@@ -367,12 +383,76 @@ body{
     <button class="btn-winner b" onclick="openShotModal(2,'winner')">
       <span class="btn-icon">🎯</span>
       <span class="btn-main">Point gagnant</span>
-      <span class="btn-sub">Choisir le coup</span>
+      <span class="btn-sub">Coup gagnant</span>
     </button>
     <button class="btn-faute b" onclick="openShotModal(1,'faute')">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Choisir le coup</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ1" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ1"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',1)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',1)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ2" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ2"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',2)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',2)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ3" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ3"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',3)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',3)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ4" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ4"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',4)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',4)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
     </button>
   </div>
 </div>
@@ -383,21 +463,16 @@ body{
   <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
 </div>
 
-<!-- Stats live -->
 <div class="stats-card" id="statsCard">
-  <div class="stats-title">Stats en direct</div>
+  <div class="stats-title">Stats détaillées</div>
   <div id="statsContent"></div>
 </div>
 
-
-
-<!-- Log -->
 <div class="log-wrap">
   <div class="log-title">Journal du match</div>
   <div class="log-list" id="logList"></div>
 </div>
 
-<!-- Shot modal -->
 <div class="modal-overlay" id="shotModal">
   <div class="modal">
     <div class="modal-context" id="modalContext">—</div>
@@ -406,7 +481,6 @@ body{
   </div>
 </div>
 
-<!-- Winner overlay -->
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-trophy">🏆</div>
@@ -431,8 +505,31 @@ body{
 </div>
 
 <script>
-// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+// ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
+const BASE_SHOTS = ['service', 'smash', 'retour', 'amorti', 'lob', 'rush'];
+const SHOT_LBL = {
+  service:'Service', smash:'Smash', 
+  retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
+  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV',
+  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV',
+  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV'
+};
+const SHOT_ICO = {service:'🎾', smash:'💥', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
+
+// Liste complète des clés pour les statistiques
+const ALL_SHOT_KEYS = [
+  'service', 'smash', 
+  'retour_cd', 'retour_rev', 
+  'amorti_cd', 'amorti_rev', 
+  'lob_cd', 'lob_rev', 
+  'rush_cd', 'rush_rev'
+];
+
+// ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
+const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
 const players = {
   j1: _p.get('j1') || 'Joueur 1',
   j2: _p.get('j2') || 'Joueur 2',
@@ -449,35 +546,47 @@ function initNames() {
   const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
   document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
   document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
-  // update "Point à X" sub-labels
-  document.querySelectorAll('.btn-faute.a .btn-sub')[0].textContent = 'Point à A';
-  document.querySelectorAll('.btn-faute.b .btn-sub')[0].textContent = 'Point à B';
+  if (statsMode === 'joueur') {
+    document.getElementById('lblA').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblB').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblJ1').textContent = players.j1;
+    document.getElementById('lblJ2').textContent = players.j2;
+    document.getElementById('lblJ3').textContent = players.j3;
+    document.getElementById('lblJ4').textContent = players.j4;
+    ['joueurCtrlJ1','joueurCtrlJ2','joueurCtrlJ3','joueurCtrlJ4'].forEach(id => {
+      document.getElementById(id).style.display = '';
+    });
+  }
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
-let setHistory=[]; // [{a:g1,b:g2}, ...]
+let setHistory=[];
 let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
-// Stats
-const SHOTS = ['service','retour','smash','amorti','lob','rush'];
-const SHOT_LBL = {service:'Service', retour:'Retour', smash:'Smash', amorti:'Amorti', lob:'Lob', rush:'Rush'};
-const SHOT_ICO = {service:'🎾', retour:'↩️', smash:'💥', amorti:'🪶', lob:'🌙', rush:'⚡'};
+
 function emptyStats(){
   const base = {pA:0, pB:0};
-  for(const t of ['A','B']) for(const tp of ['w','f']) for(const s of SHOTS) base[tp+t+'_'+s]=0;
+  for(const t of ['A','B']) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+t+'_'+s]=0;
+    }
+  }
+  for(const n of [1,2,3,4]) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+n+'_'+s]=0;
+    }
+  }
   return base;
 }
 let stats = emptyStats();
-
 let history = [];
 let matchLog = [];
-
 const TP = ['0','15','30','40'];
 
 // ── SAVE STATE ────────────────────────────────────────────────────────────────
 function saveState() {
   history.push({
-    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory: JSON.parse(JSON.stringify(setHistory)),
     stats: JSON.parse(JSON.stringify(stats)),
     pill: document.getElementById('setPill').innerText,
     status: document.getElementById('statusLabel').innerText
@@ -485,13 +594,14 @@ function saveState() {
 }
 
 // ── SCORE LOGIC ───────────────────────────────────────────────────────────────
+let pendingShot = null;
 function scorePoint(player, type) {
   if (matchOver) return;
   saveState();
 
-  // Record stats — pendingShot set by shot modal
-  const shot = pendingShot || 'coup_droit';
+  const shot = pendingShot || 'service';
   pendingShot = null;
+
   if (player === 1) {
     stats.pA++;
     if (type === 'winner') stats['wA_'+shot]++; else stats['fB_'+shot]++;
@@ -499,29 +609,27 @@ function scorePoint(player, type) {
     stats.pB++;
     if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
   }
+  if (pendingPlayerNum) {
+    if (type === 'winner') stats['w'+pendingPlayerNum+'_'+shot]++;
+    else stats['f'+pendingPlayerNum+'_'+shot]++;
+    pendingPlayerNum = null;
+  }
 
   const teamName = player === 1 ? nameA : nameB;
   logPoint(teamName, type, shot);
 
   if (inSuperTiebreak) {
     if (player === 1) p1++; else p2++;
-    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
-      logEvent(teamName, 'remporte le Super Tie-Break et le match !');
-      winMatch(player); return;
-    }
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) { winMatch(player); return; }
     updateDisplay(); return;
   }
 
   if (inTiebreak) {
     if (player === 1) p1++; else p2++;
-    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
-      logEvent(teamName, 'remporte le Tie-Break !');
-      winGame(player);
-    }
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) { winGame(player); }
     updateDisplay(); return;
   }
 
-  // Normal game (No-Ad)
   if (player === 1) p1++; else p2++;
   if (p1 > 3 || p2 > 3) {
     if (p1 > p2) winGame(1); else winGame(2);
@@ -534,10 +642,9 @@ function winGame(player) {
   const wasTiebreak = inTiebreak;
   p1=0; p2=0; inTiebreak=false;
   if (player === 1) g1++; else g2++;
-  logEvent(player===1 ? nameA : nameB, 'remporte le jeu → ' + g1 + '-' + g2);
+  logEvent(player===1 ? nameA : nameB, 'remporte le jeu (' + g1 + '-' + g2 + ')');
 
   if (wasTiebreak) { winSet(player); return; }
-
   const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
   if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
 
@@ -545,53 +652,70 @@ function winGame(player) {
     if (s1 === 1 && s2 === 1) {
       inSuperTiebreak=true; p1=0; p2=0;
       document.getElementById('setPill').textContent = 'Super Tie-Break';
-      document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-      logEvent('', '⚡ Super Tie-Break (3e set) !');
+      document.getElementById('statusLabel').textContent = "10 pts";
     } else {
       inTiebreak=true; p1=0; p2=0;
       document.getElementById('setPill').textContent = 'Tie-Break';
-      document.getElementById('statusLabel').textContent = "7 points, 2 d'écart";
-      logEvent('', '🔀 Tie-Break !');
+      document.getElementById('statusLabel').textContent = "7 pts";
     }
   }
   updateDisplay();
 }
 
-function winSet(player) {
+function winSet(player){
   setHistory.push({a:g1,b:g2});
-  p1=0; p2=0; g1=0; g2=0; inTiebreak=false; inSuperTiebreak=false;
-  if (player === 1) s1++; else s2++;
-  logEvent(player===1 ? nameA : nameB, 'remporte le set ' + s1 + '-' + s2);
-  if (s1 === 2 || s2 === 2) { winMatch(player); return; }
-  document.getElementById('setPill').textContent = 'Set ' + (s1+s2+1);
-  document.getElementById('statusLabel').textContent = 'En cours';
+  p1=0; p2=0; g1=0; g2=0; 
+  inTiebreak=false; 
+  inSuperTiebreak=false;
+
+  if(player===1) s1++; else s2++;
+  logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
+
+  // Si une équipe a 2 sets, elle gagne le match
+  if(s1===2 || s2===2){
+    winMatch(player); 
+    return;
+  }
+
+  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
+  if(s1===1 && s2===1){
+    inSuperTiebreak = true;
+    document.getElementById('setPill').textContent = "Super Tie-Break";
+    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+    logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
+  } else {
+    // Passage au set 2 normal
+    document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
+    document.getElementById('statusLabel').textContent = "En cours";
+  }
+  
   updateDisplay();
 }
 
 function winMatch(player) {
   matchOver = true;
-  // Stop timer when match ends
   if(timerRunning) timerToggle();
   const winner = player === 1 ? nameA : nameB;
   document.getElementById('winnerName').textContent = winner;
   document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
-  const _totWA=SHOTS.reduce((s,sh)=>s+stats['wA_'+sh],0);
-  const _totWB=SHOTS.reduce((s,sh)=>s+stats['wB_'+sh],0);
-  const _totFA=SHOTS.reduce((s,sh)=>s+stats['fA_'+sh],0);
-  const _totFB=SHOTS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  
+  const _totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const _totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const _totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const _totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  
   document.getElementById('ws-wA').textContent = _totWA;
   document.getElementById('ws-wB').textContent = _totWB;
   document.getElementById('ws-fA').textContent = _totFA;
   document.getElementById('ws-fB').textContent = _totFB;
   document.getElementById('winnerOverlay').classList.add('show');
-  logEvent(winner, '🏆 VAINQUEUR DU MATCH !');
+  logEvent(winner, '🏆 VICTOIRE !');
   updateDisplay();
 }
 
-// ── UNDO ──────────────────────────────────────────────────────────────────────
 function undo() {
   if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
-  if (history.length === 0) { alert('Rien à annuler !'); return; }
+  if (history.length === 0) return;
   const last = history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
@@ -599,21 +723,19 @@ function undo() {
   stats = JSON.parse(JSON.stringify(last.stats));
   document.getElementById('setPill').innerText = last.pill;
   document.getElementById('statusLabel').innerText = last.status;
-  // Remove last log entry
   const list = document.getElementById('logList');
   if (list.firstChild) list.removeChild(list.firstChild);
   matchLog.shift();
   updateDisplay();
 }
 
-// ── DISPLAY ───────────────────────────────────────────────────────────────────
 function updateDisplay() {
   let ptA, ptB;
   if (inSuperTiebreak || inTiebreak) {
     ptA=p1; ptB=p2;
   } else {
     ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
-    if (p1===3 && p2===3) { ptA='AD'; ptB='AD'; }
+    if (p1===3 && p2===3) { ptA='40'; ptB='40'; }
   }
   document.getElementById('ptA').textContent = ptA;
   document.getElementById('ptB').textContent = ptB;
@@ -634,32 +756,17 @@ function updateDisplay() {
       cellA.className='cell set-score'; cellB.className='cell set-score';
     }
   }
-
   renderStats();
 }
 
-function updateBar(idA, idB, vA, vB) {
-  const total = vA + vB;
-  const pct = total === 0 ? 50 : Math.round((vA/total)*100);
-  document.getElementById(idA).style.width = pct + '%';
-  document.getElementById(idB).style.width = (100-pct) + '%';
-}
-
-// ── LOG ───────────────────────────────────────────────────────────────────────
 function logPoint(winnerTeam, type, shot) {
   const isA = winnerTeam === nameA;
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  let label, dotClass, displayTeam;
-  const shotLbl = SHOT_LBL[shot] || shot;
-  const shotIco = SHOT_ICO[shot] || '';
-  if (type === 'winner') {
-    label = '🎯 '+shotLbl; dotClass = isA ? 'dot-a' : 'dot-b'; displayTeam = winnerTeam;
-  } else {
-    const faulter = isA ? nameB : nameA;
-    label = '💥 '+shotLbl; dotClass = isA ? 'dot-b' : 'dot-a'; displayTeam = faulter;
-  }
-  const entry = {team: displayTeam, type, shot, time, msg: label};
-  matchLog.unshift(entry);
+  const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
+  const dotClass = type === 'winner' ? (isA ? 'dot-a' : 'dot-b') : (isA ? 'dot-b' : 'dot-a');
+  const displayTeam = type === 'winner' ? winnerTeam : (isA ? nameB : nameA);
+  
+  matchLog.unshift({team: displayTeam, type, shot, time, msg: label});
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry ' + dotClass;
@@ -669,8 +776,7 @@ function logPoint(winnerTeam, type, shot) {
 
 function logEvent(team, msg) {
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const entry = {team, msg, time};
-  matchLog.unshift(entry);
+  matchLog.unshift({team, msg, time});
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry event';
@@ -678,296 +784,218 @@ function logEvent(team, msg) {
   list.prepend(div);
 }
 
-// ── RESET ─────────────────────────────────────────────────────────────────────
 function resetMatch() {
-  if (!confirm('Remettre le match à zéro ?')) return;
+  if (!confirm('Remettre à zéro ?')) return;
   p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
-  setHistory=[];
-  timerReset();
-  stats=emptyStats();
-  history=[];matchLog=[];
+  setHistory=[]; timerReset(); stats=emptyStats(); history=[]; matchLog=[];
   document.getElementById('setPill').textContent='Set 1';
-  document.getElementById('statusLabel').textContent='En cours';
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('','🎾 Match démarré — '+nameA+' vs '+nameB);
 }
 
-// ── PDF EXPORT ────────────────────────────────────────────────────────────────
-function formatDuration(secs){
-  const h=Math.floor(secs/3600);
-  const m=Math.floor((secs%3600)/60);
-  const s=secs%60;
-  if(h>0) return h+'h '+String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
-  return String(m).padStart(2,'0')+'min '+String(s).padStart(2,'0')+'s';
-}
-
-function exportPDF() {
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210, M=20;
-  let y=M;
-
-  // ── Fond sombre ──
-  doc.setFillColor(8,15,30);
-  doc.rect(0,0,W,297,'F');
-
-  // ── Titre ──
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(28);
-  doc.setTextColor(245,197,24);
-  doc.text('BEACH TENNIS', W/2, y+8, {align:'center'});
-  doc.setFontSize(12);
-  doc.setTextColor(74,100,148);
-  doc.text('STATS AVANCÉES', W/2, y+16, {align:'center'});
-  y+=26;
-
-  // ── Date + durée ──
-  doc.setFontSize(10);
-  doc.setTextColor(74,100,148);
-  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y, {align:'center'});
-  y+=6;
-  doc.setTextColor(245,197,24);
-  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
-  y+=10;
-
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=10;
-
-  // ── Équipes + score par set ──
-  const teams = [
-    {label:'ÉQUIPE A', color:[59,130,246], name:nameA, sets:s1},
-    {label:'ÉQUIPE B', color:[249,115,22], name:nameB, sets:s2}
-  ];
-  teams.forEach((t,i) => {
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...t.color);
-    doc.text(t.label, M, y);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(13);
-    doc.setTextColor(226,234,248);
-    doc.text(t.name, M, y+7);
-    // Score sets
-    let setStr = '';
-    setHistory.forEach((sh,idx) => {
-      const sc = i===0 ? sh.a : sh.b;
-      const opp = i===0 ? sh.b : sh.a;
-      setStr += 'S'+(idx+1)+': '+sc+(sc>opp?'*':'')+' ';
-    });
-    if(setStr) {
-      doc.setFontSize(10);
-      doc.setTextColor(74,100,148);
-      doc.text(setStr.trim(), M, y+13);
-    }
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(22);
-    doc.setTextColor(245,197,24);
-    doc.text(String(t.sets)+' set'+(t.sets>1?'s':''), W-M, y+6, {align:'right'});
-    y += setStr ? 20 : 16;
-    doc.setDrawColor(30,53,96);
-    doc.line(M,y,W-M,y);
-    y+=8;
-  });
-
-  y+=2;
-
-  // ── Stats détaillées ──
-  const totWA=SHOTS.reduce((s,sh)=>s+stats['wA_'+sh],0);
-  const totWB=SHOTS.reduce((s,sh)=>s+stats['wB_'+sh],0);
-  const totFA=SHOTS.reduce((s,sh)=>s+stats['fA_'+sh],0);
-  const totFB=SHOTS.reduce((s,sh)=>s+stats['fB_'+sh],0);
-
-  // Résumé totaux
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  doc.setTextColor(245,197,24);
-  doc.text('RÉSUMÉ', M, y);
-  y+=6;
-  const summary = [
-    ['Points gagnants', totWA, totWB],
-    ['Fautes directes', totFA, totFB],
-    ['Points gagnés',   stats.pA, stats.pB],
-  ];
-  doc.setFontSize(9);
-  doc.setTextColor(74,100,148);
-  doc.text('Statistique', M, y);
-  doc.text('Éq.A', W/2, y, {align:'center'});
-  doc.text('Éq.B', W-M, y, {align:'right'});
-  y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=5;
-  summary.forEach(r => {
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
-    doc.text(r[0], M, y);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(59,130,246);  doc.text(String(r[1]), W/2, y, {align:'center'});
-    doc.setTextColor(249,115,22); doc.text(String(r[2]), W-M, y, {align:'right'});
-    y+=7;
-  });
-  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
-
-  // Détail par coup
-  function pdfStatSection(title, prefix, colorTitle) {
-    if(y>240){doc.addPage();y=M;doc.setFillColor(8,15,30);doc.rect(0,0,W,297,'F');}
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...colorTitle);
-    doc.text(title, M, y); y+=6;
-    doc.setFontSize(9); doc.setTextColor(74,100,148);
-    doc.text('Coup', M, y);
-    doc.text('Éq.A', W/2, y, {align:'center'});
-    doc.text('Éq.B', W-M, y, {align:'right'});
-    y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=5;
-    SHOTS.forEach(s => {
-      if(y>270){doc.addPage();y=M;doc.setFillColor(8,15,30);doc.rect(0,0,W,297,'F');}
-      const vA = stats[prefix+'A_'+s];
-      const vB = stats[prefix+'B_'+s];
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
-      doc.text(SHOT_LBL[s], M, y);
-      doc.setFont('helvetica','bold');
-      doc.setTextColor(59,130,246);  doc.text(String(vA), W/2, y, {align:'center'});
-      doc.setTextColor(249,115,22); doc.text(String(vB), W-M, y, {align:'right'});
-      y+=6;
-    });
-    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=4;
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
-    doc.text('Total', M, y);
-    const tA = SHOTS.reduce((s,sh)=>s+stats[prefix+'A_'+sh],0);
-    const tB = SHOTS.reduce((s,sh)=>s+stats[prefix+'B_'+sh],0);
-    doc.setTextColor(59,130,246);  doc.text(String(tA), W/2, y, {align:'center'});
-    doc.setTextColor(249,115,22); doc.text(String(tB), W-M, y, {align:'right'});
-    y+=10;
-  }
-
-  pdfStatSection('POINTS GAGNANTS — détail par coup', 'w', [34,197,94]);
-  pdfStatSection('FAUTES DIRECTES — détail par coup', 'f', [239,68,68]);
-
-  // ── Journal ──
-  if(y>240){doc.addPage();y=M;doc.setFillColor(8,15,30);doc.rect(0,0,W,297,'F');}
-  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
-  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(245,197,24);
-  doc.text('JOURNAL DU MATCH', M, y); y+=8;
-
-  [...matchLog].reverse().slice(0,40).forEach(entry => {
-    if(y>272){doc.addPage();y=M;doc.setFillColor(8,15,30);doc.rect(0,0,W,297,'F');}
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.setTextColor(74,100,148);
-    doc.text(entry.time, M, y);
-    doc.setTextColor(180,200,230);
-    const txt = (entry.team ? entry.team+' — ':'')+entry.msg;
-    doc.text(txt, M+16, y);
-    y+=6;
-  });
-
-  doc.save('BeachStats_Avancees_'+new Date().toISOString().slice(0,10)+'.pdf');
-}
-
-// ── SHOT MODAL ───────────────────────────────────────────────────────────────
+// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
 let pendingPlayer = null;
 let pendingType = null;
-let pendingShot = null;
+let pendingPlayerNum = null;
 
-function openShotModal(player, type) {
+function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   pendingPlayer = player;
   pendingType = type;
+  pendingPlayerNum = playerNum || null;
+  
   const isWinner = type === 'winner';
   const teamName = player === 1 ? nameA : nameB;
   const actionTeam = isWinner ? teamName : (player === 1 ? nameB : nameA);
-  const ctx = document.getElementById('modalContext');
-  ctx.innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${actionTeam}`;
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayName = playerNum ? playerNames[playerNum] : actionTeam;
+
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${displayName}`;
+  
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
-  for(const s of SHOTS){
-    const btn = document.createElement('button');
-    btn.className = 'shot-btn type-'+type;
-    btn.innerHTML = `<span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}`;
-    btn.onclick = () => confirmShot(s);
-    grid.appendChild(btn);
-  }
+  
+  BASE_SHOTS.forEach(s => {
+    const group = document.createElement('div');
+    group.className = 'shot-group';
+    if (s === 'service' || s === 'smash') {
+      group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
+        <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+      </button>`;
+    } else {
+      group.innerHTML = `
+        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+        <div class="shot-sub-row">
+          <button class="shot-btn type-${type}" onclick="confirmShot('${s}_cd')">CD</button>
+          <button class="shot-btn type-${type}" onclick="confirmShot('${s}_rev')">REV</button>
+        </div>`;
+    }
+    grid.appendChild(group);
+  });
+  
   document.getElementById('shotModal').classList.add('show');
 }
 
 function closeShotModal() {
-  pendingPlayer = null; pendingType = null;
   document.getElementById('shotModal').classList.remove('show');
 }
 
-function confirmShot(shot) {
-  document.getElementById('shotModal').classList.remove('show');
-  pendingShot = shot;
+function confirmShot(shotKey) {
+  pendingShot = shotKey;
+  closeShotModal();
   scorePoint(pendingPlayer, pendingType);
-  pendingPlayer = null; pendingType = null;
 }
 
-// ── RENDER STATS ──────────────────────────────────────────────────────────────
+// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
 function renderStats() {
+  if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
+
   const el = document.getElementById('statsContent');
   let html = '';
 
-  // totals
-  const totWA = SHOTS.reduce((s,sh)=>s+stats['wA_'+sh],0);
-  const totWB = SHOTS.reduce((s,sh)=>s+stats['wB_'+sh],0);
-  const totFA = SHOTS.reduce((s,sh)=>s+stats['fA_'+sh],0);
-  const totFB = SHOTS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
 
-  function bar(a,b){const t=a+b||1;return`<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;}
+  const bar = (a,b) => {
+    const t=a+b||1;
+    return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
+  };
 
-  // Winners section
+  // Section Winners
   html += `<div class="stats-section">
     <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
     <table class="stats-table">`;
-  for(const s of SHOTS){
+  
+  ALL_SHOT_KEYS.forEach(s => {
     const vA=stats['wA_'+s], vB=stats['wB_'+s];
-    html+=`<tr>
-      <td class="td-a">${vA}</td>
-      <td class="td-bar">${bar(vA,vB)}<div class="td-lbl" style="margin-top:2px">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div></td>
-      <td class="td-b">${vB}</td>
-    </tr>`;
-  }
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
+  });
   html += '</table></div>';
 
-  // Fautes section
+  // Section Fautes
   html += `<div class="stats-section">
     <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
     <table class="stats-table">`;
-  for(const s of SHOTS){
+  
+  ALL_SHOT_KEYS.forEach(s => {
     const vA=stats['fA_'+s], vB=stats['fB_'+s];
-    html+=`<tr>
-      <td class="td-a">${vA}</td>
-      <td class="td-bar">${bar(vA,vB)}<div class="td-lbl" style="margin-top:2px">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div></td>
-      <td class="td-b">${vB}</td>
-    </tr>`;
-  }
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
+  });
   html += '</table></div>';
 
-  // Totals row
+  // Totaux
   html += `<div class="stats-totals">
     <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
     <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
-    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function renderStatsParJoueur() {
+  const el = document.getElementById('statsContent');
+
+  // [nom, clé equipe A ou B, couleur CSS]
+  const playerDefs = [
+    { name: players.j1, team: 'A', cls: 'var(--blue)', num: 1 },
+    { name: players.j2, team: 'A', cls: 'var(--blue)', num: 2 },
+    { name: players.j3, team: 'B', cls: 'var(--orange)', num: 3 },
+    { name: players.j4, team: 'B', cls: 'var(--orange)', num: 4 },
+  ];
+
+  const buildPlayerRow = (p, type) => {
+    const tp = type === 'winner' ? 'w' : 'f';
+    const key = tp + p.num + '_';
+    const total = ALL_SHOT_KEYS.reduce((s, sh) => s + (stats[key + sh] || 0), 0);
+
+    let rows = '';
+    ALL_SHOT_KEYS.forEach(sh => {
+      const v = stats[key + sh] || 0;
+      const maxV = Math.max(1, ...[1,2,3,4].map(n => stats[tp+n+'_'+sh] || 0));
+      const pct = Math.round(v / maxV * 100);
+      if (v > 0) {
+        rows += `<tr>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:.28rem .5rem .28rem 0;width:1%">${SHOT_LBL[sh]}</td>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:${p.cls};text-align:right;padding:.28rem .5rem;white-space:nowrap;width:1%">${v}</td>
+          <td style="padding:.28rem 0;width:100%">
+            <div style="height:5px;border-radius:4px;background:var(--bg)">
+              <div style="width:${pct}%;height:100%;background:${p.cls};border-radius:4px;transition:width .3s"></div>
+            </div>
+          </td>
+        </tr>`;
+      }
+    });
+
+    if (!rows) return '';
+
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:15px;margin-left:3px">${total}</span></span>
+      </div>
+      <table style="width:100%;border-collapse:collapse">${rows}</table>
+    </div>`;
+  };
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+
+  let html = `
+    <div class="stat-row"><div class="stat-val a">${totWA}</div><div class="stat-name">Points gagnants</div><div class="stat-val b">${totWB}</div></div>
+    <div class="stat-row"><div class="stat-val a">${totFA}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${totFB}</div></div>`;
+
+  // Section Winners
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
+  html += `</div>`;
+
+  // Section Fautes
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
+  html += `</div>`;
+
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${stats.pA}</span><span style="color:var(--muted)">/</span><span class="b">${stats.pB}</span></div><div class="tot-lbl">Points Totaux</div></div>
   </div>`;
 
   el.innerHTML = html;
 }
 
 // ── TIMER ────────────────────────────────────────────────────────────────────
-let timerSeconds = 0;
-let timerInterval = null;
-let timerRunning = false;
-
+let timerSeconds = 0, timerInterval = null, timerRunning = false;
 function timerToggle() {
   if (timerRunning) {
-    clearInterval(timerInterval);
-    timerRunning = false;
+    clearInterval(timerInterval); timerRunning = false;
     document.getElementById('timerStartBtn').textContent = '▶ Start';
     document.getElementById('timerStartBtn').className = 'timer-btn start';
-    document.getElementById('timerDisplay').classList.remove('running');
   } else {
     timerRunning = true;
     document.getElementById('timerStartBtn').textContent = '⏸ Pause';
     document.getElementById('timerStartBtn').className = 'timer-btn pause';
-    document.getElementById('timerDisplay').classList.add('running');
     timerInterval = setInterval(() => {
       timerSeconds++;
       const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
@@ -976,21 +1004,44 @@ function timerToggle() {
     }, 1000);
   }
 }
-
-function timerReset() {
-  clearInterval(timerInterval);
-  timerRunning = false;
-  timerSeconds = 0;
-  document.getElementById('timerDisplay').textContent = '00:00';
-  document.getElementById('timerDisplay').classList.remove('running');
-  document.getElementById('timerStartBtn').textContent = '▶ Start';
-  document.getElementById('timerStartBtn').className = 'timer-btn start';
+function timerReset() { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; document.getElementById('timerDisplay').textContent = '00:00'; }
+function formatDuration(secs){
+  const m=Math.floor(secs/60), s=secs%60;
+  return String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── PDF EXPORT ────────────────────────────────────────────────────────────────
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18); doc.text("Rapport Beach Tennis", 14, 20);
+  doc.setFontSize(12); doc.text(`${nameA} vs ${nameB}`, 14, 30);
+  doc.text(`Score Final: ${s1} - ${s2}`, 14, 38);
+  
+  let y = 50;
+  doc.text("Stats Winners:", 14, y); y+=7;
+  ALL_SHOT_KEYS.forEach(s => {
+    if(stats['wA_'+s] > 0 || stats['wB_'+s] > 0) {
+      doc.text(`${SHOT_LBL[s]}: A(${stats['wA_'+s]}) - B(${stats['wB_'+s]})`, 20, y);
+      y+=6;
+    }
+  });
+  
+  y+=10;
+  doc.text("Stats Fautes:", 14, y); y+=7;
+  ALL_SHOT_KEYS.forEach(s => {
+    if(stats['fA_'+s] > 0 || stats['fB_'+s] > 0) {
+      doc.text(`${SHOT_LBL[s]}: A(${stats['fA_'+s]}) - B(${stats['fB_'+s]})`, 20, y);
+      y+=6;
+    }
+  });
+  
+  doc.save(`Match_${new Date().getTime()}.pdf`);
+}
+
 initNames();
 updateDisplay();
-logEvent('', '🎾 Match démarré — '+nameA+' vs '+nameB);
+logEvent('', '🎾 Match démarré');
 </script>
 </body>
 </html>
