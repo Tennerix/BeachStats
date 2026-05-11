@@ -860,19 +860,22 @@ function renderStatsParJoueur() {
     </div>`;
   };
 
-  let html = '';
-
-  // Section Winners
   const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
   const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+
+  let html = `
+    <div class="stat-row"><div class="stat-val a">${totWA}</div><div class="stat-name">Points gagnants</div><div class="stat-val b">${totWB}</div></div>
+    <div class="stat-row"><div class="stat-val a">${totFA}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${totFB}</div></div>`;
+
+  // Section Winners
   html += `<div class="stats-section">
     <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
   playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
   html += `</div>`;
 
   // Section Fautes
-  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
-  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
   html += `<div class="stats-section">
     <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
   playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
