@@ -91,6 +91,10 @@ input:checked + .slider:before { transform: translateX(26px); }
 .btn-stat.base i{color:#3b82f6}
 .btn-stat.avancees{border-left:3px solid #f97316}
 .btn-stat.avancees i{color:#f97316}
+.btn-stat.intermediaire{border-left:3px solid #22c55e}
+.btn-stat.intermediaire i{color:#22c55e}
+.btn-stat.pro{border-left:3px solid #a855f7}
+.btn-stat.pro i{color:#a855f7}
 @media(max-width:380px){.names-grid{grid-template-columns:1fr}.bt-title{font-size:17px;letter-spacing:2px}.btn-stat{font-size:13px;padding:11px 12px}.hero img{max-height:180px}}
 </style>
 </head>
@@ -125,7 +129,9 @@ input:checked + .slider:before { transform: translateX(26px); }
     <div class="btn-group">
       <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
+      <button type="button" class="btn-stat intermediaire" onclick="goToSintermediaire()"><i class="ti ti-chart-area-line"></i>Stats intermediaires<i class="ti ti-chevron-right arrow"></i></button>
       <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i>Stats avancees<i class="ti ti-chevron-right arrow"></i></button>
+      <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i>Stats pro<i class="ti ti-chevron-right arrow"></i></button>
     </div>
   </div>
 </div>
@@ -152,6 +158,12 @@ function goToSbase() {
 }
 function goToCDP() {
   window.location.href = `CDP.html?${getParams()}`;
+}
+function goToSintermediaire() {
+  window.location.href = `Sintermediaire.html?${getParams()}`;
+}
+function goToSpro() {
+  window.location.href = `Spro.html?${getParams()}`;
 }
 </script>
 </body>
