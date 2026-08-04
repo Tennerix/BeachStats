@@ -727,106 +727,150 @@ function exportPDF() {
   const W=210, M=20;
   let y=M;
 
+  const newPage = () => {
+    doc.addPage();
+    doc.setFillColor(8,15,30);
+    doc.rect(0,0,W,297,'F');
+    y = M;
+  };
+
+  const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  // Les polices standards de jsPDF (Helvetica) ne supportent pas les emojis :
+  // on les retire avant toute écriture dans le PDF pour éviter les caractères
+  // corrompus (les emojis restent affichés normalement dans l'application).
+  const stripEmoji = (str) => String(str)
+    .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const sectionTitle = (title, color) => {
+    ensureSpace(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...color);
+    doc.text(title, M, y); y+=7;
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
+  };
+
+  // ── Fond sombre ──
   doc.setFillColor(8,15,30);
   doc.rect(0,0,W,297,'F');
 
+  // ── Titre ──
   doc.setFont('helvetica','bold');
-  doc.setFontSize(26);
-  doc.setTextColor(245,197,24);
+  doc.setFontSize(26); doc.setTextColor(245,197,24);
   doc.text('BEACH TENNIS — STATS DE BASE', W/2, y+8, {align:'center'});
-  doc.setFontSize(11);
-  doc.setTextColor(74,100,148);
-  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y+17, {align:'center'});
-  doc.setFontSize(10);
-  doc.setTextColor(245,197,24);
-  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y+24, {align:'center'});
-  y+=34;
+  y+=18;
 
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
+  // ── Date ──
+  doc.setFontSize(10); doc.setTextColor(74,100,148);
+  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y, {align:'center'});
   y+=10;
+  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
 
-  [{label:'ÉQUIPE A',color:[59,130,246],name:nameA,sets:s1},
-   {label:'ÉQUIPE B',color:[249,115,22],name:nameB,sets:s2}].forEach(t => {
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...t.color);
+  // ══ 1. VAINQUEUR ET SCORE (pas de titre, juste le nom et le score) ═════════
+  ensureSpace(40);
+
+  const winnerIsA = s1 > s2;
+  const winnerName = winnerIsA ? nameA : nameB;
+  const scoreStr = setHistory.map(sh => {
+    const wG = winnerIsA ? sh.a : sh.b;
+    const lG = winnerIsA ? sh.b : sh.a;
+    return wG + '/' + lG;
+  }).join('   -   ');
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(245,197,24);
+  doc.text(winnerName, W/2, y, {align:'center'}); y+=9;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(226,234,248);
+  doc.text(scoreStr || '—', W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(74,100,148);
+  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
+  y+=12;
+
+  [{label:'ÉQUIPE A',color:[59,130,246],name:nameA,sets:s1,idx:0},
+   {label:'ÉQUIPE B',color:[249,115,22],name:nameB,sets:s2,idx:1}].forEach(t => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.color);
     doc.text(t.label, M, y);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(13);
-    doc.setTextColor(226,234,248);
+    doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(226,234,248);
     doc.text(t.name, M, y+7);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);
-    doc.setTextColor(245,197,24);
-    doc.text('Sets : '+t.sets, W-M, y+4, {align:'right'});
-    y+=18;
-    doc.setDrawColor(30,53,96);
-    doc.line(M,y,W-M,y);
-    y+=8;
+    let setStr = setHistory.map((sh,i) => {
+      const sc  = t.idx===0 ? sh.a : sh.b;
+      const opp = t.idx===0 ? sh.b : sh.a;
+      return 'S'+(i+1)+': '+sc+(sc>opp?'*':'');
+    }).join('  ');
+    if (setStr) { doc.setFontSize(9); doc.setTextColor(74,100,148); doc.text(setStr, M, y+13); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(245,197,24);
+    doc.text('Sets : '+t.sets, W-M, y+6, {align:'right'});
+    y += setStr ? 20 : 16;
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
   });
+  y+=2;
 
-  y+=4;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(13);
-  doc.setTextColor(245,197,24);
-  doc.text('STATISTIQUES', M, y);
-  y+=8;
+  // ══ 2. STATS DE POINTS GAGNANTS & FAUTES DIRECTES PAR ÉQUIPE ═══════════════
+  sectionTitle('POINTS GAGNANTS & FAUTES DIRECTES — PAR ÉQUIPE', [245,197,24]);
 
   const rows = [
-    ['Coups gagnants (Winners)', stats.wA, stats.wB],
+    ['Points gagnants', stats.wA, stats.wB],
     ['Fautes directes', stats.fA, stats.fB],
     ['Points gagnés', stats.pA, stats.pB],
   ];
 
-  doc.setFontSize(10);
-  doc.setTextColor(74,100,148);
+  doc.setFontSize(9); doc.setTextColor(74,100,148);
   doc.text('Statistique', M, y);
-  doc.text('Équipe A', W/2-10, y, {align:'center'});
-  doc.text('Équipe B', W-M, y, {align:'right'});
-  y+=5;
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=7;
-
+  doc.text('Éq.A', W/2, y, {align:'center'});
+  doc.text('Éq.B', W-M, y, {align:'right'});
+  y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=5;
   rows.forEach(r => {
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(11);
-    doc.setTextColor(226,234,248);
-    doc.text(r[0], M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248); doc.text(r[0], M, y);
     doc.setFont('helvetica','bold');
-    doc.setTextColor(59,130,246);
-    doc.text(String(r[1]), W/2-10, y, {align:'center'});
-    doc.setTextColor(249,115,22);
-    doc.text(String(r[2]), W-M, y, {align:'right'});
-    y+=8;
+    doc.setTextColor(59,130,246);  doc.text(String(r[1]), W/2, y, {align:'center'});
+    doc.setTextColor(249,115,22); doc.text(String(r[2]), W-M, y, {align:'right'});
+    y+=7;
   });
+  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
 
-  y+=4;
-  doc.setDrawColor(30,53,96);
-  doc.line(M,y,W-M,y);
-  y+=10;
+  // ══ 3. DÉTAIL PAR JOUEUR (si le mode individuel est actif) ══════════════════
+  if (mode === 'joueur') {
+    sectionTitle('DÉTAIL PAR JOUEUR', [245,197,24]);
+    const playerDefs = [
+      {name:players.j1, color:[59,130,246]},
+      {name:players.j2, color:[59,130,246]},
+      {name:players.j3, color:[249,115,22]},
+      {name:players.j4, color:[249,115,22]},
+    ];
+    doc.setFontSize(9); doc.setTextColor(74,100,148);
+    doc.text('Joueur', M, y);
+    doc.text('Winners', W/2, y, {align:'center'});
+    doc.text('Fautes', W-M, y, {align:'right'});
+    y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=6;
+    playerDefs.forEach(pl => {
+      const w = stats.ind[pl.name]?.w || 0;
+      const f = stats.ind[pl.name]?.f || 0;
+      ensureSpace(8);
+      doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(...pl.color);
+      doc.text(pl.name, M, y);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(34,197,94);  doc.text(String(w), W/2, y, {align:'center'});
+      doc.setTextColor(239,68,68); doc.text(String(f), W-M, y, {align:'right'});
+      y+=8;
+    });
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
+  }
 
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(12);
-  doc.setTextColor(245,197,24);
-  doc.text('JOURNAL DU MATCH', M, y);
-  y+=8;
-
-  [...matchLog].reverse().slice(0,40).forEach(entry => {
-    if (y > 270) { doc.addPage(); y=M; }
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(74,100,148);
-    doc.text(entry.time, M, y);
+  // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
+  sectionTitle('JOURNAL DU MATCH COMPLET', [245,197,24]);
+  [...matchLog].reverse().forEach(entry => {
+    ensureSpace(6);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.setTextColor(74,100,148); doc.text(entry.time, M, y);
     doc.setTextColor(180,200,230);
-    const txt = (entry.team ? entry.team+' — ':'')+entry.msg;
+    const txt = (entry.team ? stripEmoji(entry.team)+' — ':'')+stripEmoji(entry.msg);
     doc.text(txt, M+16, y);
     y+=6;
   });
 
   doc.save('BeachStats_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
+
 
 // ── TIMER ────────────────────────────────────────────────────────────────────
 let timerSeconds = 0;
