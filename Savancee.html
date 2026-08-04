@@ -507,23 +507,26 @@ body{
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
+const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_LBL = {
   service:'Service', smash:'Smash', roule:'Bras roulé',
   retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
   amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV', amorti_roule:'Amorti Bras Roulé',
   lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_roule:'Lob Bras Roulé', lob_rainbow:'Lob Rainbow',
-  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow'
+  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
+  defense:'Défense'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
 const ALL_SHOT_KEYS = [
-  'service', 'smash', 'roule',
-  'retour_cd', 'retour_rev', 
+  'service',
+  'retour_cd', 'retour_rev',
+  'smash', 'roule',
   'amorti_cd', 'amorti_rev', 'amorti_roule',
   'lob_cd', 'lob_rev', 'lob_roule', 'lob_rainbow', 
-  'rush_cd', 'rush_rev', 'rush_rainbow'
+  'rush_cd', 'rush_rev', 'rush_rainbow',
+  'defense'
 ];
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
@@ -850,7 +853,7 @@ function openShotModal(player, type, playerNum) {
   BASE_SHOTS.forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
-    if (s === 'service' || s === 'smash' || s === 'roule') {
+    if (s === 'service' || s === 'smash' || s === 'roule' || s === 'defense') {
       group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
         <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
       </button>`;
