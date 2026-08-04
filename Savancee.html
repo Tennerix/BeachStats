@@ -1053,6 +1053,15 @@ function exportPDF() {
     y = M;
   };
 
+  const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  const sectionTitle = (title, color) => {
+    ensureSpace(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...color);
+    doc.text(title, M, y); y+=7;
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
+  };
+
   // ── Fond sombre ──
   doc.setFillColor(8,15,30);
   doc.rect(0,0,W,297,'F');
@@ -1065,16 +1074,28 @@ function exportPDF() {
   doc.text('STATS AVANCÉES', W/2, y+16, {align:'center'});
   y+=26;
 
-  // ── Date + durée ──
+  // ── Date ──
   doc.setFontSize(10); doc.setTextColor(74,100,148);
   doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y, {align:'center'});
-  y+=6;
-  doc.setTextColor(245,197,24);
-  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
   y+=10;
   doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
 
-  // ── Équipes + score par set ──
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+
+  // ══ 1. VAINQUEUR ET SCORE ══════════════════════════════════════════════════
+  sectionTitle('🏆 VAINQUEUR & SCORE', [245,197,24]);
+
+  const winnerIsA = s1 > s2;
+  const winnerName = winnerIsA ? nameA : nameB;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(245,197,24);
+  doc.text(winnerName, W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(74,100,148);
+  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
+  y+=12;
+
   [{label:'ÉQUIPE A', color:[59,130,246], name:nameA, sets:s1, idx:0},
    {label:'ÉQUIPE B', color:[249,115,22],  name:nameB, sets:s2, idx:1}].forEach(t => {
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.color);
@@ -1093,17 +1114,11 @@ function exportPDF() {
     y += setStr ? 20 : 16;
     doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
   });
-
   y+=2;
 
-  // ── Résumé totaux ──
-  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
-  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
-  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
-  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  // ══ 2. STATS DE POINTS GAGNANTS & FAUTES DIRECTES PAR ÉQUIPE ═══════════════
+  sectionTitle('📊 POINTS GAGNANTS & FAUTES DIRECTES — PAR ÉQUIPE', [245,197,24]);
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(245,197,24);
-  doc.text('RÉSUMÉ', M, y); y+=6;
   doc.setFontSize(9); doc.setTextColor(74,100,148);
   doc.text('Statistique', M, y);
   doc.text('Éq.A', W/2, y, {align:'center'});
@@ -1118,9 +1133,9 @@ function exportPDF() {
   });
   doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
 
-  // ── Détail par coup ──
-  const pdfSection = (title, prefix, titleColor) => {
-    if (y > 240) newPage();
+  // ══ 3. DÉTAIL — PAR JOUEUR OU PAR ÉQUIPE (selon le mode choisi) ═════════════
+  const pdfShotTable = (title, prefix, titleColor) => {
+    ensureSpace(20);
     doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...titleColor);
     doc.text(title, M, y); y+=6;
     doc.setFontSize(9); doc.setTextColor(74,100,148);
@@ -1131,7 +1146,7 @@ function exportPDF() {
     ALL_SHOT_KEYS.forEach(s => {
       const vA = stats[prefix+'A_'+s], vB = stats[prefix+'B_'+s];
       if (vA === 0 && vB === 0) return;
-      if (y > 272) newPage();
+      ensureSpace(8);
       doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
       doc.text(SHOT_LBL[s], M, y);
       doc.setFont('helvetica','bold');
@@ -1149,15 +1164,8 @@ function exportPDF() {
     y+=10;
   };
 
-  pdfSection('POINTS GAGNANTS — détail par coup', 'w', [34,197,94]);
-  pdfSection('FAUTES DIRECTES — détail par coup', 'f', [239,68,68]);
-
-  // ── Stats par joueur (si mode joueur) ──
   if (statsMode === 'joueur') {
-    if (y > 220) newPage();
-    else { doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10; }
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(245,197,24);
-    doc.text('DÉTAIL PAR JOUEUR', M, y); y+=8;
+    sectionTitle('🎾 DÉTAIL PAR JOUEUR', [245,197,24]);
     const playerDefs = [
       {name:players.j1, color:[59,130,246],  num:1},
       {name:players.j2, color:[59,130,246],  num:2},
@@ -1168,14 +1176,14 @@ function exportPDF() {
       const totW = ALL_SHOT_KEYS.reduce((s,sh)=>s+(stats['w'+pl.num+'_'+sh]||0),0);
       const totF = ALL_SHOT_KEYS.reduce((s,sh)=>s+(stats['f'+pl.num+'_'+sh]||0),0);
       if (totW+totF === 0) return;
-      if (y > 250) newPage();
+      ensureSpace(14);
       doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...pl.color);
       doc.text(pl.name+' — Winners: '+totW+'  Fautes: '+totF, M, y); y+=6;
       ALL_SHOT_KEYS.forEach(s => {
         const vW = stats['w'+pl.num+'_'+s]||0;
         const vF = stats['f'+pl.num+'_'+s]||0;
         if (vW+vF === 0) return;
-        if (y > 272) newPage();
+        ensureSpace(6);
         doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(226,234,248);
         doc.text(SHOT_LBL[s], M+4, y);
         doc.setTextColor(34,197,94);  doc.text('W:'+vW, W/2-10, y, {align:'center'});
@@ -1184,15 +1192,16 @@ function exportPDF() {
       });
       y+=4;
     });
+  } else {
+    sectionTitle('🎾 DÉTAIL PAR ÉQUIPE', [245,197,24]);
+    pdfShotTable('Points gagnants — détail par coup', 'w', [34,197,94]);
+    pdfShotTable('Fautes directes — détail par coup', 'f', [239,68,68]);
   }
 
-  // ── Journal ──
-  if (y > 240) newPage();
-  else { doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10; }
-  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(245,197,24);
-  doc.text('JOURNAL DU MATCH', M, y); y+=8;
-  [...matchLog].reverse().slice(0,50).forEach(entry => {
-    if (y > 272) newPage();
+  // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
+  sectionTitle('📋 JOURNAL DU MATCH COMPLET', [245,197,24]);
+  [...matchLog].reverse().forEach(entry => {
+    ensureSpace(6);
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
     doc.setTextColor(74,100,148); doc.text(entry.time, M, y);
     doc.setTextColor(180,200,230);
@@ -1202,6 +1211,7 @@ function exportPDF() {
 
   doc.save('BeachStats_Avancees_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
+
 
 initNames();
 updateDisplay();
