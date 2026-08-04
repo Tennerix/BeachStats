@@ -507,15 +507,15 @@ body{
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
+const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_LBL = {
   service:'Service', smash:'Smash', roule:'Bras roulé',
-  retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush'
+  retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
-const ALL_SHOT_KEYS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
+const ALL_SHOT_KEYS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
