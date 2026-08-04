@@ -609,6 +609,7 @@ function scorePoint(player, type) {
     stats.pB++;
     if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
   }
+  const playerNumForLog = pendingPlayerNum;
   if (pendingPlayerNum) {
     if (type === 'winner') stats['w'+pendingPlayerNum+'_'+shot]++;
     else stats['f'+pendingPlayerNum+'_'+shot]++;
@@ -616,7 +617,7 @@ function scorePoint(player, type) {
   }
 
   const teamName = player === 1 ? nameA : nameB;
-  logPoint(teamName, type, shot);
+  logPoint(teamName, type, shot, playerNumForLog);
 
   if (inSuperTiebreak) {
     if (player === 1) p1++; else p2++;
@@ -759,12 +760,15 @@ function updateDisplay() {
   renderStats();
 }
 
-function logPoint(winnerTeam, type, shot) {
+function logPoint(winnerTeam, type, shot, playerNum) {
   const isA = winnerTeam === nameA;
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
   const dotClass = type === 'winner' ? (isA ? 'dot-a' : 'dot-b') : (isA ? 'dot-b' : 'dot-a');
-  const displayTeam = type === 'winner' ? winnerTeam : (isA ? nameB : nameA);
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayTeam = playerNum
+    ? playerNames[playerNum]
+    : (type === 'winner' ? winnerTeam : (isA ? nameB : nameA));
   
   matchLog.unshift({team: displayTeam, type, shot, time, msg: label});
   const list = document.getElementById('logList');
