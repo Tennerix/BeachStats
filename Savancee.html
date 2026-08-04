@@ -511,10 +511,11 @@ body{
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
 const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_LBL = {
-  service:'Service', smash:'Smash', roule:'Bras roulé',
+  service:'Service', smash:'Smash',
+  roule:'Bras roulé', roule_amorti:'Bras roulé Amorti', roule_lob:'Bras roulé Lob',
   retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
-  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV', amorti_roule:'Amorti Bras Roulé',
-  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_roule:'Lob Bras Roulé', lob_rainbow:'Lob Rainbow',
+  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV',
+  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_rainbow:'Lob Rainbow',
   rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
   defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
 };
@@ -524,9 +525,10 @@ const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', a
 const ALL_SHOT_KEYS = [
   'service',
   'retour_cd', 'retour_rev',
-  'smash', 'roule',
-  'amorti_cd', 'amorti_rev', 'amorti_roule',
-  'lob_cd', 'lob_rev', 'lob_roule', 'lob_rainbow', 
+  'smash',
+  'roule_amorti', 'roule_lob',
+  'amorti_cd', 'amorti_rev',
+  'lob_cd', 'lob_rev', 'lob_rainbow', 
   'rush_cd', 'rush_rev', 'rush_rainbow',
   'defense_cd', 'defense_rev'
 ];
@@ -830,10 +832,17 @@ let pendingPlayer = null;
 let pendingType = null;
 let pendingPlayerNum = null;
 
-// Variantes supplémentaires (en plus de CD/REV) par coup côté
-const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'], defense: [] };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
-const SIDED_SHOTS = Object.keys(SIDED_EXTRAS); // coups qui ont un côté (CD/REV...)
+// Variantes disponibles à l'étape 2, par coup côté (CD/REV non pertinents pour le bras roulé)
+const SIDED_VARIANTS = {
+  retour: ['cd', 'rev'],
+  amorti: ['cd', 'rev'],
+  lob: ['cd', 'rev', 'rainbow'],
+  rush: ['cd', 'rev', 'rainbow'],
+  defense: ['cd', 'rev'],
+  roule: ['amorti', 'lob']
+};
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', rainbow: 'Rainbow', amorti: 'Amorti', lob: 'Lob' };
+const SIDED_SHOTS = Object.keys(SIDED_VARIANTS); // coups qui ont une étape de sélection supplémentaire
 
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
@@ -873,7 +882,7 @@ function renderShotCategories() {
 function selectShotCategory(s) {
   if (!SIDED_SHOTS.includes(s)) { confirmShot(s); return; }
   
-  const variants = ['cd', 'rev', ...(SIDED_EXTRAS[s] || [])];
+  const variants = SIDED_VARIANTS[s];
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = `
     <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
