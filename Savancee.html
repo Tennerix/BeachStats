@@ -594,7 +594,21 @@ function saveState() {
 }
 
 // ── SCORE LOGIC ───────────────────────────────────────────────────────────────
-let pendingShot = null;
+function scoreSnapshot(player) {
+  let pp1=p1, pp2=p2;
+  if (player === 1) pp1++; else pp2++;
+  let ptStr;
+  if (inSuperTiebreak || inTiebreak) {
+    ptStr = pp1 + '-' + pp2;
+  } else {
+    let a = TP[Math.min(pp1,3)] || '0';
+    let b = TP[Math.min(pp2,3)] || '0';
+    if (pp1>=3 && pp2>=3) { a='40'; b='40'; }
+    ptStr = a + '-' + b;
+  }
+  return ptStr + ' · Jeu ' + g1 + '-' + g2 + ' · Set ' + s1 + '-' + s2;
+}
+ let pendingShot = null;
 function scorePoint(player, type) {
   if (matchOver) return;
   saveState();
@@ -617,7 +631,8 @@ function scorePoint(player, type) {
   }
 
   const teamName = player === 1 ? nameA : nameB;
-  logPoint(teamName, type, shot, playerNumForLog);
+  const scoreLabel = scoreSnapshot(player);
+  logPoint(teamName, type, shot, playerNumForLog, scoreLabel);
 
   if (inSuperTiebreak) {
     if (player === 1) p1++; else p2++;
@@ -760,7 +775,7 @@ function updateDisplay() {
   renderStats();
 }
 
-function logPoint(winnerTeam, type, shot, playerNum) {
+function logPoint(winnerTeam, type, shot, playerNum, scoreLabel) {
   const isA = winnerTeam === nameA;
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
@@ -770,11 +785,11 @@ function logPoint(winnerTeam, type, shot, playerNum) {
     ? playerNames[playerNum]
     : (type === 'winner' ? winnerTeam : (isA ? nameB : nameA));
   
-  matchLog.unshift({team: displayTeam, type, shot, time, msg: label});
+  matchLog.unshift({team: displayTeam, type, shot, time, msg: label, score: scoreLabel});
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry ' + dotClass;
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong></span><span class="log-tag ${type}">${label}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
   list.prepend(div);
 }
 
