@@ -1093,17 +1093,21 @@ function exportPDF() {
   const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
   const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
 
-  // ══ 1. VAINQUEUR ET SCORE ══════════════════════════════════════════════════
-  sectionTitle('VAINQUEUR & SCORE', [245,197,24]);
+  // ══ 1. VAINQUEUR ET SCORE (pas de titre, juste le nom et le score) ═════════
+  ensureSpace(40);
 
   const winnerIsA = s1 > s2;
   const winnerName = winnerIsA ? nameA : nameB;
-  const loserSets = winnerIsA ? s2 : s1;
-  const winnerSets = winnerIsA ? s1 : s2;
+  const scoreStr = setHistory.map(sh => {
+    const wG = winnerIsA ? sh.a : sh.b;
+    const lG = winnerIsA ? sh.b : sh.a;
+    return wG + '/' + lG;
+  }).join('   -   ');
+
   doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(245,197,24);
   doc.text(winnerName, W/2, y, {align:'center'}); y+=9;
-  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(226,234,248);
-  doc.text('Score final : '+winnerSets+' sets à '+loserSets, W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(226,234,248);
+  doc.text(scoreStr || '—', W/2, y, {align:'center'}); y+=8;
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(74,100,148);
   doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
   y+=12;
@@ -1215,7 +1219,7 @@ function exportPDF() {
   [...matchLog].reverse().forEach(entry => {
     ensureSpace(6);
     let cleanMsg = stripEmoji(entry.msg);
-    if (entry.type === 'winner') cleanMsg = 'Point — ' + cleanMsg;
+    if (entry.type === 'winner') cleanMsg = 'Point gagnant — ' + cleanMsg;
     else if (entry.type === 'faute') cleanMsg = 'Faute — ' + cleanMsg;
     doc.setFont('helvetica','normal'); doc.setFontSize(9);
     doc.setTextColor(74,100,148); doc.text(entry.time, M, y);
