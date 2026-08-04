@@ -465,6 +465,7 @@ function saveState() {
 // ── SCORE LOGIC ───────────────────────────────────────────────────────────────
 function scorePoint(player, type, entityName) {
   if (matchOver) return;
+  ensureTimerRunning();
   saveState();
 
   // Stats Équipe
@@ -815,6 +816,10 @@ function exportPDF() {
 let timerSeconds = 0;
 let timerInterval = null;
 let timerRunning = false;
+
+function ensureTimerRunning() {
+  if (!timerRunning && !matchOver) timerToggle();
+}
 
 function timerToggle() {
   if (timerRunning) {
