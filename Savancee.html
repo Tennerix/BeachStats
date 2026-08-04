@@ -803,6 +803,7 @@ let pendingPlayerNum = null;
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   pendingPlayer = player;
+  ensureTimerRunning();
   pendingType = type;
   pendingPlayerNum = playerNum || null;
   
@@ -987,6 +988,9 @@ function renderStatsParJoueur() {
 
 // ── TIMER ────────────────────────────────────────────────────────────────────
 let timerSeconds = 0, timerInterval = null, timerRunning = false;
+  function ensureTimerRunning() {
+  if (!timerRunning && !matchOver) timerToggle();
+}
 function timerToggle() {
   if (timerRunning) {
     clearInterval(timerInterval); timerRunning = false;
