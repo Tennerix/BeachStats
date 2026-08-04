@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Beach Tennis – Stats Avancées</title>
+<title>Beach Tennis – Stats Intermédiaires</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -510,21 +510,12 @@ body{
 const BASE_SHOTS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
 const SHOT_LBL = {
   service:'Service', smash:'Smash', roule:'Bras roulé',
-  retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
-  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV', amorti_roule:'Amorti Bras Roulé',
-  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_roule:'Lob Bras Roulé', lob_rainbow:'Lob Rainbow',
-  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow'
+  retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush'
 };
 const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
 
 // Liste complète des clés pour les statistiques
-const ALL_SHOT_KEYS = [
-  'service', 'smash', 'roule',
-  'retour_cd', 'retour_rev', 
-  'amorti_cd', 'amorti_rev', 'amorti_roule',
-  'lob_cd', 'lob_rev', 'lob_roule', 'lob_rainbow', 
-  'rush_cd', 'rush_rev', 'rush_rainbow'
-];
+const ALL_SHOT_KEYS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
@@ -825,10 +816,6 @@ let pendingPlayer = null;
 let pendingType = null;
 let pendingPlayerNum = null;
 
-// Variantes supplémentaires (en plus de CD/REV) par coup côté
-const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'] };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
-
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   pendingPlayer = player;
@@ -850,19 +837,9 @@ function openShotModal(player, type, playerNum) {
   BASE_SHOTS.forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
-    if (s === 'service' || s === 'smash' || s === 'roule') {
-      group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
-        <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
-      </button>`;
-    } else {
-      const variants = ['cd', 'rev', ...(SIDED_EXTRAS[s] || [])];
-      const btns = variants.map(v =>
-        `<button class="shot-btn type-${type}" onclick="confirmShot('${s}_${v}')">${VARIANT_LBL[v]}</button>`
-      ).join('');
-      group.innerHTML = `
-        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
-        <div class="shot-sub-row">${btns}</div>`;
-    }
+    group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
+      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+    </button>`;
     grid.appendChild(group);
   });
   
@@ -1084,7 +1061,7 @@ function exportPDF() {
   doc.setFontSize(28); doc.setTextColor(245,197,24);
   doc.text('BEACH TENNIS', W/2, y+8, {align:'center'});
   doc.setFontSize(12); doc.setTextColor(74,100,148);
-  doc.text('STATS AVANCÉES', W/2, y+16, {align:'center'});
+  doc.text('STATS INTERMÉDIAIRES', W/2, y+16, {align:'center'});
   y+=26;
 
   // ── Date ──
@@ -1233,7 +1210,7 @@ function exportPDF() {
     y+=6;
   });
 
-  doc.save('BeachStats_Avancees_'+new Date().toISOString().slice(0,10)+'.pdf');
+  doc.save('BeachStats_Intermediaires_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
 
 
