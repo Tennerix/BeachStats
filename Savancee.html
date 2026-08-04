@@ -831,10 +831,6 @@ let pendingType = null;
 let pendingPlayerNum = null;
 
 // Variantes supplémentaires (en plus de CD/REV) par coup côté
-const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'] };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
-
-// Variantes supplémentaires (en plus de CD/REV) par coup côté
 const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'], defense: [] };
 const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
 const SIDED_SHOTS = Object.keys(SIDED_EXTRAS); // coups qui ont un côté (CD/REV...)
