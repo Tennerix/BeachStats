@@ -1098,9 +1098,13 @@ function exportPDF() {
 
   const winnerIsA = s1 > s2;
   const winnerName = winnerIsA ? nameA : nameB;
+  const loserSets = winnerIsA ? s2 : s1;
+  const winnerSets = winnerIsA ? s1 : s2;
   doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(245,197,24);
-  doc.text(winnerName, W/2, y, {align:'center'}); y+=8;
-  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(74,100,148);
+  doc.text(winnerName, W/2, y, {align:'center'}); y+=9;
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(226,234,248);
+  doc.text('Score final : '+winnerSets+' sets à '+loserSets, W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(74,100,148);
   doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
   y+=12;
 
