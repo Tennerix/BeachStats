@@ -248,6 +248,8 @@ body{
 /* Shot Grid Layout */
 .shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
 .shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
+.shot-back{grid-column:1 / -1;background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:2px}
+.shot-back:hover{border-color:var(--gold);color:var(--gold)}
 .shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
 .shot-sub-row{display:flex;flex-wrap:wrap;gap:6px}
 .shot-sub-row .shot-btn{flex:1 1 calc(50% - 3px)}
@@ -507,24 +509,27 @@ body{
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'smash', 'roule', 'retour', 'amorti', 'lob', 'rush'];
+const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_LBL = {
   service:'Service', service_1:'Service Z1', service_2:'Service Z2', service_3:'Service Z3', service_4:'Service Z4', service_5:'Service Z5',
   smash:'Smash', roule:'Bras roulé',
   retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
   amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV', amorti_roule:'Amorti Bras Roulé',
   lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_roule:'Lob Bras Roulé', lob_rainbow:'Lob Rainbow',
-  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow'
+  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
+  defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡'};
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
 const ALL_SHOT_KEYS = [
-  'service_1', 'service_2', 'service_3', 'service_4', 'service_5', 'smash', 'roule',
-  'retour_cd', 'retour_rev', 
+  'service_1', 'service_2', 'service_3', 'service_4', 'service_5',
+  'retour_cd', 'retour_rev',
+  'smash', 'roule',
   'amorti_cd', 'amorti_rev', 'amorti_roule',
   'lob_cd', 'lob_rev', 'lob_roule', 'lob_rainbow', 
-  'rush_cd', 'rush_rev', 'rush_rainbow'
+  'rush_cd', 'rush_rev', 'rush_rainbow',
+  'defense_cd', 'defense_rev'
 ];
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
@@ -822,8 +827,9 @@ let pendingType = null;
 let pendingPlayerNum = null;
 
 // Variantes supplémentaires (en plus de CD/REV) par coup côté
-const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'] };
+const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'], defense: [] };
 const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
+const SIDED_SHOTS = Object.keys(SIDED_EXTRAS); // coups qui ont un côté (CD/REV...)
 const SERVICE_ZONES = ['1', '2', '3', '4', '5'];
 
 function openShotModal(player, type, playerNum) {
@@ -841,36 +847,53 @@ function openShotModal(player, type, playerNum) {
 
   document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${displayName}`;
   
+  renderShotCategories();
+  document.getElementById('shotModal').classList.add('show');
+}
+
+// ── ÉTAPE 1 : grandes catégories ─────────────────────────────────────────────
+function renderShotCategories() {
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
   
   BASE_SHOTS.forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
-    if (s === 'service') {
-      const btns = SERVICE_ZONES.map(z =>
-        `<button class="shot-btn type-${type}" onclick="confirmShot('service_${z}')">Zone ${z}</button>`
-      ).join('');
-      group.innerHTML = `
-        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
-        <div class="shot-sub-row">${btns}</div>`;
-    } else if (s === 'smash' || s === 'roule') {
-      group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
-        <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
-      </button>`;
-    } else {
-      const variants = ['cd', 'rev', ...(SIDED_EXTRAS[s] || [])];
-      const btns = variants.map(v =>
-        `<button class="shot-btn type-${type}" onclick="confirmShot('${s}_${v}')">${VARIANT_LBL[v]}</button>`
-      ).join('');
-      group.innerHTML = `
-        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
-        <div class="shot-sub-row">${btns}</div>`;
-    }
+    group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">
+      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+    </button>`;
     grid.appendChild(group);
   });
-  
-  document.getElementById('shotModal').classList.add('show');
+}
+
+// ── ÉTAPE 2 : zone de service, ou côté (CD/REV...) selon le coup ────────────
+function selectShotCategory(s) {
+  const grid = document.getElementById('shotGrid');
+
+  if (s === 'service') {
+    const btns = SERVICE_ZONES.map(z =>
+      `<button class="shot-btn type-${pendingType}" onclick="confirmShot('service_${z}')">Zone ${z}</button>`
+    ).join('');
+    grid.innerHTML = `
+      <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+      <div class="shot-group" style="grid-column:1 / -1">
+        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+        <div class="shot-sub-row">${btns}</div>
+      </div>`;
+    return;
+  }
+
+  if (!SIDED_SHOTS.includes(s)) { confirmShot(s); return; }
+
+  const variants = ['cd', 'rev', ...(SIDED_EXTRAS[s] || [])];
+  grid.innerHTML = `
+    <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+      <div class="shot-sub-row">
+        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${s}_${v}')">${VARIANT_LBL[v]}</button>`).join('')}
+      </div>
+    </div>`;
 }
 
 function closeShotModal() {
