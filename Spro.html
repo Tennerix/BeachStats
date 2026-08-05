@@ -520,13 +520,13 @@ const SHOT_VARIANTS = {
   service: [],
   smash: [],
   retour: ['cd', 'rev'],
-  roule: ['normal', 'tendu'],
-  amorti: ['cd', 'rev', 'roule'],
-  lob: ['cd', 'rev', 'roule', 'rainbow'],
+  roule: ['amorti', 'lobe', 'tendu'],
+  amorti: ['cd', 'rev'],
+  lob: ['cd', 'rev', 'rainbow'],
   rush: ['cd', 'rev', 'rainbow'],
   defense: ['cd', 'rev']
 };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', normal: 'Roulé', tendu: 'Tendu', roule: 'Bras roulé', rainbow: 'Rainbow' };
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow' };
 
 // Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
