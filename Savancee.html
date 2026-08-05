@@ -548,6 +548,14 @@ const players = {
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
 
+// Les noms viennent de l'URL (?j1=...) : on les échappe avant toute
+// insertion via innerHTML pour éviter qu'un lien piégé n'exécute du code.
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
@@ -803,7 +811,7 @@ function logPoint(winnerTeam, type, shot, playerNum, scoreLabel) {
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry ' + dotClass;
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${displayTeam}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${escapeHtml(displayTeam)}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
   list.prepend(div);
 }
 
@@ -813,7 +821,7 @@ function logEvent(team, msg) {
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry event';
-  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+team+'</strong>':''} ${msg}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+escapeHtml(team)+'</strong>':''} ${msg}</span>`;
   list.prepend(div);
 }
 
@@ -858,7 +866,7 @@ function openShotModal(player, type, playerNum) {
   const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
   const displayName = playerNum ? playerNames[playerNum] : actionTeam;
 
-  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${displayName}`;
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${escapeHtml(displayName)}`;
   
   renderShotCategories();
   document.getElementById('shotModal').classList.add('show');
@@ -1020,7 +1028,7 @@ function renderStatsParJoueur() {
 
     return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
-        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${p.name}</span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${escapeHtml(p.name)}</span>
         <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:15px;margin-left:3px">${total}</span></span>
       </div>
       <table style="width:100%;border-collapse:collapse">${rows}</table>
