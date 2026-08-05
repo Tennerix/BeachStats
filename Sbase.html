@@ -384,6 +384,22 @@ const mode = _p.get('mode') || 'equipe'; // 'joueur' ou 'equipe'
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
 
+// Les noms viennent de l'URL (?j1=...) : on les échappe avant toute insertion
+// via innerHTML. Attention : un simple échappement HTML ne suffit PAS à
+// protéger un nom inséré à l'intérieur d'un attribut onclick="...'...'"
+// (le navigateur décode les entités HTML avant d'exécuter le JS de
+// l'attribut, donc un caractère ' ou ) pourrait quand même casser hors de
+// la chaîne JS). C'est pourquoi createControlBlock() ci-dessous n'insère
+// jamais le nom lui-même dans le onclick : seul un identifiant fixe et sûr
+// ('j1'..'j4' ou null), choisi par le code et jamais par l'utilisateur, y
+// est placé. Le vrai nom n'est utilisé que comme texte (via escapeHtml) ou
+// comme valeur JS normale (jamais recomposé en code).
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
@@ -392,10 +408,10 @@ function initNames() {
   container.innerHTML = '';
 
   if (mode === 'joueur') {
-    container.innerHTML += createControlBlock('a', players.j1, 1);
-    container.innerHTML += createControlBlock('a', players.j2, 1);
-    container.innerHTML += createControlBlock('b', players.j3, 2);
-    container.innerHTML += createControlBlock('b', players.j4, 2);
+    container.innerHTML += createControlBlock('a', players.j1, 1, 'j1');
+    container.innerHTML += createControlBlock('a', players.j2, 1, 'j2');
+    container.innerHTML += createControlBlock('b', players.j3, 2, 'j3');
+    container.innerHTML += createControlBlock('b', players.j4, 2, 'j4');
 
     // Modifier l'affichage des stats en direct pour le mode individuel
     let statsHTML = `<div class="stat-row" style="grid-template-columns: 1fr 60px 60px; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
@@ -403,37 +419,40 @@ function initNames() {
       <div class="stat-name">W</div>
       <div class="stat-name">F</div>
     </div>`;
-    [players.j1, players.j2, players.j3, players.j4].forEach((p, index) => {
+    ['j1', 'j2', 'j3', 'j4'].forEach((key, index) => {
       const colorClass = index < 2 ? 'var(--blue)' : 'var(--orange)';
       statsHTML += `
         <div class="stat-row" style="grid-template-columns: 1fr 60px 60px; align-items:center">
-          <div class="stat-name" style="text-align:left; color:var(--text); font-size:13px">${p}</div>
-          <div class="stat-val" id="st-w-${p}" style="text-align:center; color:var(--green); font-size:20px">0</div>
-          <div class="stat-val" id="st-f-${p}" style="text-align:center; color:var(--red); font-size:20px">0</div>
+          <div class="stat-name" style="text-align:left; color:var(--text); font-size:13px">${escapeHtml(players[key])}</div>
+          <div class="stat-val" id="st-w-${key}" style="text-align:center; color:var(--green); font-size:20px">0</div>
+          <div class="stat-val" id="st-f-${key}" style="text-align:center; color:var(--red); font-size:20px">0</div>
         </div>`;
     });
     document.getElementById('statsContent').innerHTML = statsHTML;
   } else {
     const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
     const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
-    container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1);
-    container.innerHTML += createControlBlock('b', 'Équipe B — ' + shortB, 2);
+    container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1, null);
+    container.innerHTML += createControlBlock('b', 'Équipe B — ' + shortB, 2, null);
   }
 }
 
-function createControlBlock(teamClass, label, teamId) {
+function createControlBlock(teamClass, label, teamId, entityKey) {
   const opponentId = teamId === 1 ? 2 : 1;
   const subLabel = teamId === 1 ? 'Point à A' : 'Point à B';
+  // entityKey vaut toujours 'j1'..'j4' ou null : jamais une valeur saisie
+  // par l'utilisateur, donc sûr à insérer tel quel dans le onclick.
+  const entityArg = entityKey ? `'${entityKey}'` : 'null';
   return `
     <div class="team-controls">
-      <div class="team-ctrl-label ${teamClass}">${label}</div>
+      <div class="team-ctrl-label ${teamClass}">${escapeHtml(label)}</div>
       <div class="ctrl-row">
-        <button class="btn-winner ${teamClass}" onclick="scorePoint(${teamId},'winner', '${label}')">
+        <button class="btn-winner ${teamClass}" onclick="scorePoint(${teamId},'winner', ${entityArg})">
           <span class="btn-icon">🎯</span>
           <span class="btn-main">Point gagnant</span>
           <span class="btn-sub">Coup gagnant</span>
         </button>
-        <button class="btn-faute ${teamClass}" onclick="scorePoint(${opponentId},'faute', '${label}')">
+        <button class="btn-faute ${teamClass}" onclick="scorePoint(${opponentId},'faute', ${entityArg})">
           <span class="btn-icon">💥</span>
           <span class="btn-main">Faute directe</span>
           <span class="btn-sub">${subLabel}</span>
@@ -478,10 +497,14 @@ function scoreSnapshot(player) {
   return ptStr + ' · Jeu ' + g1 + '-' + g2 + ' · Set ' + s1 + '-' + s2;
 }
 
-function scorePoint(player, type, entityName) {
+function scorePoint(player, type, entityKey) {
   if (matchOver) return;
   ensureTimerRunning();
   saveState();
+
+  // Le nom réel n'est résolu qu'ici, à partir d'un identifiant sûr ('j1'..'j4') —
+  // jamais reconstruit à partir d'une chaîne injectée dans le onclick.
+  const entityName = entityKey ? players[entityKey] : null;
 
   // Stats Équipe
   if (player === 1) {
@@ -492,13 +515,13 @@ function scorePoint(player, type, entityName) {
     if (type === 'winner') stats.wB++; else stats.fA++; 
   }
 
-  // Stats Individuelles
-  if (mode === 'joueur' && entityName) {
-    if (!stats.ind[entityName]) stats.ind[entityName] = { w:0, f:0 };
+  // Stats Individuelles (indexées par la clé sûre 'j1'..'j4', pas par le nom)
+  if (mode === 'joueur' && entityKey) {
+    if (!stats.ind[entityKey]) stats.ind[entityKey] = { w:0, f:0 };
     if (type === 'winner') {
-      stats.ind[entityName].w++;
+      stats.ind[entityKey].w++;
     } else {
-      stats.ind[entityName].f++;
+      stats.ind[entityKey].f++;
     }
   }
 
@@ -641,9 +664,9 @@ function updateDisplay() {
   }
 
   if (mode === 'joueur') {
-    [players.j1, players.j2, players.j3, players.j4].forEach(p => {
-      document.getElementById(`st-w-${p}`).textContent = stats.ind[p]?.w || 0;
-      document.getElementById(`st-f-${p}`).textContent = stats.ind[p]?.f || 0;
+    ['j1', 'j2', 'j3', 'j4'].forEach(key => {
+      document.getElementById(`st-w-${key}`).textContent = stats.ind[key]?.w || 0;
+      document.getElementById(`st-f-${key}`).textContent = stats.ind[key]?.f || 0;
     });
   } else {
     document.getElementById('st-wA').textContent = stats.wA;
@@ -680,7 +703,7 @@ function logPoint(entity, type, scoreLabel) {
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry ' + dotClass;
-  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${entity}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time} — <strong>${escapeHtml(entity)}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
   list.prepend(div);
 }
 
@@ -691,7 +714,7 @@ function logEvent(team, msg) {
   const list = document.getElementById('logList');
   const div = document.createElement('div');
   div.className = 'log-entry event';
-  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+team+'</strong>':''} ${msg}</span>`;
+  div.innerHTML = `<span class="dot"></span><span>${time}${team?' — <strong>'+escapeHtml(team)+'</strong>':''} ${msg}</span>`;
   list.prepend(div);
 }
 
@@ -709,7 +732,7 @@ function resetMatch() {
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('','🎾 Match démarré — '+nameA+' vs '+nameB);
+  logEvent('','🎾 Match démarré — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
 }
 
 // ── PDF EXPORT ────────────────────────────────────────────────────────────────
@@ -832,10 +855,10 @@ function exportPDF() {
   if (mode === 'joueur') {
     sectionTitle('DÉTAIL PAR JOUEUR', [245,197,24]);
     const playerDefs = [
-      {name:players.j1, color:[59,130,246]},
-      {name:players.j2, color:[59,130,246]},
-      {name:players.j3, color:[249,115,22]},
-      {name:players.j4, color:[249,115,22]},
+      {name:players.j1, key:'j1', color:[59,130,246]},
+      {name:players.j2, key:'j2', color:[59,130,246]},
+      {name:players.j3, key:'j3', color:[249,115,22]},
+      {name:players.j4, key:'j4', color:[249,115,22]},
     ];
     doc.setFontSize(9); doc.setTextColor(74,100,148);
     doc.text('Joueur', M, y);
@@ -843,8 +866,8 @@ function exportPDF() {
     doc.text('Fautes', W-M, y, {align:'right'});
     y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=6;
     playerDefs.forEach(pl => {
-      const w = stats.ind[pl.name]?.w || 0;
-      const f = stats.ind[pl.name]?.f || 0;
+      const w = stats.ind[pl.key]?.w || 0;
+      const f = stats.ind[pl.key]?.f || 0;
       ensureSpace(8);
       doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(...pl.color);
       doc.text(pl.name, M, y);
@@ -915,7 +938,7 @@ function timerReset() {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 initNames();
 updateDisplay();
-logEvent('', '🎾 Match démarré — '+nameA+' vs '+nameB);
+logEvent('', '🎾 Match démarré — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
 </script>
 </body>
 </html>
