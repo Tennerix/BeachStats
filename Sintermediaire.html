@@ -317,7 +317,10 @@ body{
 
 <div class="header">
   <div class="header-logo">Beach<span>/</span>Stats</div>
-  <button class="header-back" onclick="window.location.href='index.html'">← Accueil</button>
+  <div style="display:flex;gap:8px">
+    <button class="header-back" onclick="window.location.href='Historique.html'">📋 Historique</button>
+    <button class="header-back" onclick="window.location.href='index.html'">← Accueil</button>
+  </div>
 </div>
 
 <div class="status-bar">
@@ -731,7 +734,32 @@ function winMatch(player) {
   document.getElementById('ws-fB').textContent = _totFB;
   document.getElementById('winnerOverlay').classList.add('show');
   logEvent(winner, '🏆 VICTOIRE !');
+  saveMatchToHistory(winner, _totWA, _totWB, _totFA, _totFB);
   updateDisplay();
+}
+
+// ── SAUVEGARDE DE L'HISTORIQUE (localStorage) ────────────────────────────────
+function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
+  const record = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    page: 'Sintermediaire',
+    nameA, nameB,
+    winner,
+    sets: s1 + '-' + s2,
+    setDetail: setHistory.map(sh => sh.a + '/' + sh.b).join('  '),
+    setHistory: JSON.parse(JSON.stringify(setHistory)),
+    matchLog: JSON.parse(JSON.stringify(matchLog)),
+    players: JSON.parse(JSON.stringify(players)),
+    mode: typeof mode !== 'undefined' ? mode : 'equipe',
+    duration: formatDuration(timerSeconds),
+    stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB }
+  };
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
+  hist.push(record);
+  try { localStorage.setItem('beachstats_history', JSON.stringify(hist)); }
+  catch(e) { console.error('Sauvegarde impossible', e); }
 }
 
 function undo() {
