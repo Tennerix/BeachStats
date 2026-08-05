@@ -548,6 +548,14 @@ let players={
 const nameA = players.j1 + " / " + players.j2;
 const nameB = players.j3 + " / " + players.j4;
 
+// Les noms viennent de l'URL (?j1=...) : on les échappe avant toute
+// insertion via innerHTML pour éviter qu'un lien piégé n'exécute du code.
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 function initNames(){
   document.getElementById('nameA').textContent = "Équipe A";
   document.getElementById('playersA').textContent = nameA;
@@ -748,7 +756,7 @@ function logEvent(team,msg){
   const list=document.getElementById('logList');
   const div=document.createElement('div');
   div.className='log-entry '+(isA?'dot-a':isB?'dot-b':'event');
-  div.innerHTML=`<span class="dot"></span><span>${entry.time} — ${team?'<strong>'+team+'</strong> ':''} ${msg}</span>`;
+  div.innerHTML=`<span class="dot"></span><span>${entry.time} — ${team?'<strong>'+escapeHtml(team)+'</strong> ':''} ${msg}</span>`;
   list.prepend(div);
 }
 
@@ -766,7 +774,7 @@ function resetMatch() {
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('','🎾 Match démarré — '+nameA+' vs '+nameB);
+  logEvent('','🎾 Match démarré — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
 }
 
 // ── PDF EXPORT ───────────────────────────────────────────────────────────────
@@ -899,7 +907,7 @@ function timerReset() {
 // ── INIT ─────────────────────────────────────────────────────────────────────
 initNames();
 updateDisplay();
-logEvent("","🎾 Match démarré — "+nameA+" vs "+nameB);
+logEvent("","🎾 Match démarré — "+escapeHtml(nameA)+" vs "+escapeHtml(nameB));
 </script>
 
 </body>
