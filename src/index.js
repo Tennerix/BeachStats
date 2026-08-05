@@ -27,7 +27,7 @@ export default {
         const assetUrl = new URL(route.file, request.url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
       }
-      return renderLoginPage(url.pathname);
+      return renderLoginPage(url.pathname + url.search);
     }
 
     return new Response("Page introuvable", { status: 404 });
