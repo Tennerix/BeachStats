@@ -181,12 +181,14 @@ body{
 .zc-count .sep{fill:var(--muted);font-size:16px}
 .zc-count .f{fill:var(--red)}
 .zc-net-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;fill:var(--gold);text-transform:uppercase}
+.zc-band-lbl{font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:10px;letter-spacing:1px;fill:var(--gold);text-transform:uppercase}
 .zone-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--border)}
 .zl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500}
 .zl-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
 .zl-dot.zl-win{background:var(--green)}
 .zl-dot.zl-flt{background:var(--red)}
 .zl-dot.zl-tie{background:var(--gold)}
+.zone-roule-hint{font-size:10.5px;color:var(--muted);font-weight:500;line-height:1.4}
 
 /* ── LOG ── */
 .log-wrap{width:100%;max-width:580px}
@@ -582,7 +584,9 @@ BASE_SHOTS.forEach(s => {
       const key = prefix + '_' + z;
       SHOT_LBL[key] = labels[i] + ' Z' + z;
       ALL_SHOT_KEYS.push(key);
-      SHOT_ZONE_KEYS[s][z].push(key);
+      // Le bras roulé (roule) n'agrège pas ses variantes dans la carto largeur classique :
+      // il a son propre affichage combiné (3 bandes Amorti/Tendu/Lob) plus bas.
+      if (s !== 'roule') SHOT_ZONE_KEYS[s][z].push(key);
     });
   });
 });
@@ -1138,11 +1142,23 @@ function computeZoneData(wPrefix, fPrefix) {
   });
 }
 
+// Données de zone pour un préfixe précis (ex: 'roule_amorti'), utilisées pour les
+// sous-cartes en profondeur du bras roulé.
+function computeZoneDataForPrefix(prefix, zoneList, wPrefix, fPrefix) {
+  return zoneList.map(z => ({
+    z: parseInt(z, 10),
+    w: stats[wPrefix + prefix + '_' + z] || 0,
+    f: stats[fPrefix + prefix + '_' + z] || 0
+  }));
+}
+
 // Terrain de beach tennis : 8m de large x 16m de long. La largeur (8m) est
-// découpée en 5 zones ; la zone 1 est à droite, la zone 5 à gauche.
+// découpée en 5 zones ; la zone 1 est à droite, la zone 5 à gauche. On n'affiche
+// que le demi-terrain utile (les données ne portent que sur la largeur) avec le
+// filet marqué en bas, dans la continuité du schéma du bras roulé.
 function buildCourtSVG(data) {
   const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
-  const W = 260, L = 520, ZW = W / 5;
+  const W = 260, L = 260, ZW = W / 5;
 
   let cols = '', dividers = '';
   data.forEach(d => {
@@ -1167,12 +1183,72 @@ function buildCourtSVG(data) {
   }
 
   return `
-    <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="${W-2}" height="${L-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
-      ${cols}
-      ${dividers}
-      <line x1="0" y1="${L/2}" x2="${W}" y2="${L/2}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
-      <text x="${W/2}" y="${L/2-8}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+    <svg viewBox="0 0 ${W} ${L+26}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(0,10)">
+        <rect x="1" y="1" width="${W-2}" height="${L-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
+        ${cols}
+        ${dividers}
+        <line x1="-3" y1="${L}" x2="${W+3}" y2="${L}" stroke="var(--gold)" stroke-width="6" stroke-linecap="round"/>
+        <line x1="-3" y1="${L}" x2="${W+3}" y2="${L}" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+      </g>
+      <text x="${W/2}" y="${L+22}" text-anchor="middle" class="zc-net-lbl" style="font-size:15px">Filet</text>
+    </svg>`;
+}
+
+// Carte combinée du bras roulé : 3 bandes horizontales empilées (Lob au fond en haut,
+// Tendu au milieu, Amorti proche filet en bas), collées les unes aux autres sans
+// séparation — on veut que ça se lise comme UN seul terrain adverse, avec le filet
+// bien marqué en bas. La profondeur est donc représentée par la position de la bande
+// (pas de ressaisie), et chaque bande garde les 5 zones de largeur classiques.
+function buildRouleCourtSVG(amortiData, tenduData, lobData) {
+  const W = 260, bandH = 172, headH = 16, ZW = W / 5;
+  const L = bandH * 3;
+
+  const buildBand = (data, yOff, label) => {
+    const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
+    let cols = '', dividers = '';
+    data.forEach(d => {
+      const xStart = W - d.z * ZW; // zone 1 -> collée au bord droit
+      const total = d.w + d.f;
+      let fill;
+      if (total === 0) {
+        fill = 'rgba(30,53,96,.35)';
+      } else {
+        const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
+        if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
+        else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+      }
+      cols += `<rect x="${xStart}" y="${yOff}" width="${ZW}" height="${bandH}" fill="${fill}"/>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yOff+headH+20}" text-anchor="middle" class="zc-lbl" style="font-size:13px">Z${d.z}</text>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yOff+bandH/2+18}" text-anchor="middle" class="zc-count" style="font-size:16px">
+        <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
+      </text>`;
+    });
+    // Traits verticaux de zone uniquement (aucun trait horizontal entre les bandes :
+    // amorti / tendu / lob doivent se lire comme un seul terrain continu).
+    for (let k = 1; k < 5; k++) {
+      dividers += `<line x1="${k*ZW}" y1="${yOff}" x2="${k*ZW}" y2="${yOff+bandH}" stroke="var(--border)" stroke-width="1"/>`;
+    }
+    // Bandeau centré en haut de la bande (ne chevauche plus les libellés Z1-Z5).
+    const lblBg = `<rect x="0" y="${yOff}" width="${W}" height="${headH}" fill="rgba(8,15,30,.55)"/>`;
+    const lblTxt = `<text x="${W/2}" y="${yOff+headH-4}" text-anchor="middle" class="zc-band-lbl">${label}</text>`;
+    return cols + dividers + lblBg + lblTxt;
+  };
+
+  let body = '';
+  body += buildBand(lobData, 0, 'LOB');
+  body += buildBand(tenduData, bandH, 'TENDU');
+  body += buildBand(amortiData, bandH*2, 'AMORTI');
+
+  return `
+    <svg viewBox="0 0 ${W} ${L+34}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(0,10)">
+        <rect x="1" y="1" width="${W-2}" height="${L-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
+        ${body}
+        <line x1="-3" y1="${L}" x2="${W+3}" y2="${L}" stroke="var(--gold)" stroke-width="6" stroke-linecap="round"/>
+        <line x1="-3" y1="${L}" x2="${W+3}" y2="${L}" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+      </g>
+      <text x="${W/2}" y="${L+30}" text-anchor="middle" class="zc-net-lbl" style="font-size:15px">Filet</text>
     </svg>`;
 }
 
@@ -1192,11 +1268,33 @@ function renderZoneMap() {
         { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_' },
       ];
 
+  if (zoneMapShot === 'roule') {
+    renderRouleZoneMap(grid, entries);
+    return;
+  }
+
   grid.innerHTML = entries.map(e => {
     const data = computeZoneData(e.wp, e.fp);
     return `<div class="zone-court-item">
       <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
       ${buildCourtSVG(data)}
+    </div>`;
+  }).join('');
+}
+
+// Bras roulé : les 3 variantes gardent chacune leurs 5 zones de largeur classiques,
+// mais sont empilées sur une même carte (Amorti proche filet, Tendu au milieu, Lob
+// proche fond) pour visualiser la différence entre elles sans ressaisie de profondeur.
+function renderRouleZoneMap(grid, entries) {
+  grid.innerHTML = `<div class="zone-roule-hint" style="grid-column:1/-1;margin-bottom:.7rem">
+    Les 3 variantes du bras roulé partagent les mêmes 5 zones de largeur (Z1 à Z5), empilées ici du filet (Amorti) au fond (Lob) pour les comparer d'un coup d'œil.
+  </div>` + entries.map(e => {
+    const amortiData = computeZoneDataForPrefix('roule_amorti', ZONES, e.wp, e.fp);
+    const tenduData = computeZoneDataForPrefix('roule_tendu', ZONES, e.wp, e.fp);
+    const lobData = computeZoneDataForPrefix('roule_lobe', ZONES, e.wp, e.fp);
+    return `<div class="zone-court-item">
+      <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
+      ${buildRouleCourtSVG(amortiData, tenduData, lobData)}
     </div>`;
   }).join('');
 }
@@ -1424,6 +1522,7 @@ function exportPDF() {
 
   const zcCourtW = zoneEntities.length > 2 ? 34 : 62;
   const zcCourtL = zcCourtW * 2;
+  const zcHalfL = zcCourtW; // demi-terrain utile pour les coups "génériques" (pas le bras roulé)
   const zcGap = 6;
 
   const zoneColor = (w, f) => {
@@ -1432,10 +1531,10 @@ function exportPDF() {
     return w > f ? [34, 197, 94] : [239, 68, 68];
   };
 
-  BASE_SHOTS.forEach(shotKey => {
-    ensureSpace(zcCourtL + 18);
+  const drawWidthCourtRow = (label, keysGetter) => {
+    ensureSpace(zcHalfL + 18);
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
-    doc.text(SHOT_BASE_LBL[shotKey], M, y);
+    doc.text(label, M, y);
     y += 5;
 
     const rowLabelY = y;
@@ -1449,14 +1548,14 @@ function exportPDF() {
       doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
 
       ZONES.forEach(z => {
-        const keys = SHOT_ZONE_KEYS[shotKey][z];
+        const keys = keysGetter(z);
         let w = 0, f = 0;
         keys.forEach(k => { w += stats[ent.wp+k] || 0; f += stats[ent.fp+k] || 0; });
         const zi = parseInt(z, 10);
         const zx = x0 + zcCourtW - zi * zw; // zone 1 collée au bord droit
 
         doc.setFillColor(...zoneColor(w, f));
-        doc.rect(zx, courtTop, zw, zcCourtL, 'F');
+        doc.rect(zx, courtTop, zw, zcHalfL, 'F');
 
         doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 7 : 5); doc.setTextColor(255,255,255);
         doc.text(String(zi), zx + zw/2, courtTop + (zw > 10 ? 7 : 5), {align:'center'});
@@ -1465,16 +1564,83 @@ function exportPDF() {
       doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
       for (let k = 1; k < 5; k++) {
         const lx = x0 + k*zw;
-        doc.line(lx, courtTop, lx, courtTop+zcCourtL);
+        doc.line(lx, courtTop, lx, courtTop+zcHalfL);
       }
-      doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
-      doc.line(x0, courtTop+zcCourtL/2, x0+zcCourtW, courtTop+zcCourtL/2);
+      doc.setDrawColor(245,197,24); doc.setLineWidth(1.1);
+      doc.line(x0, courtTop+zcHalfL, x0+zcCourtW, courtTop+zcHalfL); // filet, en bas
+
+      doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
+      doc.rect(x0, courtTop, zcCourtW, zcHalfL);
+    });
+
+    y = courtTop + zcHalfL + 8;
+  };
+
+  // Bras roulé : une seule carte combinant les 3 variantes, empilées en 3 bandes
+  // sans séparation (Lob au fond en haut, Tendu au milieu, Amorti proche filet en bas),
+  // chacune gardant les 5 zones de largeur classiques. Le filet est marqué en bas.
+  const drawRouleCourtRow = () => {
+    ensureSpace(zcCourtL + 18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+    doc.text('Bras roule (Lob / Tendu / Amorti)', M, y);
+    y += 5;
+
+    const rowLabelY = y;
+    const courtTop = rowLabelY + 3;
+    const zw = zcCourtW / 5;
+    const bandH = zcCourtL / 3;
+    const bands = [
+      { prefix: 'roule_lobe',   label: 'LOB'    },
+      { prefix: 'roule_tendu',  label: 'TENDU'  },
+      { prefix: 'roule_amorti', label: 'AMORTI' },
+    ];
+
+    zoneEntities.forEach((ent, i) => {
+      const x0 = M + i * (zcCourtW + zcGap);
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...ent.color);
+      doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+      bands.forEach((band, bi) => {
+        const yOff = courtTop + bi * bandH;
+
+        ZONES.forEach(z => {
+          const key = band.prefix + '_' + z;
+          const w = stats[ent.wp+key] || 0, f = stats[ent.fp+key] || 0;
+          const zi = parseInt(z, 10);
+          const zx = x0 + zcCourtW - zi * zw;
+
+          doc.setFillColor(...zoneColor(w, f));
+          doc.rect(zx, yOff, zw, bandH, 'F');
+        });
+
+        doc.setDrawColor(30,53,96); doc.setLineWidth(0.15);
+        for (let k = 1; k < 5; k++) {
+          const lx = x0 + k*zw;
+          doc.line(lx, yOff, lx, yOff+bandH);
+        }
+
+        doc.setFillColor(8,15,30); doc.rect(x0, yOff, zcCourtW*0.42, 3.4, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(4.2); doc.setTextColor(245,197,24);
+        doc.text(band.label, x0 + 1, yOff + 2.6);
+      });
+
+      doc.setDrawColor(245,197,24); doc.setLineWidth(1.1);
+      doc.line(x0, courtTop+zcCourtL, x0+zcCourtW, courtTop+zcCourtL); // filet, en bas
 
       doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
       doc.rect(x0, courtTop, zcCourtW, zcCourtL);
     });
 
     y = courtTop + zcCourtL + 8;
+  };
+
+  BASE_SHOTS.forEach(shotKey => {
+    if (shotKey === 'roule') {
+      drawRouleCourtRow();
+      return;
+    }
+    drawWidthCourtRow(SHOT_BASE_LBL[shotKey], z => SHOT_ZONE_KEYS[shotKey][z]);
   });
 
   // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
