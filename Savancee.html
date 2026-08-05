@@ -511,7 +511,8 @@ body{
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
 const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_LBL = {
-  service:'Service', smash:'Smash',
+  service:'Service', service_1:'Service Z1', service_2:'Service Z2', service_3:'Service Z3', service_4:'Service Z4', service_5:'Service Z5',
+  smash:'Smash',
   roule:'Bras roulé', roule_amorti:'Bras roulé Amorti', roule_lob:'Bras roulé Lob',
   retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
   amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV',
@@ -523,7 +524,7 @@ const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', a
 
 // Liste complète des clés pour les statistiques
 const ALL_SHOT_KEYS = [
-  'service',
+  'service_1', 'service_2', 'service_3', 'service_4', 'service_5',
   'retour_cd', 'retour_rev',
   'smash',
   'roule_amorti', 'roule_lob',
@@ -621,7 +622,7 @@ function scorePoint(player, type) {
   if (matchOver) return;
   saveState();
 
-  const shot = pendingShot || 'service';
+  const shot = pendingShot || 'service_1';
   pendingShot = null;
 
   if (player === 1) {
@@ -879,7 +880,23 @@ function renderShotCategories() {
 }
 
 // ── ÉTAPE 2 : choix du côté (uniquement pour les coups qui en ont un) ───────
+const SERVICE_ZONES = ['1', '2', '3', '4', '5'];
+
 function selectShotCategory(s) {
+  if (s === 'service') {
+    const btns = SERVICE_ZONES.map(z =>
+      `<button class="shot-btn type-${pendingType}" onclick="confirmShot('service_${z}')">Zone ${z}</button>`
+    ).join('');
+    const grid = document.getElementById('shotGrid');
+    grid.innerHTML = `
+      <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+      <div class="shot-group" style="grid-column:1 / -1">
+        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+        <div class="shot-sub-row">${btns}</div>
+      </div>`;
+    return;
+  }
+
   if (!SIDED_SHOTS.includes(s)) { confirmShot(s); return; }
   
   const variants = SIDED_VARIANTS[s];
