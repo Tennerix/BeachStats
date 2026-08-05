@@ -161,6 +161,32 @@ body{
 .btn-action.pdf{border-color:var(--green);color:var(--green)}
 .btn-action.pdf:hover{background:rgba(34,197,94,.12)}
 
+/* ── ZONE MAP ── */
+.zone-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:1rem;scrollbar-width:none}
+.zone-tabs::-webkit-scrollbar{display:none}
+.zone-tab{
+  flex:0 0 auto;background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:.45rem .8rem;border-radius:10px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.zone-tab:hover{color:var(--text);border-color:var(--muted)}
+.zone-tab.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+.zone-court-wrap{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.zone-court-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.zone-court-title{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.zone-court-svg{width:100%;height:auto;display:block;overflow:visible}
+.zc-lbl{font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:20px;fill:var(--text);opacity:.9}
+.zc-count{font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:22px}
+.zc-count .w{fill:var(--green)}
+.zc-count .sep{fill:var(--muted);font-size:16px}
+.zc-count .f{fill:var(--red)}
+.zc-net-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;fill:var(--gold);text-transform:uppercase}
+.zone-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.zl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500}
+.zl-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+.zl-dot.zl-win{background:var(--green)}
+.zl-dot.zl-flt{background:var(--red)}
+
 /* ── LOG ── */
 .log-wrap{width:100%;max-width:580px}
 .log-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:4px}
@@ -471,6 +497,16 @@ body{
   <div id="statsContent"></div>
 </div>
 
+<div class="stats-card" id="zoneMapCard">
+  <div class="stats-title">Cartographie par zone</div>
+  <div class="zone-tabs" id="zoneTabs"></div>
+  <div class="zone-court-wrap" id="zoneMapGrid"></div>
+  <div class="zone-legend">
+    <span class="zl-item"><span class="zl-dot zl-win"></span>Zone à dominante gagnante</span>
+    <span class="zl-item"><span class="zl-dot zl-flt"></span>Zone à dominante fautes</span>
+  </div>
+</div>
+
 <div class="log-wrap">
   <div class="log-title">Journal du match</div>
   <div class="log-list" id="logList"></div>
@@ -532,15 +568,19 @@ const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', ten
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
 const SHOT_LBL = {};
 const ALL_SHOT_KEYS = [];
+const SHOT_ZONE_KEYS = {}; // { service: {1:['service_1'], ...}, amorti: {1:['amorti_cd_1','amorti_rev_1'], ...}, ... }
 BASE_SHOTS.forEach(s => {
   const variants = SHOT_VARIANTS[s];
   const prefixes = variants.length ? variants.map(v => s + '_' + v) : [s];
   const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v]) : [SHOT_BASE_LBL[s]];
+  SHOT_ZONE_KEYS[s] = {};
+  ZONES.forEach(z => SHOT_ZONE_KEYS[s][z] = []);
   prefixes.forEach((prefix, i) => {
     ZONES.forEach(z => {
       const key = prefix + '_' + z;
       SHOT_LBL[key] = labels[i] + ' Z' + z;
       ALL_SHOT_KEYS.push(key);
+      SHOT_ZONE_KEYS[s][z].push(key);
     });
   });
 });
@@ -629,6 +669,7 @@ function scoreSnapshot(player) {
   return ptStr + ' · Jeu ' + g1 + '-' + g2 + ' · Set ' + s1 + '-' + s2;
 }
  let pendingShot = null;
+ let zoneMapShot = 'service';
 function scorePoint(player, type) {
   if (matchOver) return;
   saveState();
@@ -793,6 +834,7 @@ function updateDisplay() {
     }
   }
   renderStats();
+  renderZoneMap();
 }
 
 function logPoint(winnerTeam, type, shot, playerNum, scoreLabel) {
@@ -1057,6 +1099,97 @@ function renderStatsParJoueur() {
   el.innerHTML = html;
 }
 
+// ── CARTOGRAPHIE PAR ZONE (schéma en direct : vert = gagnants, rouge = fautes) ──
+function initZoneTabs() {
+  const tabsEl = document.getElementById('zoneTabs');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = BASE_SHOTS.map(s =>
+    `<button class="zone-tab${s===zoneMapShot?' active':''}" id="zoneTab_${s}" onclick="selectZoneMapShot('${s}')">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</button>`
+  ).join('');
+}
+
+function selectZoneMapShot(s) {
+  zoneMapShot = s;
+  document.querySelectorAll('.zone-tab').forEach(b => b.classList.remove('active'));
+  const activeTab = document.getElementById('zoneTab_'+s);
+  if (activeTab) activeTab.classList.add('active');
+  renderZoneMap();
+}
+
+function computeZoneData(wPrefix, fPrefix) {
+  return ZONES.map(z => {
+    const keys = SHOT_ZONE_KEYS[zoneMapShot][z];
+    let w = 0, f = 0;
+    keys.forEach(k => {
+      w += stats[wPrefix+k] || 0;
+      f += stats[fPrefix+k] || 0;
+    });
+    return { z: parseInt(z,10), w, f };
+  });
+}
+
+// Terrain de beach tennis : 8m de large x 16m de long. La largeur (8m) est
+// découpée en 5 zones ; la zone 1 est à droite, la zone 5 à gauche.
+function buildCourtSVG(data) {
+  const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
+  const W = 260, L = 520, ZW = W / 5;
+
+  let cols = '', dividers = '';
+  data.forEach(d => {
+    const xStart = W - d.z * ZW; // zone 1 -> collée au bord droit
+    const total = d.w + d.f;
+    let fill;
+    if (total === 0) {
+      fill = 'rgba(30,53,96,.35)';
+    } else {
+      const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
+      fill = d.w >= d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+    }
+    cols += `<rect x="${xStart}" y="2" width="${ZW}" height="${L-4}" fill="${fill}"/>`;
+    cols += `<text x="${xStart+ZW/2}" y="30" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
+    cols += `<text x="${xStart+ZW/2}" y="56" text-anchor="middle" class="zc-count">
+      <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
+    </text>`;
+  });
+  for (let k = 1; k < 5; k++) {
+    dividers += `<line x1="${k*ZW}" y1="0" x2="${k*ZW}" y2="${L}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+
+  return `
+    <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="${W-2}" height="${L-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
+      ${cols}
+      ${dividers}
+      <line x1="0" y1="${L/2}" x2="${W}" y2="${L/2}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
+      <text x="${W/2}" y="${L/2-8}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+    </svg>`;
+}
+
+function renderZoneMap() {
+  const grid = document.getElementById('zoneMapGrid');
+  if (!grid) return;
+
+  const entries = statsMode === 'joueur'
+    ? [
+        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_' },
+        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_' },
+        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_' },
+        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_' },
+      ]
+    : [
+        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_' },
+        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_' },
+      ];
+
+  grid.innerHTML = entries.map(e => {
+    const data = computeZoneData(e.wp, e.fp);
+    return `<div class="zone-court-item">
+      <div class="zone-court-title" style="color:${e.color}">${e.label}</div>
+      ${buildCourtSVG(data)}
+    </div>`;
+  }).join('');
+}
+
 // ── TIMER ────────────────────────────────────────────────────────────────────
 let timerSeconds = 0, timerInterval = null, timerRunning = false;
   function ensureTimerRunning() {
@@ -1279,6 +1412,7 @@ function exportPDF() {
 
 
 initNames();
+initZoneTabs();
 updateDisplay();
 logEvent('', '🎾 Match démarré');
 </script>
