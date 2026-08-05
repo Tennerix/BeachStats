@@ -1,7 +1,9 @@
 // ── CONFIGURATION ────────────────────────────────────────────────────────
 const GUMROAD_PRODUCT_ID = "Gm9Hj8rUABWevGSi6DZZ1w==";
+const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
 const COOKIE_NAME = "beachstats_access";
 const COOKIE_MAX_AGE_DAYS = 30;
+const MAX_DEVICES = 3;
 
 const ROUTES = {
   "/avancees": { file: "/avancees.html", requiredTier: "avancees" },
@@ -46,7 +48,7 @@ async function handleVerify(request, env, url) {
   const body = new URLSearchParams();
   body.append("product_id", GUMROAD_PRODUCT_ID);
   body.append("license_key", licenseKey);
-  body.append("increment_uses_count", "false");
+  body.append("increment_uses_count", "true");
 
   const gumroadRes = await fetch("https://api.gumroad.com/v2/licenses/verify", {
     method: "POST",
@@ -65,6 +67,10 @@ async function handleVerify(request, env, url) {
 
   if (!isActive) {
     return renderLoginPage(dest, "Code invalide ou abonnement inactif.");
+  }
+
+  if (data.uses > MAX_DEVICES) {
+    return renderLoginPage(dest, "Ce code a déjà été utilisé sur trop d'appareils.");
   }
 
   const variantText = (purchase.variants || "").toLowerCase();
@@ -132,6 +138,8 @@ h1{font-size:18px;margin:0 0 1rem}
 input{width:100%;padding:10px;border-radius:8px;border:1px solid #1e3560;background:#0d1a2e;color:#fff;margin-bottom:1rem;box-sizing:border-box}
 button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;font-weight:bold;cursor:pointer}
 .err{color:#f97316;font-size:13px;margin-bottom:1rem}
+.buy{text-align:center;margin-top:1rem;font-size:13px;color:#8ba3c7}
+.buy a{color:#f5c518;text-decoration:none;font-weight:bold}
 </style></head>
 <body>
 <div class="box">
@@ -142,6 +150,7 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
     <input type="text" name="license_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" required>
     <button type="submit">Débloquer l'accès</button>
   </form>
+  <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank">Débloquer l'accès ici →</a></p>
 </div>
 </body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
