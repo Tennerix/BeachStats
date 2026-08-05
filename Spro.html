@@ -510,28 +510,40 @@ body{
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
 const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
-const SHOT_LBL = {
-  service:'Service', service_1:'Service Z1', service_2:'Service Z2', service_3:'Service Z3', service_4:'Service Z4', service_5:'Service Z5',
-  smash:'Smash', smash_1:'Smash Z1', smash_2:'Smash Z2', smash_3:'Smash Z3', smash_4:'Smash Z4', smash_5:'Smash Z5',
-  roule:'Bras roulé',
-  retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
-  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV', amorti_roule:'Amorti Bras Roulé',
-  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_roule:'Lob Bras Roulé', lob_rainbow:'Lob Rainbow',
-  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
-  defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
-};
 const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
+const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const ZONES = ['1', '2', '3', '4', '5'];
 
-// Liste complète des clés pour les statistiques
-const ALL_SHOT_KEYS = [
-  'service_1', 'service_2', 'service_3', 'service_4', 'service_5',
-  'retour_cd', 'retour_rev',
-  'smash_1', 'smash_2', 'smash_3', 'smash_4', 'smash_5', 'roule',
-  'amorti_cd', 'amorti_rev', 'amorti_roule',
-  'lob_cd', 'lob_rev', 'lob_roule', 'lob_rainbow', 
-  'rush_cd', 'rush_rev', 'rush_rainbow',
-  'defense_cd', 'defense_rev'
-];
+// Variantes (côté / type) disponibles pour chaque coup avant le choix de la zone.
+// Un tableau vide = pas de variante, on passe direct au choix de la zone.
+const SHOT_VARIANTS = {
+  service: [],
+  smash: [],
+  retour: ['cd', 'rev'],
+  roule: ['normal', 'tendu'],
+  amorti: ['cd', 'rev', 'roule'],
+  lob: ['cd', 'rev', 'roule', 'rainbow'],
+  rush: ['cd', 'rev', 'rainbow'],
+  defense: ['cd', 'rev']
+};
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', normal: 'Roulé', tendu: 'Tendu', roule: 'Bras roulé', rainbow: 'Rainbow' };
+
+// Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
+// Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
+const SHOT_LBL = {};
+const ALL_SHOT_KEYS = [];
+BASE_SHOTS.forEach(s => {
+  const variants = SHOT_VARIANTS[s];
+  const prefixes = variants.length ? variants.map(v => s + '_' + v) : [s];
+  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v]) : [SHOT_BASE_LBL[s]];
+  prefixes.forEach((prefix, i) => {
+    ZONES.forEach(z => {
+      const key = prefix + '_' + z;
+      SHOT_LBL[key] = labels[i] + ' Z' + z;
+      ALL_SHOT_KEYS.push(key);
+    });
+  });
+});
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
@@ -827,12 +839,6 @@ let pendingPlayer = null;
 let pendingType = null;
 let pendingPlayerNum = null;
 
-// Variantes supplémentaires (en plus de CD/REV) par coup côté
-const SIDED_EXTRAS = { retour: [], amorti: ['roule'], lob: ['roule', 'rainbow'], rush: ['rainbow'], defense: [] };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', roule: 'Bras roulé', rainbow: 'Rainbow' };
-const SIDED_SHOTS = Object.keys(SIDED_EXTRAS); // coups qui ont un côté (CD/REV...)
-const SERVICE_ZONES = ['1', '2', '3', '4', '5'];
-
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   pendingPlayer = player;
@@ -861,39 +867,46 @@ function renderShotCategories() {
     const group = document.createElement('div');
     group.className = 'shot-group';
     group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">
-      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_BASE_LBL[s]}
     </button>`;
     grid.appendChild(group);
   });
 }
 
-// ── ÉTAPE 2 : zone de service, ou côté (CD/REV...) selon le coup ────────────
+// ── ÉTAPE 2 : variante (côté / type) du coup, si le coup en a une ───────────
 function selectShotCategory(s) {
+  const variants = SHOT_VARIANTS[s];
+
+  if (!variants.length) { renderZoneStep(s, SHOT_BASE_LBL[s], SHOT_ICO[s], 'renderShotCategories()'); return; }
+
   const grid = document.getElementById('shotGrid');
-
-  if (s === 'service' || s === 'smash') {
-    const btns = SERVICE_ZONES.map(z =>
-      `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${s}_${z}')">Zone ${z}</button>`
-    ).join('');
-    grid.innerHTML = `
-      <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
-      <div class="shot-group" style="grid-column:1 / -1">
-        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
-        <div class="shot-sub-row">${btns}</div>
-      </div>`;
-    return;
-  }
-
-  if (!SIDED_SHOTS.includes(s)) { confirmShot(s); return; }
-
-  const variants = ['cd', 'rev', ...(SIDED_EXTRAS[s] || [])];
   grid.innerHTML = `
     <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
     <div class="shot-group" style="grid-column:1 / -1">
-      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</div>
       <div class="shot-sub-row">
-        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${s}_${v}')">${VARIANT_LBL[v]}</button>`).join('')}
+        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="selectShotVariant('${s}','${v}')">${VARIANT_LBL[v]}</button>`).join('')}
       </div>
+    </div>`;
+}
+
+function selectShotVariant(s, v) {
+  const prefix = s + '_' + v;
+  const label = SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v];
+  renderZoneStep(prefix, label, SHOT_ICO[s], `selectShotCategory('${s}')`);
+}
+
+// ── ÉTAPE 3 : zone du terrain où le coup a été réalisé (toujours en dernier) ─
+function renderZoneStep(prefix, label, icon, backOnClick) {
+  const grid = document.getElementById('shotGrid');
+  const btns = ZONES.map(z =>
+    `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${prefix}_${z}')">Zone ${z}</button>`
+  ).join('');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="${backOnClick}">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${icon} ${label}</div>
+      <div class="shot-sub-row">${btns}</div>
     </div>`;
 }
 
