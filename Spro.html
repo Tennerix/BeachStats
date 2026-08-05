@@ -186,6 +186,7 @@ body{
 .zl-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
 .zl-dot.zl-win{background:var(--green)}
 .zl-dot.zl-flt{background:var(--red)}
+.zl-dot.zl-tie{background:var(--gold)}
 
 /* ── LOG ── */
 .log-wrap{width:100%;max-width:580px}
@@ -504,6 +505,7 @@ body{
   <div class="zone-legend">
     <span class="zl-item"><span class="zl-dot zl-win"></span>Zone à dominante gagnante</span>
     <span class="zl-item"><span class="zl-dot zl-flt"></span>Zone à dominante fautes</span>
+    <span class="zl-item"><span class="zl-dot zl-tie"></span>Égalité gagnants / fautes</span>
   </div>
 </div>
 
@@ -1143,7 +1145,8 @@ function buildCourtSVG(data) {
       fill = 'rgba(30,53,96,.35)';
     } else {
       const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
-      fill = d.w >= d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+      if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
+      else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
     }
     cols += `<rect x="${xStart}" y="2" width="${ZW}" height="${L-4}" fill="${fill}"/>`;
     cols += `<text x="${xStart+ZW/2}" y="30" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
@@ -1392,6 +1395,79 @@ function exportPDF() {
     pdfShotTable('Points gagnants — détail par coup', 'w', [34,197,94]);
     pdfShotTable('Fautes directes — détail par coup', 'f', [239,68,68]);
   }
+
+  // ══ 3.5 CARTOGRAPHIE PAR ZONE (tous les coups, terrain par équipe/joueur) ═══
+  sectionTitle('CARTOGRAPHIE PAR ZONE', [245,197,24]);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,140,180);
+  doc.text('Vert = zone a dominante gagnante  /  Rouge = zone a dominante fautes  /  Jaune = egalite  /  Gris = aucune donnee', M, y);
+  y += 8;
+
+  const zoneEntities = statsMode === 'joueur'
+    ? [
+        {label: players.j1, color:[59,130,246], wp:'w1_', fp:'f1_'},
+        {label: players.j2, color:[59,130,246], wp:'w2_', fp:'f2_'},
+        {label: players.j3, color:[249,115,22], wp:'w3_', fp:'f3_'},
+        {label: players.j4, color:[249,115,22], wp:'w4_', fp:'f4_'},
+      ]
+    : [
+        {label: nameA, color:[59,130,246], wp:'wA_', fp:'fA_'},
+        {label: nameB, color:[249,115,22], wp:'wB_', fp:'fB_'},
+      ];
+
+  const zcCourtW = zoneEntities.length > 2 ? 34 : 62;
+  const zcCourtL = zcCourtW * 2;
+  const zcGap = 6;
+
+  const zoneColor = (w, f) => {
+    if (w === 0 && f === 0) return [40, 60, 95];
+    if (w === f) return [245, 197, 24];
+    return w > f ? [34, 197, 94] : [239, 68, 68];
+  };
+
+  BASE_SHOTS.forEach(shotKey => {
+    ensureSpace(zcCourtL + 18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+    doc.text(SHOT_BASE_LBL[shotKey], M, y);
+    y += 5;
+
+    const rowLabelY = y;
+    const courtTop = rowLabelY + 3;
+    const zw = zcCourtW / 5;
+
+    zoneEntities.forEach((ent, i) => {
+      const x0 = M + i * (zcCourtW + zcGap);
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...ent.color);
+      doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+      ZONES.forEach(z => {
+        const keys = SHOT_ZONE_KEYS[shotKey][z];
+        let w = 0, f = 0;
+        keys.forEach(k => { w += stats[ent.wp+k] || 0; f += stats[ent.fp+k] || 0; });
+        const zi = parseInt(z, 10);
+        const zx = x0 + zcCourtW - zi * zw; // zone 1 collée au bord droit
+
+        doc.setFillColor(...zoneColor(w, f));
+        doc.rect(zx, courtTop, zw, zcCourtL, 'F');
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 7 : 5); doc.setTextColor(255,255,255);
+        doc.text(String(zi), zx + zw/2, courtTop + (zw > 10 ? 7 : 5), {align:'center'});
+      });
+
+      doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
+      for (let k = 1; k < 5; k++) {
+        const lx = x0 + k*zw;
+        doc.line(lx, courtTop, lx, courtTop+zcCourtL);
+      }
+      doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
+      doc.line(x0, courtTop+zcCourtL/2, x0+zcCourtW, courtTop+zcCourtL/2);
+
+      doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
+      doc.rect(x0, courtTop, zcCourtW, zcCourtL);
+    });
+
+    y = courtTop + zcCourtL + 8;
+  });
 
   // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
   sectionTitle('JOURNAL DU MATCH COMPLET', [245,197,24]);
