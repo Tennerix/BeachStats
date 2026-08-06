@@ -81,7 +81,11 @@ body{
   display:flex;align-items:center;justify-content:space-between;
   padding:1.2rem 0 1rem;
   border-bottom:1px solid var(--border);
-  margin-bottom:1.2rem;
+  margin-bottom:1.2rem;flex-wrap:wrap;row-gap:8px;}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+@media(max-width:480px){
+  .header-logo{font-size:18px}
+  .header-back{font-size:11px;padding:5px 9px}
 }
 .header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
 .header-logo span{color:var(--text);opacity:.5}
@@ -357,7 +361,7 @@ body{
 
 <div class="header">
   <div class="header-logo">Beach<span>/</span>Stats</div>
-  <div style="display:flex;gap:8px">
+  <div class="header-actions">
     <div class="theme-switch-wrap">
       <button class="header-back" onclick="toggleThemeMenu(event)" aria-label="Changer de theme">Theme</button>
       <div class="theme-menu" id="themeMenu">
