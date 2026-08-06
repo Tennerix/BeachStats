@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>(function(){var t=localStorage.getItem('beachstats_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Beach Tennis – Stats Pro</title>
@@ -14,6 +15,7 @@
   --surface:#0d1829;
   --card:#111e35;
   --border:#1e3560;
+  --hover:#162040;
   --gold:#f5c518;
   --blue:#3b82f6;
   --orange:#f97316;
@@ -23,6 +25,41 @@
   --text:#e2eaf8;
   --muted:#4a6494;
 }
+[data-theme="light"]{
+  --bg:#eef1f6; --surface:#e7ecf3; --card:#f7f9fc; --hover:#dde4ee; --border:#aebad2;
+  --gold:#b3860f; --blue:#3b66c4; --orange:#c9601e; --green:#1f8a4c; --purple:#7c4bc4;
+  --red:#c23a3a; --text:#2c3646; --muted:#748094;
+}
+[data-theme="neon"]{
+  --bg:#050214; --surface:#0d0620; --card:#140a2e; --hover:#1c0f3d; --border:#3d1a6b;
+  --gold:#ffe600; --blue:#00e5ff; --orange:#ff2e97; --green:#39ff14; --purple:#c644ff;
+  --red:#ff2e5f; --text:#f2ecff; --muted:#8c6bc9;
+}
+[data-theme="sunset"]{
+  --bg:linear-gradient(180deg,#200a12 0%,#4a1f16 22%,#b8531f 48%,#f0c542 62%,#6b2a52 84%,#241130 100%);
+  --surface:linear-gradient(135deg,#3c1a14 0%,#6b3420 100%);
+  --card:linear-gradient(150deg,#481f18 0%,#7a3f22 100%);
+  --hover:linear-gradient(135deg,#5c2a1c 0%,#8a4a26 100%);
+  --border:#a35a35;
+  --gold:#ffcb3d; --blue:#5ec8f5; --orange:#ff7f3f; --green:#3fd9ae; --purple:#e488a8;
+  --red:#ef4a4a; --text:#fff8ec; --muted:#e0b89f;
+}
+/* ── SÉLECTEUR DE THÈME ── */
+body{transition:background-color .25s ease,color .25s ease}
+.theme-switch-wrap{position:relative}
+.theme-menu{position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px;display:none;flex-direction:column;gap:2px;z-index:30;min-width:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.theme-menu.open{display:flex}
+.theme-swatch{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);
+  font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.theme-swatch:hover{background:var(--surface)}
+.theme-swatch.active{outline:1px solid var(--gold)}
+.sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
+.sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
+.sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
+.sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
 
 body{
   font-family:Barlow,sans-serif;
@@ -153,7 +190,7 @@ body{
   font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;
   text-transform:uppercase;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
 }
-.btn-action:hover{background:#162040;border-color:var(--muted)}
+.btn-action:hover{background:var(--hover);border-color:var(--muted)}
 .btn-action.undo{border-color:#f59e0b;color:#f59e0b}
 .btn-action.undo:hover{background:rgba(245,158,11,.12)}
 .btn-action.reset{border-color:var(--red);color:var(--red)}
@@ -260,7 +297,7 @@ body{
   font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
   letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
 }
-.timer-btn:hover{background:#162040;border-color:var(--muted)}
+.timer-btn:hover{background:var(--hover);border-color:var(--muted)}
 .timer-btn.start{border-color:var(--green);color:var(--green)}
 .timer-btn.start:hover{background:rgba(34,197,94,.12)}
 .timer-btn.pause{border-color:var(--gold);color:var(--gold)}
@@ -350,6 +387,15 @@ body{
 <div class="header">
   <div class="header-logo">Beach<span>/</span>Stats</div>
   <div style="display:flex;gap:8px">
+    <div class="theme-switch-wrap">
+      <button class="header-back" onclick="toggleThemeMenu(event)" aria-label="Changer de theme">Theme</button>
+      <div class="theme-menu" id="themeMenu">
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span>Sombre</button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach <span style="margin-left:auto;font-size:10px;color:var(--gold)">PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold <span style="margin-left:auto;font-size:10px;color:var(--gold)">PRO</span></button>
+      </div>
+    </div>
     <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
     <button class="header-back" onclick="window.location.href='/'">← Accueil</button>
   </div>
@@ -1683,6 +1729,26 @@ initNames();
 initZoneTabs();
 updateDisplay();
 logEvent('', '🎾 Match démarré');
+// ── THÈMES ────────────────────────────────────────────────────────────────
+function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+function setTheme(theme) {
+  localStorage.setItem('beachstats_theme', theme);
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('themeMenu')?.classList.remove('open');
+}
+function toggleThemeMenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeMenu')?.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.theme-switch-wrap')) document.getElementById('themeMenu')?.classList.remove('open');
+});
+document.addEventListener('DOMContentLoaded', function() {
+  const current = localStorage.getItem('beachstats_theme') || 'dark';
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+});
+
 </script>
 </body>
 </html>
