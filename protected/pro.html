@@ -181,6 +181,9 @@ body{
 .zc-count .sep{fill:var(--muted);font-size:16px}
 .zc-count .f{fill:var(--red)}
 .zc-net-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;fill:var(--gold);text-transform:uppercase}
+.zc-band-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:11px;letter-spacing:1.5px;fill:var(--muted);text-transform:uppercase}
+.zone-depth-note{font-family:Barlow,sans-serif;font-size:12px;line-height:1.4;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.9rem}
+.zone-depth-note b{color:var(--gold)}
 .zone-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--border)}
 .zl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500}
 .zl-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
@@ -504,6 +507,7 @@ body{
 <div class="stats-card" id="zoneMapCard">
   <div class="stats-title">Cartographie par zone</div>
   <div class="zone-tabs" id="zoneTabs"></div>
+  <div class="zone-depth-note" id="zoneDepthNote" style="display:none">Bras roulé : le terrain est découpé en 3 bandes de profondeur — <b>Amorti</b> (proche filet), <b>Tendu</b> (milieu), <b>Lob</b> (fond) — chacune divisée en 5 zones de largeur.</div>
   <div class="zone-court-wrap" id="zoneMapGrid"></div>
   <div class="zone-legend">
     <span class="zl-item"><span class="zl-dot zl-win"></span>Zone à dominante gagnante</span>
@@ -568,6 +572,15 @@ const SHOT_VARIANTS = {
   defense: ['cd', 'rev']
 };
 const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow' };
+
+// Cartographie par zone du bras roulé : 3 bandes de profondeur, chacune liée
+// à une variante précise (proche filet → amorti, milieu → tendu, fond → lob),
+// chaque bande étant elle-même divisée en 5 zones de largeur (comme les autres coups).
+const ROULE_DEPTH_VARIANTS = [
+  { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+  { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+  { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
+];
 
 // Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
@@ -1171,11 +1184,21 @@ function computeZoneData(wPrefix, fPrefix) {
   });
 }
 
-// Terrain de beach tennis : 8m de large x 16m de long. La largeur (8m) est
-// découpée en 5 zones ; la zone 1 est à droite, la zone 5 à gauche.
+// Données de zone pour une variante de profondeur précise du bras roulé
+// (amorti / tendu / lobe), zone par zone de largeur (1 à 5).
+function computeRouleZoneData(wPrefix, fPrefix, variant) {
+  return ZONES.map(z => {
+    const key = 'roule_' + variant + '_' + z;
+    return { z: parseInt(z,10), w: stats[wPrefix+key] || 0, f: stats[fPrefix+key] || 0 };
+  });
+}
+
+// Terrain de beach tennis, vue demi-terrain (côté où le coup atterrit) : 8m de
+// large, découpés en 5 zones (zone 1 à droite, zone 5 à gauche). Le filet est
+// en bas du schéma, puisque c'est la limite la plus proche de la frappe.
 function buildCourtSVG(data) {
   const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
-  const W = 260, L = 520, ZW = W / 5;
+  const W = 260, courtL = 256, ZW = W / 5, L = courtL + 30;
 
   let cols = '', dividers = '';
   data.forEach(d => {
@@ -1189,29 +1212,84 @@ function buildCourtSVG(data) {
       if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
       else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
     }
-    cols += `<rect x="${xStart}" y="2" width="${ZW}" height="${L-4}" fill="${fill}"/>`;
+    cols += `<rect x="${xStart}" y="2" width="${ZW}" height="${courtL-4}" fill="${fill}"/>`;
     cols += `<text x="${xStart+ZW/2}" y="30" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
     cols += `<text x="${xStart+ZW/2}" y="56" text-anchor="middle" class="zc-count">
       <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
     </text>`;
   });
   for (let k = 1; k < 5; k++) {
-    dividers += `<line x1="${k*ZW}" y1="0" x2="${k*ZW}" y2="${L}" stroke="var(--border)" stroke-width="1"/>`;
+    dividers += `<line x1="${k*ZW}" y1="0" x2="${k*ZW}" y2="${courtL}" stroke="var(--border)" stroke-width="1"/>`;
   }
 
   return `
     <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="${W-2}" height="${L-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
+      <rect x="1" y="1" width="${W-2}" height="${courtL-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
       ${cols}
       ${dividers}
-      <line x1="0" y1="${L/2}" x2="${W}" y2="${L/2}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
-      <text x="${W/2}" y="${L/2-8}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+      <line x1="0" y1="${courtL}" x2="${W}" y2="${courtL}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
+      <text x="${W/2}" y="${courtL+18}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+    </svg>`;
+}
+
+// Cartographie du bras roulé, vue demi-terrain : 3 bandes de profondeur
+// empilées, filet en bas. De bas en haut : proche filet → amorti, milieu →
+// tendu, fond → lob. Chaque bande est divisée en 5 zones de largeur.
+function buildRouleCourtSVG(wPrefix, fPrefix) {
+  const W = 260, ZW = W / 5, bandH = 148, gap = 8, TOPPAD = 4, LBLPAD = 26;
+  const L = TOPPAD + bandH * 3 + gap * 2 + LBLPAD;
+
+  // Filet en bas -> ordre visuel de haut en bas : fond, milieu, proche filet.
+  const visualOrder = [...ROULE_DEPTH_VARIANTS].reverse();
+  const dataByVariant = {};
+  ROULE_DEPTH_VARIANTS.forEach(dv => { dataByVariant[dv.variant] = computeRouleZoneData(wPrefix, fPrefix, dv.variant); });
+  const maxTotal = Math.max(1, ...Object.values(dataByVariant).flat().map(d => d.w + d.f));
+
+  let bands = '';
+  visualOrder.forEach((dv, bi) => {
+    const data = dataByVariant[dv.variant];
+    const yStart = TOPPAD + bi * (bandH + gap);
+    let cols = '', dividers = '';
+    data.forEach(d => {
+      const xStart = W - d.z * ZW;
+      const total = d.w + d.f;
+      let fill;
+      if (total === 0) {
+        fill = 'rgba(30,53,96,.35)';
+      } else {
+        const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
+        if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
+        else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+      }
+      cols += `<rect x="${xStart}" y="${yStart}" width="${ZW}" height="${bandH}" fill="${fill}"/>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yStart+22}" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yStart+44}" text-anchor="middle" class="zc-count">
+        <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
+      </text>`;
+    });
+    for (let k = 1; k < 5; k++) {
+      dividers += `<line x1="${k*ZW}" y1="${yStart}" x2="${k*ZW}" y2="${yStart+bandH}" stroke="var(--border)" stroke-width="1"/>`;
+    }
+    bands += `<rect x="1" y="${yStart}" width="${W-2}" height="${bandH}" fill="none" stroke="var(--border)" stroke-width="1.5" rx="3"/>`;
+    bands += cols + dividers;
+    bands += `<text x="${W/2}" y="${yStart+bandH-8}" text-anchor="middle" class="zc-band-lbl">${escapeHtml(dv.label)}</text>`;
+  });
+
+  const netY = TOPPAD + bandH * 3 + gap * 2;
+  return `
+    <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      ${bands}
+      <line x1="0" y1="${netY}" x2="${W}" y2="${netY}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
+      <text x="${W/2}" y="${netY+18}" text-anchor="middle" class="zc-net-lbl">Filet</text>
     </svg>`;
 }
 
 function renderZoneMap() {
   const grid = document.getElementById('zoneMapGrid');
   if (!grid) return;
+
+  const depthNote = document.getElementById('zoneDepthNote');
+  if (depthNote) depthNote.style.display = zoneMapShot === 'roule' ? 'block' : 'none';
 
   const entries = statsMode === 'joueur'
     ? [
@@ -1226,10 +1304,12 @@ function renderZoneMap() {
       ];
 
   grid.innerHTML = entries.map(e => {
-    const data = computeZoneData(e.wp, e.fp);
+    const svg = zoneMapShot === 'roule'
+      ? buildRouleCourtSVG(e.wp, e.fp)
+      : buildCourtSVG(computeZoneData(e.wp, e.fp));
     return `<div class="zone-court-item">
       <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
-      ${buildCourtSVG(data)}
+      ${svg}
     </div>`;
   }).join('');
 }
@@ -1456,8 +1536,10 @@ function exportPDF() {
       ];
 
   const zcCourtW = zoneEntities.length > 2 ? 34 : 62;
-  const zcCourtL = zcCourtW * 2;
+  const zcCourtL = zcCourtW * 2;      // hauteur totale des 3 bandes de profondeur (bras roulé)
+  const zcCourtLHalf = zcCourtW;      // hauteur d'un demi-terrain (tous les autres coups)
   const zcGap = 6;
+  const zcNetGap = 4; // espace entre le bas du terrain et la ligne de filet
 
   const zoneColor = (w, f) => {
     if (w === 0 && f === 0) return [40, 60, 95];
@@ -1466,7 +1548,71 @@ function exportPDF() {
   };
 
   BASE_SHOTS.forEach(shotKey => {
-    ensureSpace(zcCourtL + 18);
+    // ── Cas particulier : bras roulé → 3 bandes de profondeur (amorti / tendu / lob), filet en bas ──
+    if (shotKey === 'roule') {
+      const bandH = zcCourtL / 3;
+      ensureSpace(zcCourtL + 26);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+      doc.text(SHOT_BASE_LBL[shotKey] + ' (par profondeur)', M, y);
+      y += 5;
+
+      const rowLabelY = y;
+      const courtTop = rowLabelY + 3;
+      const zw = zcCourtW / 5;
+      // Filet en bas -> ordre visuel de haut en bas : fond, milieu, proche filet.
+      const visualOrder = [...ROULE_DEPTH_VARIANTS].reverse();
+
+      zoneEntities.forEach((ent, i) => {
+        const x0 = M + i * (zcCourtW + zcGap);
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+        visualOrder.forEach((dv, bi) => {
+          const bandTop = courtTop + bi * bandH;
+
+          ZONES.forEach(z => {
+            const zi = parseInt(z, 10);
+            const key = 'roule_' + dv.variant + '_' + z;
+            const w = stats[ent.wp+key] || 0, f = stats[ent.fp+key] || 0;
+            const zx = x0 + zcCourtW - zi * zw;
+
+            doc.setFillColor(...zoneColor(w, f));
+            doc.rect(zx, bandTop, zw, bandH, 'F');
+
+            doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 6 : 4.5); doc.setTextColor(255,255,255);
+            doc.text(String(zi), zx + zw/2, bandTop + Math.min(bandH - 1.5, 6), {align:'center'});
+          });
+
+          doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
+          for (let k = 1; k < 5; k++) {
+            const lx = x0 + k*zw;
+            doc.line(lx, bandTop, lx, bandTop+bandH);
+          }
+          doc.setDrawColor(245,197,24); doc.setLineWidth(0.3);
+          doc.rect(x0, bandTop, zcCourtW, bandH);
+
+          doc.setFont('helvetica','normal'); doc.setFontSize(3.8); doc.setTextColor(245,197,24);
+          doc.text(dv.short, x0 + zcCourtW/2, bandTop + bandH - 1.5, {align:'center'});
+        });
+
+        doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
+        doc.rect(x0, courtTop, zcCourtW, zcCourtL);
+
+        // Ligne de filet, sous la bande "proche filet"
+        doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
+        doc.line(x0, courtTop+zcCourtL+zcNetGap, x0+zcCourtW, courtTop+zcCourtL+zcNetGap);
+      });
+
+      doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(245,197,24);
+      doc.text('FILET', M, courtTop+zcCourtL+zcNetGap+5);
+
+      y = courtTop + zcCourtL + zcNetGap + 10;
+      return;
+    }
+
+    // ── Tous les autres coups : demi-terrain (5 zones de largeur), filet en bas ──
+    ensureSpace(zcCourtLHalf + 26);
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
     doc.text(SHOT_BASE_LBL[shotKey], M, y);
     y += 5;
@@ -1489,7 +1635,7 @@ function exportPDF() {
         const zx = x0 + zcCourtW - zi * zw; // zone 1 collée au bord droit
 
         doc.setFillColor(...zoneColor(w, f));
-        doc.rect(zx, courtTop, zw, zcCourtL, 'F');
+        doc.rect(zx, courtTop, zw, zcCourtLHalf, 'F');
 
         doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 7 : 5); doc.setTextColor(255,255,255);
         doc.text(String(zi), zx + zw/2, courtTop + (zw > 10 ? 7 : 5), {align:'center'});
@@ -1498,16 +1644,21 @@ function exportPDF() {
       doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
       for (let k = 1; k < 5; k++) {
         const lx = x0 + k*zw;
-        doc.line(lx, courtTop, lx, courtTop+zcCourtL);
+        doc.line(lx, courtTop, lx, courtTop+zcCourtLHalf);
       }
-      doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
-      doc.line(x0, courtTop+zcCourtL/2, x0+zcCourtW, courtTop+zcCourtL/2);
 
       doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
-      doc.rect(x0, courtTop, zcCourtW, zcCourtL);
+      doc.rect(x0, courtTop, zcCourtW, zcCourtLHalf);
+
+      // Ligne de filet, en bas du demi-terrain
+      doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
+      doc.line(x0, courtTop+zcCourtLHalf+zcNetGap, x0+zcCourtW, courtTop+zcCourtLHalf+zcNetGap);
     });
 
-    y = courtTop + zcCourtL + 8;
+    doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(245,197,24);
+    doc.text('FILET', M, courtTop+zcCourtLHalf+zcNetGap+5);
+
+    y = courtTop + zcCourtLHalf + zcNetGap + 10;
   });
 
   // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
