@@ -13,6 +13,9 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:f
 .hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
 .hero img{width:100%;display:block;object-fit:cover;max-height:260px}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid #f5c518;color:#f5c518;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
+.history-btn{position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:6px;background:rgba(10,22,40,.78);border:1.5px solid #3b5280;color:#e0eaf8;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 12px 6px 10px;border-radius:20px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:border-color .18s,color .18s}
+.history-btn i{font-size:15px}
+.history-btn:hover{border-color:#f5c518;color:#f5c518}
 .bt-card{width:100%;background:#111e35;border:1px solid #1e3560;border-radius:20px;padding:1.75rem 1.5rem;margin-top:1.5rem;box-shadow:0 4px 32px rgba(0,0,0,.45)}
 .bt-title{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:3px;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:center;gap:8px}
 .bt-title .hl{color:#f5c518}
@@ -78,6 +81,7 @@ input:checked+.slider:before{transform:translateX(26px)}
 <div class="page-wrapper">
   <div class="hero">
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
+    <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i>Historique</button>
     <div class="hero-badge">Interface Stats v1.0</div>
   </div>
   <div class="bt-card">
@@ -196,6 +200,7 @@ function goToSbase() { window.location.href = `/base?${getParams()}`; }
 function goToCDP() { window.location.href = `/points?${getParams()}`; }
 function goToSintermediaire() { window.location.href = `/intermediaire?${getParams()}`; }
 function goToSpro() { window.location.href = `/pro?${getParams()}`; }
+function goToHistorique() { window.location.href = `/historique`; }
 </script>
 </body>
 </html>
