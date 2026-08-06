@@ -24,6 +24,17 @@ export default {
       return handleVerify(request, env, url);
     }
 
+    // Petit endpoint utilisé par le sélecteur de thème : indique au
+    // JavaScript de la page (sans jamais exposer le cookie lui-même,
+    // qui reste HttpOnly) si le visiteur a un accès Avancées/Pro valide,
+    // peu importe la page où il se trouve.
+    if (url.pathname === "/api/tier") {
+      const session = await readSessionCookie(request, env);
+      return new Response(JSON.stringify({ tier: session ? session.tier : null }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const route = ROUTES[url.pathname];
     if (route) {
       if (route.tier === null) {
