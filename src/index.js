@@ -8,6 +8,7 @@ const MAX_DEVICES = 3;
 const ROUTES = {
   "/avancees": { file: "/avancees.html", requiredTier: "avancees" },
   "/pro": { file: "/pro.html", requiredTier: "pro" },
+  "/historique": { file: "/historique.html", requiredTier: "avancees" },
 };
 
 export default {
