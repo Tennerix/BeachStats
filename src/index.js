@@ -138,7 +138,8 @@ h1{font-size:18px;margin:0 0 1rem}
 input{width:100%;padding:10px;border-radius:8px;border:1px solid #1e3560;background:#0d1a2e;color:#fff;margin-bottom:1rem;box-sizing:border-box}
 button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;font-weight:bold;cursor:pointer}
 .err{color:#f97316;font-size:13px;margin-bottom:1rem}
-.buy{text-align:center;margin-top:1rem;font-size:13px;color:#8ba3c7}
+.info{text-align:center;font-size:11px;color:#5a7299;margin-top:1rem;line-height:1.5}
+.buy{text-align:center;margin-top:.75rem;font-size:13px;color:#8ba3c7}
 .buy a{color:#f5c518;text-decoration:none;font-weight:bold}
 </style></head>
 <body>
@@ -150,6 +151,10 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
     <input type="text" name="license_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" required>
     <button type="submit">Débloquer l'accès</button>
   </form>
+  <p class="info">
+    Un code débloque l'accès sur 3 appareils maximum.<br>
+    L'accès est automatiquement suspendu si l'abonnement n'est pas renouvelé.
+  </p>
   <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank">Débloquer l'accès ici →</a></p>
 </div>
 </body></html>`;
