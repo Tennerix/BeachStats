@@ -5,10 +5,15 @@ const COOKIE_NAME = "beachstats_access";
 const COOKIE_MAX_AGE_DAYS = 30;
 const MAX_DEVICES = 3;
 
+// tier: null = accès libre, aucune vérification. Sinon 'avancees' ou 'pro'.
 const ROUTES = {
-  "/avancees": { file: "/avancees.html", requiredTier: "avancees" },
-  "/pro": { file: "/pro.html", requiredTier: "pro" },
-  "/historique": { file: "/historique.html", requiredTier: "avancees" },
+  "/":              { file: "/index.html",         tier: null },
+  "/points":        { file: "/points.html",         tier: null },
+  "/base":          { file: "/base.html",           tier: null },
+  "/intermediaire": { file: "/intermediaire.html",  tier: null },
+  "/historique":    { file: "/historique.html",     tier: null },
+  "/avancees":      { file: "/avancees.html",       tier: "avancees" },
+  "/pro":           { file: "/pro.html",            tier: "pro" },
 };
 
 export default {
@@ -21,10 +26,14 @@ export default {
 
     const route = ROUTES[url.pathname];
     if (route) {
+      if (route.tier === null) {
+        const assetUrl = new URL(route.file, request.url);
+        return env.ASSETS.fetch(new Request(assetUrl, request));
+      }
+
       const session = await readSessionCookie(request, env);
       const hasAccess =
-        session &&
-        (session.tier === "pro" || session.tier === route.requiredTier);
+        session && (session.tier === "pro" || session.tier === route.tier);
 
       if (hasAccess) {
         const assetUrl = new URL(route.file, request.url);
@@ -33,7 +42,13 @@ export default {
       return renderLoginPage(url.pathname + url.search);
     }
 
-    return new Response("Page introuvable", { status: 404 });
+    // Pas une route connue : on tente quand même de servir un asset statique
+    // tel quel (ex: image1.png, favicon...), sinon 404.
+    try {
+      return await env.ASSETS.fetch(request);
+    } catch {
+      return new Response("Page introuvable", { status: 404 });
+    }
   },
 };
 
