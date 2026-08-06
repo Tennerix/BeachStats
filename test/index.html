@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach Tennis - Stats</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Barlow,sans-serif;min-height:100vh;background:#0a1628;display:flex;flex-direction:column;align-items:center;padding:0 1rem 3rem}
+.page-wrapper{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:stretch}
+.hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.hero img{width:100%;display:block;object-fit:cover;max-height:260px}
+.hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid #f5c518;color:#f5c518;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
+.bt-card{width:100%;background:#111e35;border:1px solid #1e3560;border-radius:20px;padding:1.75rem 1.5rem;margin-top:1.5rem;box-shadow:0 4px 32px rgba(0,0,0,.45)}
+.bt-title{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:3px;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.bt-title .hl{color:#f5c518}
+.bt-title i{font-size:20px;color:#f5c518}
+.team-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-left:4px}
+.team-label.a{color:#3b82f6}
+.team-label.b{color:#f97316}
+.names-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.player-slot{display:flex;align-items:center;gap:10px;background:#0d1a2e;border:1px solid #1e3560;border-radius:10px;padding:10px 12px;transition:border-color .2s}
+.player-slot:focus-within{border-color:#f5c518}
+.player-slot.team-b:focus-within{border-color:#f97316}
+.player-slot i{font-size:17px;color:#3b82f6;flex-shrink:0}
+.player-slot.team-b i{color:#f97316}
+.player-slot input{background:none;border:none;outline:none;font-family:Barlow,sans-serif;font-size:14px;color:#e0eaf8;width:100%;min-width:0}
+.player-slot input::placeholder{color:#3b5280}
+.vs-divider{display:flex;align-items:center;gap:12px;margin:4px 0 12px}
+.vs-divider::before,.vs-divider::after{content:"";flex:1;height:1px;background:#1e3560}
+.vs-divider span{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:#3b5280;letter-spacing:2px}
+.mode-selector{display:flex;align-items:center;justify-content:space-between;background:#0d1a2e;padding:12px 16px;border-radius:12px;border:1px solid #1e3560;margin-bottom:1.5rem;gap:10px}
+.mode-label-wrap{display:flex;align-items:center;gap:6px;position:relative}
+.mode-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#f5c518;letter-spacing:1px;text-transform:uppercase}
+.info-btn{background:none;border:none;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;color:#3b5280;transition:color .18s;flex-shrink:0}
+.info-btn:hover,.info-btn.active{color:#f5c518}
+.info-btn i{font-size:17px}
+.info-tooltip{position:absolute;top:calc(100% + 10px);left:0;width:250px;background:#162040;border:1px solid #f5c518;border-radius:10px;padding:12px 14px;font-family:Barlow,sans-serif;font-size:12.5px;line-height:1.5;color:#e0eaf8;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:10;display:none}
+.info-tooltip.open{display:block}
+.info-tooltip::before{content:"";position:absolute;top:-6px;left:14px;width:11px;height:11px;background:#162040;border-left:1px solid #f5c518;border-top:1px solid #f5c518;transform:rotate(45deg)}
+.info-tooltip b{color:#f5c518}
+.info-tooltip p+p{margin-top:6px}
+@media(max-width:380px){.info-tooltip{width:200px}}
+.switch{position:relative;display:inline-block;width:50px;height:24px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#1e3560;transition:.4s;border-radius:24px}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.4s;border-radius:50%}
+input:checked+.slider{background-color:#f5c518}
+input:checked+.slider:before{transform:translateX(26px)}
+.btn-group{display:flex;flex-direction:column;gap:10px;margin-top:1.25rem}
+.stat-row{display:flex;align-items:center;gap:8px;position:relative}
+.btn-stat{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;border:1px solid #1e3560;background:#0d1a2e;color:#e0eaf8;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .18s;flex:1;min-width:0;text-align:left;text-decoration:none}
+.btn-stat:hover{background:#162040;transform:translateX(3px)}
+.btn-stat:active{transform:scale(.98)}
+.btn-stat i{font-size:19px}
+.btn-stat .arrow{margin-left:auto;font-size:15px;color:#3b5280}
+.btn-stat:hover .arrow{color:#e0eaf8}
+.btn-stat.points{border-left:3px solid #f5c518}
+.btn-stat.points i{color:#f5c518}
+.btn-stat.base{border-left:3px solid #3b82f6}
+.btn-stat.base i{color:#3b82f6}
+.btn-stat.avancees{border-left:3px solid #f97316}
+.btn-stat.avancees i{color:#f97316}
+.btn-stat.intermediaire{border-left:3px solid #22c55e}
+.btn-stat.intermediaire i{color:#22c55e}
+.btn-stat.pro{border-left:3px solid #a855f7}
+.btn-stat.pro i{color:#a855f7}
+.stat-row .info-btn{background:#0d1a2e;border:1px solid #1e3560;border-radius:10px;width:42px;height:47px;justify-content:center;flex-shrink:0}
+.stat-row .info-btn:hover,.stat-row .info-btn.active{border-color:#f5c518}
+.stat-row .info-tooltip{top:calc(100% + 8px);left:auto;right:0;width:100%}
+.stat-row .info-tooltip::before{left:auto;right:16px}
+@media(max-width:380px){.names-grid{grid-template-columns:1fr}.bt-title{font-size:17px;letter-spacing:2px}.btn-stat{font-size:13px;padding:11px 12px}.hero img{max-height:180px}.stat-row .info-btn{width:38px;height:43px}}
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <div class="hero">
+    <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
+    <div class="hero-badge">Interface Stats v1.0</div>
+  </div>
+  <div class="bt-card">
+    <p class="bt-title"><i class="ti ti-users"></i>Equipes &amp; <span class="hl">Joueurs</span></p>
+    <div class="team-label a">Equipe A</div>
+    <div class="names-grid">
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" placeholder="Joueur 1"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" placeholder="Joueur 2"></div>
+    </div>
+    <div class="vs-divider"><span>VS</span></div>
+    <div class="team-label b">Equipe B</div>
+    <div class="names-grid">
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" placeholder="Joueur 3"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" placeholder="Joueur 4"></div>
+    </div>
+
+    <div class="mode-selector">
+      <div class="mode-label-wrap">
+        <span class="mode-label" id="modeText">Stats par Équipe</span>
+        <button type="button" class="info-btn" data-target="infoTooltip-mode" aria-label="Explication du mode" onclick="toggleInfo(event, this)">
+          <i class="ti ti-info-circle"></i>
+        </button>
+        <div class="info-tooltip" id="infoTooltip-mode">
+          <p><b>Par Équipe :</b> les statistiques cumulent les actions des deux joueurs d'une même équipe (Équipe A vs Équipe B).</p>
+          <p><b>Par Joueur :</b> les statistiques sont détaillées individuellement pour chacun des 4 joueurs.</p>
+        </div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="modeToggle" onchange="updateModeText()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="btn-group">
+      <div class="stat-row">
+        <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="info-btn" data-target="infoTooltip-points" aria-label="Explication Comptage de points" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
+        <div class="info-tooltip" id="infoTooltip-points">
+          <p>Sert uniquement à <b>compter les points</b> du match, sans relever aucune autre statistique de jeu.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="info-btn" data-target="infoTooltip-base" aria-label="Explication Stats de base" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
+        <div class="info-tooltip" id="infoTooltip-base">
+          <p>Relève uniquement les <b>coups gagnants</b> et les <b>fautes directes</b>.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <button type="button" class="btn-stat intermediaire" onclick="goToSintermediaire()"><i class="ti ti-chart-area-line"></i>Stats intermediaires<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="info-btn" data-target="infoTooltip-inter" aria-label="Explication Stats intermediaires" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
+        <div class="info-tooltip" id="infoTooltip-inter">
+          <p>Relève les <b>coups gagnants</b> et les <b>fautes</b>, ainsi que le <b>type de coup</b> joué (smash, service, amorti, etc.).</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i>Stats avancees<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="info-btn" data-target="infoTooltip-avancees" aria-label="Explication Stats avancees" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
+        <div class="info-tooltip" id="infoTooltip-avancees">
+          <p>Relève le <b>type de coup</b>, s'il est joué en <b>coup droit ou en revers</b>, ainsi que les <b>zones de service</b>.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i>Stats pro<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="info-btn" data-target="infoTooltip-pro" aria-label="Explication Stats pro" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
+        <div class="info-tooltip" id="infoTooltip-pro">
+          <p>Le mode le plus complet : <b>tous les types de coups</b>, <b>toutes les zones</b> du terrain, avec un <b>schéma de statistiques</b> détaillé.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function updateModeText() {
+  const isChecked = document.getElementById('modeToggle').checked;
+  document.getElementById('modeText').textContent = isChecked ? "Stats par Joueur" : "Stats par Équipe";
+}
+
+function toggleInfo(event, btn) {
+  event.stopPropagation();
+  const tooltip = document.getElementById(btn.dataset.target);
+  const isOpen = tooltip.classList.contains('open');
+  closeAllInfo();
+  if (!isOpen) {
+    tooltip.classList.add('open');
+    btn.classList.add('active');
+  }
+}
+
+function closeAllInfo() {
+  document.querySelectorAll('.info-tooltip.open').forEach(t => t.classList.remove('open'));
+  document.querySelectorAll('.info-btn.active').forEach(b => b.classList.remove('active'));
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.info-tooltip') && !e.target.closest('.info-btn')) {
+    closeAllInfo();
+  }
+});
+
+function getParams() {
+  const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
+  const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
+  const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
+  const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
+  const mode = document.getElementById('modeToggle').checked ? 'joueur' : 'equipe';
+  return `j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}&mode=${mode}`;
+}
+
+function goToSavancee() { window.location.href = `/avancees?${getParams()}`; }
+function goToSbase() { window.location.href = `/base?${getParams()}`; }
+function goToCDP() { window.location.href = `/points?${getParams()}`; }
+function goToSintermediaire() { window.location.href = `/intermediaire?${getParams()}`; }
+function goToSpro() { window.location.href = `/pro?${getParams()}`; }
+</script>
+</body>
+</html>
