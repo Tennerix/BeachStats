@@ -55,6 +55,9 @@ body{transition:background-color .25s ease,color .25s ease}
   font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
 .theme-swatch:hover{background:var(--surface)}
 .theme-swatch.active{outline:1px solid var(--gold)}
+.theme-swatch.locked{opacity:.55}
+.theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
+.theme-swatch.locked .lock-badge{display:flex}
 .sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
 .sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
@@ -362,6 +365,8 @@ body{
       <div class="theme-menu" id="themeMenu">
         <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span>Sombre</button>
         <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
       </div>
     </div>
     <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
@@ -1363,23 +1368,53 @@ initNames();
 updateDisplay();
 logEvent('', '🎾 Match démarré');
 // ── THÈMES ────────────────────────────────────────────────────────────────
+const PRO_THEMES = ['neon', 'sunset'];
+let userTier = null;
+
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
 function setTheme(theme) {
+  if (PRO_THEMES.includes(theme) && userTier !== 'pro') {
+    window.open('https://beachstats.gumroad.com/l/jlcqx', '_blank');
+    return;
+  }
   localStorage.setItem('beachstats_theme', theme);
   applyTheme(theme);
   document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
   document.getElementById('themeMenu')?.classList.remove('open');
 }
+
 function toggleThemeMenu(e) {
   e.stopPropagation();
   document.getElementById('themeMenu')?.classList.toggle('open');
 }
+
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.theme-switch-wrap')) document.getElementById('themeMenu')?.classList.remove('open');
 });
+
+function updateThemeLockUI() {
+  document.querySelectorAll('.theme-swatch').forEach(b => {
+    const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
+    b.classList.toggle('locked', isProTheme && userTier !== 'pro');
+  });
+}
+
+async function checkTier() {
+  try {
+    const res = await fetch('/api/tier');
+    const data = await res.json();
+    userTier = data.tier;
+  } catch (e) {
+    userTier = null;
+  }
+  updateThemeLockUI();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
   document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+  checkTier();
 });
 
 </script>
