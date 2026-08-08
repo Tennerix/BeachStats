@@ -16,6 +16,27 @@ const ROUTES = {
   "/pro":           { file: "/pro.html",            tier: "pro" },
 };
 
+// Le paramètre "dest" (page vers laquelle rediriger après connexion) vient
+// d'un formulaire, donc potentiellement manipulable. On ne fait jamais
+// confiance à sa valeur telle quelle : on vérifie qu'il s'agit bien d'un
+// chemin relatif (jamais une adresse externe) correspondant à une de nos
+// vraies pages, sinon on retombe sur une valeur sûre par défaut. Ça évite
+// à la fois une redirection piégée vers un site extérieur (open redirect)
+// et une injection de code dans la page de connexion.
+function sanitizeDest(dest) {
+  if (typeof dest !== "string" || !dest) return "/avancees";
+  if (!dest.startsWith("/") || dest.startsWith("//") || dest.includes("\\")) return "/avancees";
+  const path = dest.split("?")[0];
+  if (!(path in ROUTES)) return "/avancees";
+  return dest;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -50,7 +71,7 @@ export default {
         const assetUrl = new URL(route.file, request.url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
       }
-      return renderLoginPage(url.pathname + url.search);
+      return renderLoginPage(sanitizeDest(url.pathname + url.search));
     }
 
     // Pas une route connue : on tente quand même de servir un asset statique
@@ -66,7 +87,7 @@ export default {
 async function handleVerify(request, env, url) {
   const form = await request.formData();
   const licenseKey = (form.get("license_key") || "").trim();
-  const dest = form.get("dest") || "/avancees";
+  const dest = sanitizeDest(form.get("dest"));
 
   if (!licenseKey) {
     return renderLoginPage(dest, "Merci d'entrer un code.");
@@ -174,7 +195,7 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
   <h1>Entre ton code d'accès</h1>
   ${error ? `<div class="err">${error}</div>` : ""}
   <form method="POST" action="/verify">
-    <input type="hidden" name="dest" value="${dest}">
+    <input type="hidden" name="dest" value="${escapeHtml(dest)}">
     <input type="text" name="license_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" required>
     <button type="submit">Débloquer l'accès</button>
   </form>
