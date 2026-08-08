@@ -43,6 +43,33 @@
   --gold:#ffcb3d; --blue:#5ec8f5; --orange:#ff7f3f; --green:#3fd9ae; --purple:#e488a8;
   --red:#ef4a4a; --text:#fff8ec; --muted:#e0b89f;
 }
+[data-theme="lagoon"]{
+  --bg:linear-gradient(180deg,#02141a 0%,#053b3f 22%,#0a6e6e 48%,#17d6d0 62%,#0a4a5c 84%,#02121e 100%);
+  --surface:linear-gradient(135deg,#04262b 0%,#0a4a4a 100%);
+  --card:linear-gradient(150deg,#063339 0%,#0d5555 100%);
+  --hover:linear-gradient(135deg,#0a4045 0%,#116868 100%);
+  --border:#1ec9c9;
+  --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7; --purple:#7c83fd;
+  --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
+}
+[data-theme="magma"]{
+  --bg:linear-gradient(180deg,#0a0302 0%,#380a04 22%,#8a1c04 48%,#ff5b0f 62%,#5c0f0f 84%,#120303 100%);
+  --surface:linear-gradient(135deg,#2e0a06 0%,#66190a 100%);
+  --card:linear-gradient(150deg,#3d0e08 0%,#7d2308 100%);
+  --hover:linear-gradient(135deg,#4d140b 0%,#992e0e 100%);
+  --border:#ff5c1a;
+  --gold:#ffc300; --blue:#3fa9ff; --orange:#ff4b00; --green:#a4d84a; --purple:#ff2e88;
+  --red:#ff2020; --text:#fff2e0; --muted:#d98a5c;
+}
+[data-theme="glacier"]{
+  --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
+  --surface:linear-gradient(135deg,#04182a 0%,#0a3550 100%);
+  --card:linear-gradient(150deg,#082238 0%,#0e3d5c 100%);
+  --hover:linear-gradient(135deg,#0c2d46 0%,#155070 100%);
+  --border:#3fa0cf;
+  --gold:#d6faff; --blue:#7fd8ff; --orange:#ffb4a8; --green:#9dfcd8; --purple:#b8c6ff;
+  --red:#ff8fa3; --text:#eaf9ff; --muted:#6f93ab;
+}
 /* ── SÉLECTEUR DE THÈME ── */
 body{transition:background-color .25s ease,color .25s ease}
 .theme-switch-wrap{position:relative}
@@ -62,6 +89,9 @@ body{transition:background-color .25s ease,color .25s ease}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
 .sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
 .sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
+.sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
+.sw-magma{background:linear-gradient(135deg,#0a0302,#ff5b0f)}
+.sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
 
 body{
   font-family:Barlow,sans-serif;
@@ -494,6 +524,9 @@ body{
         <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
         <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="magma" onclick="setTheme('magma')"><span class="sw sw-magma"></span>Magma<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
       </div>
     </div>
     <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
@@ -1099,7 +1132,7 @@ if (_savedProgress) {
   logEvent("","🎾 Match démarré — "+escapeHtml(nameA)+" vs "+escapeHtml(nameB));
 }
 // ── THÈMES ────────────────────────────────────────────────────────────────
-const PRO_THEMES = ['neon', 'sunset'];
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
 let userTier = null;
 
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
