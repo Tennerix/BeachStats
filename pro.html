@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>(function(){var t=localStorage.getItem('beachstats_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach Tennis – Stats Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#080f1e;
+  --surface:#0d1829;
+  --card:#111e35;
+  --border:#1e3560;
+  --hover:#162040;
+  --gold:#f5c518;
+  --blue:#3b82f6;
+  --orange:#f97316;
+  --green:#22c55e;
+  --red:#ef4444;
+  --purple:#a855f7;
+  --text:#e2eaf8;
+  --muted:#4a6494;
+}
+[data-theme="light"]{
+  --bg:#eef1f6; --surface:#e7ecf3; --card:#f7f9fc; --hover:#dde4ee; --border:#aebad2;
+  --gold:#b3860f; --blue:#3b66c4; --orange:#c9601e; --green:#1f8a4c; --purple:#7c4bc4;
+  --red:#c23a3a; --text:#2c3646; --muted:#748094;
+}
+[data-theme="neon"]{
+  --bg:#050214; --surface:#0d0620; --card:#140a2e; --hover:#1c0f3d; --border:#3d1a6b;
+  --gold:#ffe600; --blue:#00e5ff; --orange:#ff2e97; --green:#39ff14; --purple:#c644ff;
+  --red:#ff2e5f; --text:#f2ecff; --muted:#8c6bc9;
+}
+[data-theme="sunset"]{
+  --bg:linear-gradient(180deg,#200a12 0%,#4a1f16 22%,#b8531f 48%,#f0c542 62%,#6b2a52 84%,#241130 100%);
+  --surface:linear-gradient(135deg,#3c1a14 0%,#6b3420 100%);
+  --card:linear-gradient(150deg,#481f18 0%,#7a3f22 100%);
+  --hover:linear-gradient(135deg,#5c2a1c 0%,#8a4a26 100%);
+  --border:#a35a35;
+  --gold:#ffcb3d; --blue:#5ec8f5; --orange:#ff7f3f; --green:#3fd9ae; --purple:#e488a8;
+  --red:#ef4a4a; --text:#fff8ec; --muted:#e0b89f;
+}
+[data-theme="lagoon"]{
+  --bg:linear-gradient(180deg,#02141a 0%,#053b3f 22%,#0a6e6e 48%,#17d6d0 62%,#0a4a5c 84%,#02121e 100%);
+  --surface:linear-gradient(135deg,#04262b 0%,#0a4a4a 100%);
+  --card:linear-gradient(150deg,#063339 0%,#0d5555 100%);
+  --hover:linear-gradient(135deg,#0a4045 0%,#116868 100%);
+  --border:#1ec9c9;
+  --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7; --purple:#7c83fd;
+  --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
+}
+[data-theme="magma"]{
+  --bg:linear-gradient(180deg,#0a0302 0%,#380a04 22%,#8a1c04 48%,#ff5b0f 62%,#5c0f0f 84%,#120303 100%);
+  --surface:linear-gradient(135deg,#2e0a06 0%,#66190a 100%);
+  --card:linear-gradient(150deg,#3d0e08 0%,#7d2308 100%);
+  --hover:linear-gradient(135deg,#4d140b 0%,#992e0e 100%);
+  --border:#ff5c1a;
+  --gold:#ffc300; --blue:#3fa9ff; --orange:#ff4b00; --green:#a4d84a; --purple:#ff2e88;
+  --red:#ff2020; --text:#fff2e0; --muted:#d98a5c;
+}
+[data-theme="glacier"]{
+  --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
+  --surface:linear-gradient(135deg,#04182a 0%,#0a3550 100%);
+  --card:linear-gradient(150deg,#082238 0%,#0e3d5c 100%);
+  --hover:linear-gradient(135deg,#0c2d46 0%,#155070 100%);
+  --border:#3fa0cf;
+  --gold:#d6faff; --blue:#7fd8ff; --orange:#ffb4a8; --green:#9dfcd8; --purple:#b8c6ff;
+  --red:#ff8fa3; --text:#eaf9ff; --muted:#6f93ab;
+}
+/* ── SÉLECTEUR DE THÈME ── */
+body{transition:background-color .25s ease,color .25s ease}
+.theme-switch-wrap{position:relative}
+.theme-menu{position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px;display:none;flex-direction:column;gap:2px;z-index:30;min-width:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.theme-menu.open{display:flex}
+.theme-swatch{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);
+  font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.theme-swatch:hover{background:var(--surface)}
+.theme-swatch.active{outline:1px solid var(--gold)}
+.theme-swatch.locked{opacity:.55}
+.theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
+.theme-swatch.locked .lock-badge{display:flex}
+.sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
+.sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
+.sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
+.sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
+.sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
+.sw-magma{background:linear-gradient(135deg,#0a0302,#ff5b0f)}
+.sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
+
+body{
+  font-family:Barlow,sans-serif;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 1rem 4rem;
+}
+
+/* ── HEADER ── */
+.header{
+  width:100%;max-width:580px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 0 1rem;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.2rem;flex-wrap:wrap;row-gap:8px;}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+@media(max-width:480px){
+  .header-logo{font-size:18px}
+  .header-back{font-size:11px;padding:5px 9px}
+}
+.header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+.header-logo span{color:var(--text);opacity:.5}
+.header-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .18s}
+.header-back:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:.75rem 1.4rem;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:1rem;
+}
+.status-pill{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:4px 14px;border-radius:20px}
+.status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ── SCOREBOARD ── */
+.scoreboard{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,.5);margin-bottom:1rem;
+}
+.score-header{
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;
+  padding:.6rem 1.4rem;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.score-header span{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center}
+.score-header span:first-child{text-align:left}
+.team-row{
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;align-items:center;
+  padding:1rem 1.4rem;border-bottom:1px solid var(--border);transition:background .15s;
+}
+.team-row:last-child{border-bottom:none}
+.team-info{display:flex;flex-direction:column;gap:3px}
+.team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.team-players{font-size:11px;color:var(--muted);font-weight:500}
+.team-row.team-a .team-name{color:var(--blue)}
+.team-row.team-b .team-name{color:var(--orange)}
+.cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
+.cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
+.cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
+.cell.set-score{
+  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
+  text-align:center;color:var(--muted);
+}
+.cell.set-score.active{color:var(--text)}
+.cell.set-score.won{color:var(--gold)}
+.cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
+
+/* ── STATS CARD ── */
+.stats-card{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:1.2rem 1.4rem;margin-bottom:1rem;
+}
+.stats-title{
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:1rem;display:flex;align-items:center;gap:8px;
+}
+.stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.stats-view-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.sv-chip{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.4rem .75rem;border-radius:20px;cursor:pointer;transition:all .15s}
+.sv-chip:hover{color:var(--text);border-color:var(--muted)}
+.sv-chip.active{background:var(--gold);border-color:var(--gold);color:#0a0f1a}
+
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.7rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-val{
+  font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;
+}
+.stat-val.a{color:var(--blue);text-align:right}
+.stat-val.b{color:var(--orange);text-align:left}
+.stat-name{
+  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;
+  white-space:nowrap;
+}
+.stat-bar-wrap{grid-column:1/-1;display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--surface)}
+.stat-bar-a{background:var(--blue);transition:width .4s}
+.stat-bar-b{background:var(--orange);transition:width .4s}
+
+/* ── ACTIONS ── */
+.team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
+.team-ctrl-label{
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
+}
+.team-ctrl-label.a{color:var(--blue)}
+.team-ctrl-label.b{color:var(--orange)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-winner,.btn-faute{
+  padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
+  transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;
+  font-family:Barlow Condensed,sans-serif;
+}
+.btn-winner:active,.btn-faute:active{transform:scale(.96)}
+.btn-icon{font-size:22px}
+.btn-main{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.btn-sub{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
+.btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.a:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.b:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.a:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+.btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.b:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+
+.actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
+.btn-action{
+  padding:.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-action:hover{background:var(--hover);border-color:var(--muted)}
+.btn-action.undo{border-color:#f59e0b;color:#f59e0b}
+.btn-action.undo:hover{background:rgba(245,158,11,.12)}
+.btn-action.reset{border-color:var(--red);color:var(--red)}
+.btn-action.reset:hover{background:rgba(239,68,68,.12)}
+.btn-action.pdf{border-color:var(--green);color:var(--green)}
+.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
+
+/* ── ZONE MAP ── */
+.zone-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:1rem;scrollbar-width:none}
+.zone-tabs::-webkit-scrollbar{display:none}
+.zone-tab{
+  flex:0 0 auto;background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:.45rem .8rem;border-radius:10px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.zone-tab:hover{color:var(--text);border-color:var(--muted)}
+.zone-tab.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+/* Le thème Glacier a un fond et un doré très clairs (quasi blancs) : le texte
+   des onglets sélectionnés devient illisible (blanc sur blanc). On force un
+   bleu profond, légèrement dégradé, pour rester lisible sur le fond doré. */
+[data-theme="glacier"] .zone-tab.active{color:#0a2e52}
+[data-theme="glacier"] .zone-tab.active .zt-label{
+  background:linear-gradient(120deg,#062038 0%,#0f4d7c 55%,#0a2e52 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.zone-court-wrap{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.zone-court-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.zone-court-title{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.zone-court-svg{width:100%;height:auto;display:block;overflow:visible}
+.zc-lbl{font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:20px;fill:var(--text);opacity:.9}
+.zc-count{font-family:Barlow Condensed,sans-serif;font-weight:900;font-size:22px}
+.zc-count .w{fill:var(--green)}
+.zc-count .sep{fill:var(--muted);font-size:16px}
+.zc-count .f{fill:var(--red)}
+.zc-net-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;fill:var(--gold);text-transform:uppercase}
+.zc-band-lbl{font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:11px;letter-spacing:1.5px;fill:var(--muted);text-transform:uppercase}
+.zone-depth-note{font-family:Barlow,sans-serif;font-size:12px;line-height:1.4;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.9rem}
+.zone-depth-note b{color:var(--gold)}
+.zone-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:.9rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.zl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500}
+.zl-dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+.zl-dot.zl-win{background:var(--green)}
+.zl-dot.zl-flt{background:var(--red)}
+.zl-dot.zl-tie{background:var(--gold)}
+
+/* ── LOG ── */
+.log-wrap{width:100%;max-width:580px}
+.log-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:4px}
+.log-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.log-entry{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem 1rem;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;
+}
+.log-entry .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-entry.dot-a .dot{background:var(--blue)}
+.log-entry.dot-b .dot{background:var(--orange)}
+.log-entry.dot-w .dot{background:var(--green)}
+.log-entry.dot-f .dot{background:var(--red)}
+.log-entry.event .dot{background:var(--gold)}
+.log-tag{
+  margin-left:auto;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;
+}
+.log-tag.winner{background:rgba(34,197,94,.15);color:var(--green)}
+.log-tag.faute{background:rgba(239,68,68,.15);color:var(--red)}
+
+/* ── WINNER OVERLAY ── */
+.winner-overlay{
+  display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;
+  align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;
+}
+.winner-overlay.show{display:flex}
+.winner-box{
+  background:var(--card);border:2px solid var(--gold);border-radius:24px;
+  padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;
+  box-shadow:0 0 80px rgba(245,197,24,.2);
+}
+.winner-trophy{font-size:60px;margin-bottom:1rem}
+.winner-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.5rem}
+.winner-name{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:.4rem}
+.winner-score{font-family:Barlow Condensed,sans-serif;font-size:16px;color:var(--muted);letter-spacing:1px;margin-bottom:1.2rem}
+.winner-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.4rem}
+.ws-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem}
+.ws-val{font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900}
+.ws-val.a{color:var(--blue)}
+.ws-val.b{color:var(--orange)}
+.ws-lbl{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.winner-btn{padding:.7rem 1.4rem;border-radius:10px;border:1.5px solid;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
+.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
+.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
+.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── TIMER ── */
+.timer-wrap{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:.9rem 1.4rem;margin-bottom:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.timer-display{
+  font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
+  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
+  min-width:110px;
+}
+.timer-display.running{color:#fff}
+.timer-btns{display:flex;gap:8px}
+.timer-btn{
+  padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+}
+.timer-btn:hover{background:var(--hover);border-color:var(--muted)}
+.timer-btn.start{border-color:var(--green);color:var(--green)}
+.timer-btn.start:hover{background:rgba(34,197,94,.12)}
+.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
+.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
+.timer-btn.stop{border-color:var(--red);color:var(--red)}
+.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+
+/* ── SHOT MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.88);z-index:50;align-items:flex-end;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;width:100%;max-width:520px;padding:1.4rem 1.2rem 1.8rem;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
+.modal-context{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:1rem;color:var(--text)}
+.modal-context span{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+
+/* Shot Grid Layout */
+.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
+.shot-back{grid-column:1 / -1;background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:2px}
+.shot-back:hover{border-color:var(--gold);color:var(--gold)}
+.shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
+.shot-sub-row{display:flex;flex-wrap:wrap;gap:6px}
+.shot-sub-row .shot-btn{flex:1 1 calc(50% - 3px)}
+
+.shot-btn{padding:.7rem .3rem;border-radius:12px;border:2px solid;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.2;text-align:center}
+.shot-btn:active{transform:scale(.95)}
+.shot-btn .s-ico{font-size:20px}
+.shot-btn.type-winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
+.shot-btn.type-winner:hover{background:rgba(34,197,94,.2)}
+.shot-btn.type-faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+.shot-btn.type-faute:hover{background:rgba(239,68,68,.2)}
+
+.modal-cancel{width:100%;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── ADVANCED STATS TABLE ── */
+.stats-section{margin-bottom:.8rem}
+.stats-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.stats-section-title.w{color:var(--green)}
+.stats-section-title.f{color:var(--red)}
+.stats-table{width:100%;border-collapse:collapse}
+.stats-table tr{border-bottom:1px solid var(--border)}
+.stats-table tr:last-child{border-bottom:none}
+.stats-table td{padding:.35rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;vertical-align:middle}
+.stats-table .td-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.1}
+.stats-table .td-a{color:var(--blue);text-align:right;font-size:18px;width:36px}
+.stats-table .td-b{color:var(--orange);text-align:left;font-size:18px;width:36px}
+.stats-table .td-bar{padding:0 .4rem}
+.mini-bar{height:5px;border-radius:4px;overflow:hidden;background:var(--surface);display:flex}
+.mini-bar-a{background:var(--blue);transition:width .3s}
+.mini-bar-b{background:var(--orange);transition:width .3s}
+.stats-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:.6rem}
+.tot-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem;text-align:center}
+.tot-val{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:900;display:flex;justify-content:center;gap:8px}
+.tot-val span.a{color:var(--blue)}
+.tot-val span.b{color:var(--orange)}
+.tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* ── STATS PAR JOUEUR ── */
+.player-stats-section{margin-bottom:1rem}
+.player-stats-header{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:.3rem .5rem;border-radius:6px;margin-bottom:.4rem;
+  display:inline-block;
+}
+.player-stats-header.pa{background:rgba(59,130,246,.15);color:var(--blue)}
+.player-stats-header.pb{background:rgba(249,115,22,.15);color:var(--orange)}
+.player-stats-table{width:100%;border-collapse:collapse;margin-bottom:.3rem}
+.player-stats-table tr{border-bottom:1px solid var(--border)}
+.player-stats-table tr:last-child{border-bottom:none}
+.player-stats-table td{padding:.3rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;vertical-align:middle}
+.player-stats-table .td-lbl{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.player-stats-table .td-val{font-size:17px;font-weight:900;text-align:center;width:32px}
+.player-stats-table .td-val.pa{color:var(--blue)}
+.player-stats-table .td-val.pb{color:var(--orange)}
+.player-pair-divider{height:1px;background:var(--border);margin:.4rem 0 .6rem}
+
+@media(max-width:440px){
+  .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
+  .cell.point-cell{font-size:28px}
+  .shot-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Beach<span>/</span>Stats</div>
+  <div class="header-actions">
+    <div class="theme-switch-wrap">
+      <button class="header-back" onclick="toggleThemeMenu(event)" aria-label="Changer de theme">Theme</button>
+      <div class="theme-menu" id="themeMenu">
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span>Sombre</button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="magma" onclick="setTheme('magma')"><span class="sw sw-magma"></span>Magma<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
+      </div>
+    </div>
+    <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
+    <button class="header-back" onclick="window.location.href='/'">← Accueil</button>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-pill" id="setPill">Set 1</div>
+  <div class="status-label" id="statusLabel">En cours</div>
+</div>
+
+<div class="timer-wrap">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+  </div>
+</div>
+
+<div class="scoreboard">
+  <div class="score-header" id="scoreHeader">
+    <span>Équipe</span>
+    <span>S1</span>
+    <span>S2</span>
+    <span>S3</span>
+    <span>Points</span>
+  </div>
+  <div class="team-row team-a" id="rowA">
+    <div class="team-info">
+      <div class="team-name" id="nameA">Équipe A</div>
+      <div class="team-players" id="playersA">—</div>
+    </div>
+    <div class="cell set-score" id="setA1">—</div>
+    <div class="cell set-score" id="setA2">—</div>
+    <div class="cell set-score" id="setA3">—</div>
+    <div class="cell point-cell" id="ptA">0</div>
+  </div>
+  <div class="team-row team-b" id="rowB">
+    <div class="team-info">
+      <div class="team-name" id="nameB">Équipe B</div>
+      <div class="team-players" id="playersB">—</div>
+    </div>
+    <div class="cell set-score" id="setB1">—</div>
+    <div class="cell set-score" id="setB2">—</div>
+    <div class="cell set-score" id="setB3">—</div>
+    <div class="cell point-cell" id="ptB">0</div>
+  </div>
+</div>
+
+<div class="team-controls">
+  <div class="team-ctrl-label a" id="lblA">Équipe A</div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls">
+  <div class="team-ctrl-label b" id="lblB">Équipe B</div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ1" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ1"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',1)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',1)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ2" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ2"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',2)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',2)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ3" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ3"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',3)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',3)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ4" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ4"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',4)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',4)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+</div>
+
+<div class="stats-card" id="statsCard">
+  <div class="stats-title">Stats détaillées</div>
+  <div class="stats-view-switch" id="statsViewSwitch"></div>
+  <div id="statsContent"></div>
+</div>
+
+<div class="stats-card" id="zoneMapCard">
+  <div class="stats-title">Cartographie par zone</div>
+  <div class="zone-tabs" id="zoneTabs"></div>
+  <div class="zone-depth-note" id="zoneDepthNote" style="display:none">Bras roulé : le terrain est découpé en 3 bandes de profondeur — <b>Amorti</b> (proche filet), <b>Tendu</b> (milieu), <b>Lob</b> (fond) — chacune divisée en 5 zones de largeur.</div>
+  <div class="zone-court-wrap" id="zoneMapGrid"></div>
+  <div class="zone-legend">
+    <span class="zl-item"><span class="zl-dot zl-win"></span>Zone à dominante gagnante</span>
+    <span class="zl-item"><span class="zl-dot zl-flt"></span>Zone à dominante fautes</span>
+    <span class="zl-item"><span class="zl-dot zl-tie"></span>Égalité gagnants / fautes</span>
+  </div>
+</div>
+
+<div class="log-wrap">
+  <div class="log-title">Journal du match</div>
+  <div class="log-list" id="logList"></div>
+</div>
+
+<div class="modal-overlay" id="shotModal">
+  <div class="modal">
+    <div class="modal-context" id="modalContext">—</div>
+    <div class="shot-grid" id="shotGrid"></div>
+    <button class="modal-cancel" onclick="closeShotModal()">Annuler</button>
+  </div>
+</div>
+
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Vainqueur du match</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div class="winner-score" id="winnerScore">—</div>
+    <div class="winner-stats">
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
+        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
+      </div>
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
+        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
+      </div>
+    </div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="winner-overlay" id="resumeOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">💾</div>
+    <div class="winner-label">Match en cours détecté</div>
+    <div class="winner-name" id="resumeMatchup" style="font-size:22px">—</div>
+    <div class="winner-score" id="resumeScoreInfo">—</div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="confirmResume()">Reprendre ce match</button>
+      <button class="winner-btn secondary" onclick="discardResume()">Nouveau match</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
+const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
+const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const ZONES = ['1', '2', '3', '4', '5'];
+
+// Variantes (côté / type) disponibles pour chaque coup avant le choix de la zone.
+// Un tableau vide = pas de variante, on passe direct au choix de la zone.
+const SHOT_VARIANTS = {
+  service: [],
+  smash: [],
+  retour: ['cd', 'rev'],
+  roule: ['amorti', 'lobe', 'tendu'],
+  amorti: ['cd', 'rev'],
+  lob: ['cd', 'rev', 'rainbow'],
+  rush: ['cd', 'rev', 'rainbow'],
+  defense: ['cd', 'rev']
+};
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow' };
+
+// Cartographie par zone du bras roulé : 3 bandes de profondeur, chacune liée
+// à une variante précise (proche filet → amorti, milieu → tendu, fond → lob),
+// chaque bande étant elle-même divisée en 5 zones de largeur (comme les autres coups).
+const ROULE_DEPTH_VARIANTS = [
+  { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+  { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+  { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
+];
+
+// Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
+// Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
+const SHOT_LBL = {};
+const ALL_SHOT_KEYS = [];
+const SHOT_ZONE_KEYS = {}; // { service: {1:['service_1'], ...}, amorti: {1:['amorti_cd_1','amorti_rev_1'], ...}, ... }
+BASE_SHOTS.forEach(s => {
+  const variants = SHOT_VARIANTS[s];
+  const prefixes = variants.length ? variants.map(v => s + '_' + v) : [s];
+  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v]) : [SHOT_BASE_LBL[s]];
+  SHOT_ZONE_KEYS[s] = {};
+  ZONES.forEach(z => SHOT_ZONE_KEYS[s][z] = []);
+  prefixes.forEach((prefix, i) => {
+    ZONES.forEach(z => {
+      const key = prefix + '_' + z;
+      SHOT_LBL[key] = labels[i] + ' Z' + z;
+      ALL_SHOT_KEYS.push(key);
+      SHOT_ZONE_KEYS[s][z].push(key);
+    });
+  });
+});
+
+// ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
+const _p = new URLSearchParams(window.location.search);
+const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+const players = {
+  j1: _p.get('j1') || 'Joueur 1',
+  j2: _p.get('j2') || 'Joueur 2',
+  j3: _p.get('j3') || 'Joueur 3',
+  j4: _p.get('j4') || 'Joueur 4'
+};
+const nameA = players.j1 + ' / ' + players.j2;
+const nameB = players.j3 + ' / ' + players.j4;
+
+// Les noms viennent de l'URL (?j1=...&j2=...) : on les échappe avant toute
+// insertion via innerHTML pour éviter qu'un lien piégé n'exécute du code.
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function initNames() {
+  document.getElementById('playersA').textContent = nameA;
+  document.getElementById('playersB').textContent = nameB;
+  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
+  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
+  if (statsMode === 'joueur') {
+    document.getElementById('lblA').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblB').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblJ1').textContent = players.j1;
+    document.getElementById('lblJ2').textContent = players.j2;
+    document.getElementById('lblJ3').textContent = players.j3;
+    document.getElementById('lblJ4').textContent = players.j4;
+    ['joueurCtrlJ1','joueurCtrlJ2','joueurCtrlJ3','joueurCtrlJ4'].forEach(id => {
+      document.getElementById(id).style.display = '';
+    });
+  }
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[];
+let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
+
+function emptyStats(){
+  const base = {pA:0, pB:0};
+  for(const t of ['A','B']) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+t+'_'+s]=0;
+    }
+  }
+  for(const n of [1,2,3,4]) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+n+'_'+s]=0;
+    }
+  }
+  return base;
+}
+let stats = emptyStats();
+let history = [];
+let matchLog = [];
+const TP = ['0','15','30','40'];
+
+// ── VUE DES STATS : TOTAL DU MATCH OU PAR SET ───────────────────────────────
+// `stats` cumule toujours l'ensemble du match. À chaque set terminé, on
+// capture une photo de `stats` à cet instant ; les stats d'un set donné sont
+// alors la différence entre deux photos consécutives. Seul le panneau "Stats
+// détaillées" bascule sur cette vue ; la cartographie par zone et le PDF
+// restent basés sur les stats totales du match.
+let setSnapshots = [];        // stats cumulées à la fin de chaque set terminé
+let statsViewMode = 'total';  // 'total' | 'set'
+let statsViewSetIdx = 1;      // numéro du set affiché quand statsViewMode === 'set'
+
+function diffStats(newer, older) {
+  const out = {};
+  Object.keys(newer || {}).forEach(k => {
+    const nv = newer[k], ov = (older || {})[k];
+    if (nv && typeof nv === 'object') {
+      out[k] = diffStats(nv, ov || {});
+    } else {
+      out[k] = (nv || 0) - (ov || 0);
+    }
+  });
+  return out;
+}
+
+function getDisplayStats() {
+  if (statsViewMode === 'total') return stats;
+  const older = setSnapshots[statsViewSetIdx - 2] || {};
+  const newer = statsViewSetIdx <= setSnapshots.length ? setSnapshots[statsViewSetIdx - 1] : stats;
+  return diffStats(newer, older);
+}
+
+function renderStatsViewSwitch() {
+  const wrap = document.getElementById('statsViewSwitch');
+  if (!wrap) return;
+  const finishedSets = setSnapshots.length;
+  const showCurrent = !matchOver;
+  const totalChips = finishedSets + (showCurrent ? 1 : 0);
+
+  let html = `<button class="sv-chip${statsViewMode==='total'?' active':''}" onclick="setStatsView('total')">Total match</button>`;
+  for (let i = 1; i <= totalChips; i++) {
+    const isCurrent = i === finishedSets + 1 && showCurrent;
+    html += `<button class="sv-chip${statsViewMode==='set'&&statsViewSetIdx===i?' active':''}" onclick="setStatsView('set',${i})">Set ${i}${isCurrent?' (en cours)':''}</button>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function setStatsView(mode, idx) {
+  statsViewMode = mode;
+  if (mode === 'set') statsViewSetIdx = idx;
+  renderStatsViewSwitch();
+  renderStats();
+}
+
+// ── SAVE STATE ────────────────────────────────────────────────────────────────
+function saveState() {
+  history.push({
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory: JSON.parse(JSON.stringify(setHistory)),
+    stats: JSON.parse(JSON.stringify(stats)),
+    setSnapshots: JSON.parse(JSON.stringify(setSnapshots)),
+    pill: document.getElementById('setPill').innerText,
+    status: document.getElementById('statusLabel').innerText
+  });
+}
+
+// ── SCORE LOGIC ───────────────────────────────────────────────────────────────
+function scoreSnapshot(player) {
+  let pp1=p1, pp2=p2;
+  if (player === 1) pp1++; else pp2++;
+  let ptStr;
+  if (inSuperTiebreak || inTiebreak) {
+    ptStr = pp1 + '-' + pp2;
+  } else {
+    let a = TP[Math.min(pp1,3)] || '0';
+    let b = TP[Math.min(pp2,3)] || '0';
+    if (pp1>=3 && pp2>=3) { a='40'; b='40'; }
+    ptStr = a + '-' + b;
+  }
+  return ptStr + ' · Jeu ' + g1 + '-' + g2 + ' · Set ' + s1 + '-' + s2;
+}
+ let pendingShot = null;
+ let zoneMapShot = 'service';
+function scorePoint(player, type) {
+  if (matchOver) return;
+  saveState();
+
+  const shot = pendingShot || 'service_1';
+  pendingShot = null;
+
+  if (player === 1) {
+    stats.pA++;
+    if (type === 'winner') stats['wA_'+shot]++; else stats['fB_'+shot]++;
+  } else {
+    stats.pB++;
+    if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
+  }
+  const playerNumForLog = pendingPlayerNum;
+  if (pendingPlayerNum) {
+    if (type === 'winner') stats['w'+pendingPlayerNum+'_'+shot]++;
+    else stats['f'+pendingPlayerNum+'_'+shot]++;
+    pendingPlayerNum = null;
+  }
+
+  const teamName = player === 1 ? nameA : nameB;
+  const scoreLabel = scoreSnapshot(player);
+  logPoint(teamName, type, shot, playerNumForLog, scoreLabel);
+
+  if (inSuperTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) { winSet(player, {a:p1, b:p2}); return; }
+    updateDisplay(); return;
+  }
+
+  if (inTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) { winGame(player); }
+    updateDisplay(); return;
+  }
+
+  if (player === 1) p1++; else p2++;
+  if (p1 > 3 || p2 > 3) {
+    if (p1 > p2) winGame(1); else winGame(2);
+    return;
+  }
+  updateDisplay();
+}
+
+function winGame(player) {
+  const wasTiebreak = inTiebreak;
+  p1=0; p2=0; inTiebreak=false;
+  if (player === 1) g1++; else g2++;
+  logEvent(player===1 ? nameA : nameB, 'remporte le jeu (' + g1 + '-' + g2 + ')');
+
+  if (wasTiebreak) { winSet(player); return; }
+  const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
+  if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
+
+  if (g1 === 6 && g2 === 6) {
+    if (s1 === 1 && s2 === 1) {
+      inSuperTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Super Tie-Break';
+      document.getElementById('statusLabel').textContent = "10 pts";
+    } else {
+      inTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Tie-Break';
+      document.getElementById('statusLabel').textContent = "7 pts";
+    }
+  }
+  updateDisplay();
+}
+
+function winSet(player, scoreOverride){
+  const wasSuperTiebreak = inSuperTiebreak;
+  setHistory.push(scoreOverride || {a:g1,b:g2});
+  setSnapshots.push(JSON.parse(JSON.stringify(stats)));
+  p1=0; p2=0; g1=0; g2=0; 
+  inTiebreak=false; 
+  inSuperTiebreak=false;
+
+  if(player===1) s1++; else s2++;
+  if (wasSuperTiebreak) {
+    logEvent(player===1?nameA:nameB,"remporte le super tie-break ("+scoreOverride.a+"-"+scoreOverride.b+") et le match !");
+  } else {
+    logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
+  }
+
+  // Si une équipe a 2 sets, elle gagne le match
+  if(s1===2 || s2===2){
+    winMatch(player); 
+    return;
+  }
+
+  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
+  if(s1===1 && s2===1){
+    inSuperTiebreak = true;
+    document.getElementById('setPill').textContent = "Super Tie-Break";
+    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+    logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
+  } else {
+    // Passage au set 2 normal
+    document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
+    document.getElementById('statusLabel').textContent = "En cours";
+  }
+  
+  updateDisplay();
+}
+
+function winMatch(player) {
+  matchOver = true;
+  if(timerRunning) timerToggle();
+  const winner = player === 1 ? nameA : nameB;
+  document.getElementById('winnerName').textContent = winner;
+  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
+  
+  const _totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const _totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const _totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const _totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  
+  document.getElementById('ws-wA').textContent = _totWA;
+  document.getElementById('ws-wB').textContent = _totWB;
+  document.getElementById('ws-fA').textContent = _totFA;
+  document.getElementById('ws-fB').textContent = _totFB;
+  document.getElementById('winnerOverlay').classList.add('show');
+  logEvent(winner, '🏆 VICTOIRE !');
+  saveMatchToHistory(winner, _totWA, _totWB, _totFA, _totFB);
+  clearProgress();
+  updateDisplay();
+}
+
+// ── SAUVEGARDE DE L'HISTORIQUE (localStorage) ────────────────────────────────
+function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
+  const record = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    page: 'Spro',
+    nameA, nameB,
+    winner,
+    sets: s1 + '-' + s2,
+    setDetail: setHistory.map(sh => sh.a + '/' + sh.b).join('  '),
+    setHistory: JSON.parse(JSON.stringify(setHistory)),
+    matchLog: JSON.parse(JSON.stringify(matchLog)),
+    players: JSON.parse(JSON.stringify(players)),
+    mode: typeof mode !== 'undefined' ? mode : 'equipe',
+    duration: formatDuration(timerSeconds),
+    stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB }
+  };
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
+  hist.push(record);
+  try { localStorage.setItem('beachstats_history', JSON.stringify(hist)); }
+  catch(e) { console.error('Sauvegarde impossible', e); }
+}
+
+function undo() {
+  if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
+  if (history.length === 0) return;
+  const last = history.pop();
+  p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
+  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  setHistory=last.setHistory||[];
+  stats = JSON.parse(JSON.stringify(last.stats));
+  setSnapshots = JSON.parse(JSON.stringify(last.setSnapshots || []));
+  if (statsViewMode === 'set' && statsViewSetIdx > setSnapshots.length + 1) {
+    statsViewMode = 'total';
+  }
+  document.getElementById('setPill').innerText = last.pill;
+  document.getElementById('statusLabel').innerText = last.status;
+  const list = document.getElementById('logList');
+  if (list.firstChild) list.removeChild(list.firstChild);
+  matchLog.shift();
+  updateDisplay();
+}
+
+function updateDisplay() {
+  saveProgress();
+  let ptA, ptB;
+  if (inSuperTiebreak || inTiebreak) {
+    ptA=p1; ptB=p2;
+  } else {
+    ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
+    if (p1===3 && p2===3) { ptA='40'; ptB='40'; }
+  }
+  document.getElementById('ptA').textContent = ptA;
+  document.getElementById('ptB').textContent = ptB;
+  for(let i=1;i<=3;i++){
+    const cellA=document.getElementById('setA'+i);
+    const cellB=document.getElementById('setB'+i);
+    if(i-1 < setHistory.length){
+      const sh=setHistory[i-1];
+      cellA.textContent=sh.a; cellB.textContent=sh.b;
+      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
+      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
+    } else if(i-1 === setHistory.length){
+      cellA.textContent=g1; cellB.textContent=g2;
+      cellA.className='cell set-score active';
+      cellB.className='cell set-score active';
+    } else {
+      cellA.textContent='—'; cellB.textContent='—';
+      cellA.className='cell set-score'; cellB.className='cell set-score';
+    }
+  }
+  renderStatsViewSwitch();
+  renderStats();
+  renderZoneMap();
+}
+
+function logPoint(winnerTeam, type, shot, playerNum, scoreLabel) {
+  const isA = winnerTeam === nameA;
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
+  const dotClass = type === 'winner' ? (isA ? 'dot-a' : 'dot-b') : (isA ? 'dot-b' : 'dot-a');
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayTeam = playerNum
+    ? playerNames[playerNum]
+    : (type === 'winner' ? winnerTeam : (isA ? nameB : nameA));
+
+  const entry = {team: displayTeam, type, shot, time, msg: label, score: scoreLabel};
+  const className = 'log-entry ' + dotClass;
+  const html = `<span class="dot"></span><span>${time} — <strong>${escapeHtml(displayTeam)}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
+  entry._dom = {className, html};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = html;
+  list.prepend(div);
+}
+
+function logEvent(team, msg) {
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const entry = {team, msg, time};
+  const className = 'log-entry event';
+  const html = `<span class="dot"></span><span>${time}${team?' — <strong>'+escapeHtml(team)+'</strong>':''} ${msg}</span>`;
+  entry._dom = {className, html};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = html;
+  list.prepend(div);
+}
+
+// ── SAUVEGARDE DU MATCH EN COURS (protège d'un rafraîchissement accidentel) ──
+const PROGRESS_KEY = 'beachstats_inprogress_pro';
+
+function saveProgress() {
+  if (matchOver) { clearProgress(); return; }
+  const snapshot = {
+    p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
+    stats, setSnapshots, history, matchLog, timerSeconds,
+    nameA, nameB, savedAt: Date.now(),
+  };
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(PROGRESS_KEY); } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    if (snap.p1===0 && snap.p2===0 && snap.g1===0 && snap.g2===0 && snap.s1===0 && snap.s2===0) return null;
+    return snap;
+  } catch(e) { return null; }
+}
+
+function rebuildLog() {
+  const list = document.getElementById('logList');
+  list.innerHTML = '';
+  matchLog.forEach(entry => {
+    if (!entry._dom) return;
+    const div = document.createElement('div');
+    div.className = entry._dom.className;
+    div.innerHTML = entry._dom.html;
+    list.appendChild(div);
+  });
+}
+
+function applyProgress(snap) {
+  p1=snap.p1; p2=snap.p2; g1=snap.g1; g2=snap.g2; s1=snap.s1; s2=snap.s2;
+  setHistory = snap.setHistory || [];
+  inTiebreak = snap.inTiebreak; inSuperTiebreak = snap.inSuperTiebreak; matchOver = snap.matchOver;
+  stats = snap.stats || stats;
+  setSnapshots = snap.setSnapshots || [];
+  history = snap.history || [];
+  matchLog = snap.matchLog || [];
+  timerSeconds = snap.timerSeconds || 0;
+  document.getElementById('setPill').textContent = inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1);
+  document.getElementById('statusLabel').textContent = matchOver ? 'Terminé' : 'En cours';
+  rebuildLog();
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+  const s = String(timerSeconds % 60).padStart(2,'0');
+  document.getElementById('timerDisplay').textContent = m + ':' + s;
+  updateDisplay();
+}
+
+function confirmResume() {
+  const snap = loadProgress();
+  document.getElementById('resumeOverlay').classList.remove('show');
+  if (snap) applyProgress(snap);
+}
+
+function discardResume() {
+  clearProgress();
+  document.getElementById('resumeOverlay').classList.remove('show');
+  updateDisplay();
+  logEvent('', '🎾 Match démarré');
+}
+
+function checkResumeOnLoad() {
+  const snap = loadProgress();
+  if (!snap) return;
+  const matchup = (snap.nameA || nameA) + ' vs ' + (snap.nameB || nameB);
+  document.getElementById('resumeMatchup').textContent = matchup;
+  document.getElementById('resumeScoreInfo').textContent = `Sets ${snap.s1}-${snap.s2} · Jeux ${snap.g1}-${snap.g2}`;
+  document.getElementById('resumeOverlay').classList.add('show');
+}
+
+function resetMatch() {
+  if (!confirm('Remettre à zéro ?')) return;
+  clearProgress();
+  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
+  inTiebreak=false;inSuperTiebreak=false;matchOver=false;
+  setHistory=[]; timerReset(); stats=emptyStats();
+  setSnapshots=[]; statsViewMode='total'; statsViewSetIdx=1;
+  history=[]; matchLog=[];
+  document.getElementById('setPill').textContent='Set 1';
+  document.getElementById('logList').innerHTML='';
+  document.getElementById('winnerOverlay').classList.remove('show');
+  updateDisplay();
+}
+
+// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
+let pendingPlayer = null;
+let pendingType = null;
+let pendingPlayerNum = null;
+
+function openShotModal(player, type, playerNum) {
+  if (matchOver) return;
+  pendingPlayer = player;
+  ensureTimerRunning();
+  pendingType = type;
+  pendingPlayerNum = playerNum || null;
+  
+  const isWinner = type === 'winner';
+  const teamName = player === 1 ? nameA : nameB;
+  const actionTeam = isWinner ? teamName : (player === 1 ? nameB : nameA);
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayName = playerNum ? playerNames[playerNum] : actionTeam;
+
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${escapeHtml(displayName)}`;
+  
+  renderShotCategories();
+  document.getElementById('shotModal').classList.add('show');
+}
+
+// ── ÉTAPE 1 : grandes catégories ─────────────────────────────────────────────
+function renderShotCategories() {
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = '';
+  
+  BASE_SHOTS.forEach(s => {
+    const group = document.createElement('div');
+    group.className = 'shot-group';
+    group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">
+      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_BASE_LBL[s]}
+    </button>`;
+    grid.appendChild(group);
+  });
+}
+
+// ── ÉTAPE 2 : variante (côté / type) du coup, si le coup en a une ───────────
+function selectShotCategory(s) {
+  const variants = SHOT_VARIANTS[s];
+
+  if (!variants.length) { renderZoneStep(s, SHOT_BASE_LBL[s], SHOT_ICO[s], 'renderShotCategories()'); return; }
+
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</div>
+      <div class="shot-sub-row">
+        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="selectShotVariant('${s}','${v}')">${VARIANT_LBL[v]}</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function selectShotVariant(s, v) {
+  const prefix = s + '_' + v;
+  const label = SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v];
+  renderZoneStep(prefix, label, SHOT_ICO[s], `selectShotCategory('${s}')`);
+}
+
+// ── ÉTAPE 3 : zone du terrain où le coup a été réalisé (toujours en dernier) ─
+function renderZoneStep(prefix, label, icon, backOnClick) {
+  const grid = document.getElementById('shotGrid');
+  const btns = ZONES.map(z =>
+    `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${prefix}_${z}')">Zone ${z}</button>`
+  ).join('');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="${backOnClick}">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${icon} ${label}</div>
+      <div class="shot-sub-row">${btns}</div>
+    </div>`;
+}
+
+function closeShotModal() {
+  document.getElementById('shotModal').classList.remove('show');
+}
+
+function confirmShot(shotKey) {
+  pendingShot = shotKey;
+  closeShotModal();
+  scorePoint(pendingPlayer, pendingType);
+}
+
+// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
+function renderStats() {
+  if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
+
+  const el = document.getElementById('statsContent');
+  let html = '';
+  const ds = getDisplayStats();
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wB_'+sh]||0),0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
+
+  const bar = (a,b) => {
+    const t=a+b||1;
+    return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
+  };
+
+  // Section Winners
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
+    <table class="stats-table">`;
+  
+  ALL_SHOT_KEYS.forEach(s => {
+    const vA=ds['wA_'+s]||0, vB=ds['wB_'+s]||0;
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
+  });
+  html += '</table></div>';
+
+  // Section Fautes
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
+    <table class="stats-table">`;
+  
+  ALL_SHOT_KEYS.forEach(s => {
+    const vA=ds['fA_'+s]||0, vB=ds['fB_'+s]||0;
+    if(vA > 0 || vB > 0) {
+      html += `<tr>
+        <td class="td-a">${vA}</td>
+        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
+        <td class="td-b">${vB}</td>
+      </tr>`;
+    }
+  });
+  html += '</table></div>';
+
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${ds.pA||0}</span><span style="color:var(--muted)">/</span><span class="b">${ds.pB||0}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function renderStatsParJoueur() {
+  const el = document.getElementById('statsContent');
+  const ds = getDisplayStats();
+
+  // [nom, clé equipe A ou B, couleur CSS]
+  const playerDefs = [
+    { name: players.j1, team: 'A', cls: 'var(--blue)', num: 1 },
+    { name: players.j2, team: 'A', cls: 'var(--blue)', num: 2 },
+    { name: players.j3, team: 'B', cls: 'var(--orange)', num: 3 },
+    { name: players.j4, team: 'B', cls: 'var(--orange)', num: 4 },
+  ];
+
+  const buildPlayerRow = (p, type) => {
+    const tp = type === 'winner' ? 'w' : 'f';
+    const key = tp + p.num + '_';
+    const total = ALL_SHOT_KEYS.reduce((s, sh) => s + (ds[key + sh] || 0), 0);
+
+    let rows = '';
+    ALL_SHOT_KEYS.forEach(sh => {
+      const v = ds[key + sh] || 0;
+      const maxV = Math.max(1, ...[1,2,3,4].map(n => ds[tp+n+'_'+sh] || 0));
+      const pct = Math.round(v / maxV * 100);
+      if (v > 0) {
+        rows += `<tr>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:.28rem .5rem .28rem 0;width:1%">${SHOT_LBL[sh]}</td>
+          <td style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:${p.cls};text-align:right;padding:.28rem .5rem;white-space:nowrap;width:1%">${v}</td>
+          <td style="padding:.28rem 0;width:100%">
+            <div style="height:5px;border-radius:4px;background:var(--bg)">
+              <div style="width:${pct}%;height:100%;background:${p.cls};border-radius:4px;transition:width .3s"></div>
+            </div>
+          </td>
+        </tr>`;
+      }
+    });
+
+    if (!rows) return '';
+
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${escapeHtml(p.name)}</span>
+        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:15px;margin-left:3px">${total}</span></span>
+      </div>
+      <table style="width:100%;border-collapse:collapse">${rows}</table>
+    </div>`;
+  };
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wB_'+sh]||0),0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
+
+  let html = `
+    <div class="stat-row"><div class="stat-val a">${totWA}</div><div class="stat-name">Points gagnants</div><div class="stat-val b">${totWB}</div></div>
+    <div class="stat-row"><div class="stat-val a">${totFA}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${totFB}</div></div>`;
+
+  // Section Winners
+  html += `<div class="stats-section">
+    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
+  html += `</div>`;
+
+  // Section Fautes
+  html += `<div class="stats-section">
+    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
+  playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
+  html += `</div>`;
+
+  // Totaux
+  html += `<div class="stats-totals">
+    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
+    <div class="tot-box"><div class="tot-val"><span class="a">${ds.pA||0}</span><span style="color:var(--muted)">/</span><span class="b">${ds.pB||0}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ── CARTOGRAPHIE PAR ZONE (schéma en direct : vert = gagnants, rouge = fautes) ──
+function initZoneTabs() {
+  const tabsEl = document.getElementById('zoneTabs');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = BASE_SHOTS.map(s =>
+    `<button class="zone-tab${s===zoneMapShot?' active':''}" id="zoneTab_${s}" onclick="selectZoneMapShot('${s}')">${SHOT_ICO[s]} <span class="zt-label">${SHOT_BASE_LBL[s]}</span></button>`
+  ).join('');
+}
+
+function selectZoneMapShot(s) {
+  zoneMapShot = s;
+  document.querySelectorAll('.zone-tab').forEach(b => b.classList.remove('active'));
+  const activeTab = document.getElementById('zoneTab_'+s);
+  if (activeTab) activeTab.classList.add('active');
+  renderZoneMap();
+}
+
+function computeZoneData(wPrefix, fPrefix) {
+  return ZONES.map(z => {
+    const keys = SHOT_ZONE_KEYS[zoneMapShot][z];
+    let w = 0, f = 0;
+    keys.forEach(k => {
+      w += stats[wPrefix+k] || 0;
+      f += stats[fPrefix+k] || 0;
+    });
+    return { z: parseInt(z,10), w, f };
+  });
+}
+
+// Données de zone pour une variante de profondeur précise du bras roulé
+// (amorti / tendu / lobe), zone par zone de largeur (1 à 5).
+function computeRouleZoneData(wPrefix, fPrefix, variant) {
+  return ZONES.map(z => {
+    const key = 'roule_' + variant + '_' + z;
+    return { z: parseInt(z,10), w: stats[wPrefix+key] || 0, f: stats[fPrefix+key] || 0 };
+  });
+}
+
+// Terrain de beach tennis, vue demi-terrain (côté où le coup atterrit) : 8m de
+// large, découpés en 5 zones (zone 1 à droite, zone 5 à gauche). Le filet est
+// en bas du schéma, puisque c'est la limite la plus proche de la frappe.
+function buildCourtSVG(data) {
+  const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
+  const W = 260, courtL = 256, ZW = W / 5, L = courtL + 30;
+
+  let cols = '', dividers = '';
+  data.forEach(d => {
+    const xStart = W - d.z * ZW; // zone 1 -> collée au bord droit
+    const total = d.w + d.f;
+    let fill;
+    if (total === 0) {
+      fill = 'rgba(30,53,96,.35)';
+    } else {
+      const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
+      if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
+      else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+    }
+    cols += `<rect x="${xStart}" y="2" width="${ZW}" height="${courtL-4}" fill="${fill}"/>`;
+    cols += `<text x="${xStart+ZW/2}" y="30" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
+    cols += `<text x="${xStart+ZW/2}" y="56" text-anchor="middle" class="zc-count">
+      <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
+    </text>`;
+  });
+  for (let k = 1; k < 5; k++) {
+    dividers += `<line x1="${k*ZW}" y1="0" x2="${k*ZW}" y2="${courtL}" stroke="var(--border)" stroke-width="1"/>`;
+  }
+
+  return `
+    <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="${W-2}" height="${courtL-2}" fill="none" stroke="var(--border)" stroke-width="2" rx="4"/>
+      ${cols}
+      ${dividers}
+      <line x1="0" y1="${courtL}" x2="${W}" y2="${courtL}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
+      <text x="${W/2}" y="${courtL+18}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+    </svg>`;
+}
+
+// Cartographie du bras roulé, vue demi-terrain : 3 bandes de profondeur
+// empilées, filet en bas. De bas en haut : proche filet → amorti, milieu →
+// tendu, fond → lob. Chaque bande est divisée en 5 zones de largeur.
+function buildRouleCourtSVG(wPrefix, fPrefix) {
+  const W = 260, ZW = W / 5, bandH = 148, gap = 8, TOPPAD = 4, LBLPAD = 26;
+  const L = TOPPAD + bandH * 3 + gap * 2 + LBLPAD;
+
+  // Filet en bas -> ordre visuel de haut en bas : fond, milieu, proche filet.
+  const visualOrder = [...ROULE_DEPTH_VARIANTS].reverse();
+  const dataByVariant = {};
+  ROULE_DEPTH_VARIANTS.forEach(dv => { dataByVariant[dv.variant] = computeRouleZoneData(wPrefix, fPrefix, dv.variant); });
+  const maxTotal = Math.max(1, ...Object.values(dataByVariant).flat().map(d => d.w + d.f));
+
+  let bands = '';
+  visualOrder.forEach((dv, bi) => {
+    const data = dataByVariant[dv.variant];
+    const yStart = TOPPAD + bi * (bandH + gap);
+    let cols = '', dividers = '';
+    data.forEach(d => {
+      const xStart = W - d.z * ZW;
+      const total = d.w + d.f;
+      let fill;
+      if (total === 0) {
+        fill = 'rgba(30,53,96,.35)';
+      } else {
+        const alpha = (0.22 + 0.58 * (total / maxTotal)).toFixed(2);
+        if (d.w === d.f) fill = `rgba(245,197,24,${alpha})`;
+        else fill = d.w > d.f ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+      }
+      cols += `<rect x="${xStart}" y="${yStart}" width="${ZW}" height="${bandH}" fill="${fill}"/>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yStart+22}" text-anchor="middle" class="zc-lbl">Z${d.z}</text>`;
+      cols += `<text x="${xStart+ZW/2}" y="${yStart+44}" text-anchor="middle" class="zc-count">
+        <tspan class="w">${d.w}</tspan><tspan class="sep"> / </tspan><tspan class="f">${d.f}</tspan>
+      </text>`;
+    });
+    for (let k = 1; k < 5; k++) {
+      dividers += `<line x1="${k*ZW}" y1="${yStart}" x2="${k*ZW}" y2="${yStart+bandH}" stroke="var(--border)" stroke-width="1"/>`;
+    }
+    bands += `<rect x="1" y="${yStart}" width="${W-2}" height="${bandH}" fill="none" stroke="var(--border)" stroke-width="1.5" rx="3"/>`;
+    bands += cols + dividers;
+    bands += `<text x="${W/2}" y="${yStart+bandH-8}" text-anchor="middle" class="zc-band-lbl">${escapeHtml(dv.label)}</text>`;
+  });
+
+  const netY = TOPPAD + bandH * 3 + gap * 2;
+  return `
+    <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
+      ${bands}
+      <line x1="0" y1="${netY}" x2="${W}" y2="${netY}" stroke="var(--gold)" stroke-width="3" stroke-dasharray="8,5"/>
+      <text x="${W/2}" y="${netY+18}" text-anchor="middle" class="zc-net-lbl">Filet</text>
+    </svg>`;
+}
+
+function renderZoneMap() {
+  const grid = document.getElementById('zoneMapGrid');
+  if (!grid) return;
+
+  const depthNote = document.getElementById('zoneDepthNote');
+  if (depthNote) depthNote.style.display = zoneMapShot === 'roule' ? 'block' : 'none';
+
+  const entries = statsMode === 'joueur'
+    ? [
+        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_' },
+        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_' },
+        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_' },
+        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_' },
+      ]
+    : [
+        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_' },
+        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_' },
+      ];
+
+  grid.innerHTML = entries.map(e => {
+    const svg = zoneMapShot === 'roule'
+      ? buildRouleCourtSVG(e.wp, e.fp)
+      : buildCourtSVG(computeZoneData(e.wp, e.fp));
+    return `<div class="zone-court-item">
+      <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
+      ${svg}
+    </div>`;
+  }).join('');
+}
+
+// ── TIMER ────────────────────────────────────────────────────────────────────
+let timerSeconds = 0, timerInterval = null, timerRunning = false;
+  function ensureTimerRunning() {
+  if (!timerRunning && !matchOver) timerToggle();
+}
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+function timerReset() { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; document.getElementById('timerDisplay').textContent = '00:00'; }
+function formatDuration(secs){
+  const m=Math.floor(secs/60), s=secs%60;
+  return String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────────
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const W=210, M=20;
+  let y=M;
+
+  const newPage = () => {
+    doc.addPage();
+    doc.setFillColor(8,15,30);
+    doc.rect(0,0,W,297,'F');
+    y = M;
+  };
+
+  const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  // Les polices standards de jsPDF (Helvetica) ne supportent pas les emojis :
+  // on les retire avant toute écriture dans le PDF pour éviter les caractères
+  // corrompus (les emojis restent affichés normalement dans l'application).
+  const stripEmoji = (str) => String(str)
+    .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const sectionTitle = (title, color) => {
+    ensureSpace(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...color);
+    doc.text(title, M, y); y+=7;
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
+  };
+
+  // ── Fond sombre ──
+  doc.setFillColor(8,15,30);
+  doc.rect(0,0,W,297,'F');
+
+  // ── Titre ──
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(28); doc.setTextColor(245,197,24);
+  doc.text('BEACH TENNIS', W/2, y+8, {align:'center'});
+  doc.setFontSize(12); doc.setTextColor(74,100,148);
+  doc.text('STATS PRO', W/2, y+16, {align:'center'});
+  y+=26;
+
+  // ── Date ──
+  doc.setFontSize(10); doc.setTextColor(74,100,148);
+  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y, {align:'center'});
+  y+=10;
+  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+
+  // ══ 1. VAINQUEUR ET SCORE (pas de titre, juste le nom et le score) ═════════
+  ensureSpace(40);
+
+  const winnerIsA = s1 > s2;
+  const winnerName = winnerIsA ? nameA : nameB;
+  const scoreStr = setHistory.map(sh => {
+    const wG = winnerIsA ? sh.a : sh.b;
+    const lG = winnerIsA ? sh.b : sh.a;
+    return wG + '/' + lG;
+  }).join('   -   ');
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(245,197,24);
+  doc.text(winnerName, W/2, y, {align:'center'}); y+=9;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(226,234,248);
+  doc.text(scoreStr || '—', W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(74,100,148);
+  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
+  y+=12;
+
+  [{label:'ÉQUIPE A', color:[59,130,246], name:nameA, sets:s1, idx:0},
+   {label:'ÉQUIPE B', color:[249,115,22],  name:nameB, sets:s2, idx:1}].forEach(t => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.color);
+    doc.text(t.label, M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(226,234,248);
+    doc.text(t.name, M, y+7);
+    // Score par set
+    let setStr = setHistory.map((sh,i) => {
+      const sc  = t.idx===0 ? sh.a : sh.b;
+      const opp = t.idx===0 ? sh.b : sh.a;
+      return 'S'+(i+1)+': '+sc+(sc>opp?'*':'');
+    }).join('  ');
+    if (setStr) { doc.setFontSize(9); doc.setTextColor(74,100,148); doc.text(setStr, M, y+13); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(245,197,24);
+    doc.text(t.sets+' set'+(t.sets>1?'s':''), W-M, y+6, {align:'right'});
+    y += setStr ? 20 : 16;
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=8;
+  });
+  y+=2;
+
+  // ══ 2. STATS DE POINTS GAGNANTS & FAUTES DIRECTES PAR ÉQUIPE ═══════════════
+  sectionTitle('POINTS GAGNANTS & FAUTES DIRECTES — PAR ÉQUIPE', [245,197,24]);
+
+  doc.setFontSize(9); doc.setTextColor(74,100,148);
+  doc.text('Statistique', M, y);
+  doc.text('Éq.A', W/2, y, {align:'center'});
+  doc.text('Éq.B', W-M, y, {align:'right'});
+  y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=5;
+  [['Points gagnants', totWA, totWB], ['Fautes directes', totFA, totFB], ['Points gagnés', stats.pA, stats.pB]].forEach(r => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248); doc.text(r[0], M, y);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(59,130,246);  doc.text(String(r[1]), W/2, y, {align:'center'});
+    doc.setTextColor(249,115,22); doc.text(String(r[2]), W-M, y, {align:'right'});
+    y+=7;
+  });
+  doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
+
+  // ══ 3. DÉTAIL — PAR JOUEUR OU PAR ÉQUIPE (selon le mode choisi) ═════════════
+  const pdfShotTable = (title, prefix, titleColor) => {
+    ensureSpace(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...titleColor);
+    doc.text(title, M, y); y+=6;
+    doc.setFontSize(9); doc.setTextColor(74,100,148);
+    doc.text('Coup', M, y);
+    doc.text('Éq.A', W/2, y, {align:'center'});
+    doc.text('Éq.B', W-M, y, {align:'right'});
+    y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=5;
+    ALL_SHOT_KEYS.forEach(s => {
+      const vA = stats[prefix+'A_'+s], vB = stats[prefix+'B_'+s];
+      if (vA === 0 && vB === 0) return;
+      ensureSpace(8);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+      doc.text(SHOT_LBL[s], M, y);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(59,130,246);  doc.text(String(vA), W/2, y, {align:'center'});
+      doc.setTextColor(249,115,22); doc.text(String(vB), W-M, y, {align:'right'});
+      y+=6;
+    });
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=4;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+    doc.text('Total', M, y);
+    const tA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats[prefix+'A_'+sh],0);
+    const tB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats[prefix+'B_'+sh],0);
+    doc.setTextColor(59,130,246);  doc.text(String(tA), W/2, y, {align:'center'});
+    doc.setTextColor(249,115,22); doc.text(String(tB), W-M, y, {align:'right'});
+    y+=10;
+  };
+
+  if (statsMode === 'joueur') {
+    sectionTitle('DÉTAIL PAR JOUEUR', [245,197,24]);
+    const playerDefs = [
+      {name:players.j1, color:[59,130,246],  num:1},
+      {name:players.j2, color:[59,130,246],  num:2},
+      {name:players.j3, color:[249,115,22], num:3},
+      {name:players.j4, color:[249,115,22], num:4},
+    ];
+    playerDefs.forEach(pl => {
+      const totW = ALL_SHOT_KEYS.reduce((s,sh)=>s+(stats['w'+pl.num+'_'+sh]||0),0);
+      const totF = ALL_SHOT_KEYS.reduce((s,sh)=>s+(stats['f'+pl.num+'_'+sh]||0),0);
+      if (totW+totF === 0) return;
+      ensureSpace(14);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...pl.color);
+      doc.text(pl.name+' — Winners: '+totW+'  Fautes: '+totF, M, y); y+=6;
+      ALL_SHOT_KEYS.forEach(s => {
+        const vW = stats['w'+pl.num+'_'+s]||0;
+        const vF = stats['f'+pl.num+'_'+s]||0;
+        if (vW+vF === 0) return;
+        ensureSpace(6);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(226,234,248);
+        doc.text(SHOT_LBL[s], M+4, y);
+        doc.setTextColor(34,197,94);  doc.text('W:'+vW, W/2-10, y, {align:'center'});
+        doc.setTextColor(239,68,68); doc.text('F:'+vF, W-M, y, {align:'right'});
+        y+=5;
+      });
+      y+=4;
+    });
+  } else {
+    sectionTitle('DÉTAIL PAR ÉQUIPE', [245,197,24]);
+    pdfShotTable('Points gagnants — détail par coup', 'w', [34,197,94]);
+    pdfShotTable('Fautes directes — détail par coup', 'f', [239,68,68]);
+  }
+
+  // ══ 3.5 CARTOGRAPHIE PAR ZONE (tous les coups, terrain par équipe/joueur) ═══
+  sectionTitle('CARTOGRAPHIE PAR ZONE', [245,197,24]);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,140,180);
+  doc.text('Vert = zone a dominante gagnante  /  Rouge = zone a dominante fautes  /  Jaune = egalite  /  Gris = aucune donnee', M, y);
+  y += 8;
+
+  const zoneEntities = statsMode === 'joueur'
+    ? [
+        {label: players.j1, color:[59,130,246], wp:'w1_', fp:'f1_'},
+        {label: players.j2, color:[59,130,246], wp:'w2_', fp:'f2_'},
+        {label: players.j3, color:[249,115,22], wp:'w3_', fp:'f3_'},
+        {label: players.j4, color:[249,115,22], wp:'w4_', fp:'f4_'},
+      ]
+    : [
+        {label: nameA, color:[59,130,246], wp:'wA_', fp:'fA_'},
+        {label: nameB, color:[249,115,22], wp:'wB_', fp:'fB_'},
+      ];
+
+  const zcCourtW = zoneEntities.length > 2 ? 34 : 62;
+  const zcCourtL = zcCourtW * 2;      // hauteur totale des 3 bandes de profondeur (bras roulé)
+  const zcCourtLHalf = zcCourtW;      // hauteur d'un demi-terrain (tous les autres coups)
+  const zcGap = 6;
+  const zcNetGap = 4; // espace entre le bas du terrain et la ligne de filet
+
+  const zoneColor = (w, f) => {
+    if (w === 0 && f === 0) return [40, 60, 95];
+    if (w === f) return [245, 197, 24];
+    return w > f ? [34, 197, 94] : [239, 68, 68];
+  };
+
+  BASE_SHOTS.forEach(shotKey => {
+    // ── Cas particulier : bras roulé → 3 bandes de profondeur (amorti / tendu / lob), filet en bas ──
+    if (shotKey === 'roule') {
+      const bandH = zcCourtL / 3;
+      ensureSpace(zcCourtL + 26);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+      doc.text(SHOT_BASE_LBL[shotKey] + ' (par profondeur)', M, y);
+      y += 5;
+
+      const rowLabelY = y;
+      const courtTop = rowLabelY + 3;
+      const zw = zcCourtW / 5;
+      // Filet en bas -> ordre visuel de haut en bas : fond, milieu, proche filet.
+      const visualOrder = [...ROULE_DEPTH_VARIANTS].reverse();
+
+      zoneEntities.forEach((ent, i) => {
+        const x0 = M + i * (zcCourtW + zcGap);
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+        visualOrder.forEach((dv, bi) => {
+          const bandTop = courtTop + bi * bandH;
+
+          ZONES.forEach(z => {
+            const zi = parseInt(z, 10);
+            const key = 'roule_' + dv.variant + '_' + z;
+            const w = stats[ent.wp+key] || 0, f = stats[ent.fp+key] || 0;
+            const zx = x0 + zcCourtW - zi * zw;
+
+            doc.setFillColor(...zoneColor(w, f));
+            doc.rect(zx, bandTop, zw, bandH, 'F');
+
+            doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 6 : 4.5); doc.setTextColor(255,255,255);
+            doc.text(String(zi), zx + zw/2, bandTop + Math.min(bandH - 1.5, 6), {align:'center'});
+          });
+
+          doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
+          for (let k = 1; k < 5; k++) {
+            const lx = x0 + k*zw;
+            doc.line(lx, bandTop, lx, bandTop+bandH);
+          }
+          doc.setDrawColor(245,197,24); doc.setLineWidth(0.3);
+          doc.rect(x0, bandTop, zcCourtW, bandH);
+
+          doc.setFont('helvetica','normal'); doc.setFontSize(3.8); doc.setTextColor(245,197,24);
+          doc.text(dv.short, x0 + zcCourtW/2, bandTop + bandH - 1.5, {align:'center'});
+        });
+
+        doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
+        doc.rect(x0, courtTop, zcCourtW, zcCourtL);
+
+        // Ligne de filet, sous la bande "proche filet"
+        doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
+        doc.line(x0, courtTop+zcCourtL+zcNetGap, x0+zcCourtW, courtTop+zcCourtL+zcNetGap);
+      });
+
+      doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(245,197,24);
+      doc.text('FILET', M, courtTop+zcCourtL+zcNetGap+5);
+
+      y = courtTop + zcCourtL + zcNetGap + 10;
+      return;
+    }
+
+    // ── Tous les autres coups : demi-terrain (5 zones de largeur), filet en bas ──
+    ensureSpace(zcCourtLHalf + 26);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+    doc.text(SHOT_BASE_LBL[shotKey], M, y);
+    y += 5;
+
+    const rowLabelY = y;
+    const courtTop = rowLabelY + 3;
+    const zw = zcCourtW / 5;
+
+    zoneEntities.forEach((ent, i) => {
+      const x0 = M + i * (zcCourtW + zcGap);
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...ent.color);
+      doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+      ZONES.forEach(z => {
+        const keys = SHOT_ZONE_KEYS[shotKey][z];
+        let w = 0, f = 0;
+        keys.forEach(k => { w += stats[ent.wp+k] || 0; f += stats[ent.fp+k] || 0; });
+        const zi = parseInt(z, 10);
+        const zx = x0 + zcCourtW - zi * zw; // zone 1 collée au bord droit
+
+        doc.setFillColor(...zoneColor(w, f));
+        doc.rect(zx, courtTop, zw, zcCourtLHalf, 'F');
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(zw > 10 ? 7 : 5); doc.setTextColor(255,255,255);
+        doc.text(String(zi), zx + zw/2, courtTop + (zw > 10 ? 7 : 5), {align:'center'});
+      });
+
+      doc.setDrawColor(30,53,96); doc.setLineWidth(0.2);
+      for (let k = 1; k < 5; k++) {
+        const lx = x0 + k*zw;
+        doc.line(lx, courtTop, lx, courtTop+zcCourtLHalf);
+      }
+
+      doc.setDrawColor(30,53,96); doc.setLineWidth(0.3);
+      doc.rect(x0, courtTop, zcCourtW, zcCourtLHalf);
+
+      // Ligne de filet, en bas du demi-terrain
+      doc.setDrawColor(245,197,24); doc.setLineWidth(0.4);
+      doc.line(x0, courtTop+zcCourtLHalf+zcNetGap, x0+zcCourtW, courtTop+zcCourtLHalf+zcNetGap);
+    });
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(5.5); doc.setTextColor(245,197,24);
+    doc.text('FILET', M, courtTop+zcCourtLHalf+zcNetGap+5);
+
+    y = courtTop + zcCourtLHalf + zcNetGap + 10;
+  });
+
+  // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
+  sectionTitle('JOURNAL DU MATCH COMPLET', [245,197,24]);
+  [...matchLog].reverse().forEach(entry => {
+    ensureSpace(6);
+    let cleanMsg = stripEmoji(entry.msg);
+    if (entry.type === 'winner') cleanMsg = 'Point gagnant — ' + cleanMsg;
+    else if (entry.type === 'faute') cleanMsg = 'Faute — ' + cleanMsg;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.setTextColor(74,100,148); doc.text(entry.time, M, y);
+    doc.setTextColor(180,200,230);
+    doc.text((entry.team ? stripEmoji(entry.team)+' — ':'')+cleanMsg, M+16, y);
+    y+=6;
+  });
+
+  doc.save('BeachStats_Pro_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+
+initNames();
+initZoneTabs();
+const _savedProgress = loadProgress();
+if (_savedProgress) {
+  checkResumeOnLoad();
+} else {
+  updateDisplay();
+  logEvent('', '🎾 Match démarré');
+}
+// ── THÈMES ────────────────────────────────────────────────────────────────
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
+let userTier = null;
+
+function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+function setTheme(theme) {
+  if (PRO_THEMES.includes(theme) && userTier !== 'pro') {
+    window.open('https://beachstats.gumroad.com/l/jlcqx', '_blank');
+    return;
+  }
+  localStorage.setItem('beachstats_theme', theme);
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('themeMenu')?.classList.remove('open');
+}
+
+function toggleThemeMenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeMenu')?.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.theme-switch-wrap')) document.getElementById('themeMenu')?.classList.remove('open');
+});
+
+function updateThemeLockUI() {
+  document.querySelectorAll('.theme-swatch').forEach(b => {
+    const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
+    b.classList.toggle('locked', isProTheme && userTier !== 'pro');
+  });
+}
+
+async function checkTier() {
+  try {
+    const res = await fetch('/api/tier');
+    const data = await res.json();
+    userTier = data.tier;
+  } catch (e) {
+    userTier = null;
+  }
+  updateThemeLockUI();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const current = localStorage.getItem('beachstats_theme') || 'dark';
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+  checkTier();
+});
+
+</script>
+</body>
+</html>
