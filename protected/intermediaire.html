@@ -130,6 +130,7 @@ body{
   margin-bottom:1rem;
 }
 .status-pill{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:4px 14px;border-radius:20px}
+[data-theme="glacier"] .status-pill{color:#0a2e52}
 .status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 
 /* ── SCOREBOARD ── */
@@ -157,6 +158,7 @@ body{
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
+[data-theme="glacier"] .cell.sets-cell span.won{color:#0a2e52}
 .cell.set-score{
   font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
   text-align:center;color:var(--muted);
@@ -717,6 +719,19 @@ function diffStats(newer, older) {
   return out;
 }
 
+// Réduit un objet stats (détaillé par coup/zone) à ses totaux Winners/Fautes/Points
+// par équipe — utilisé pour le récap "Détail par set" du PDF et pour l'historique.
+function aggregateStats(s) {
+  return {
+    wA: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['wA_'+sh]||0),0),
+    wB: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['wB_'+sh]||0),0),
+    fA: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['fA_'+sh]||0),0),
+    fB: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['fB_'+sh]||0),0),
+    pA: s.pA || 0,
+    pB: s.pB || 0,
+  };
+}
+
 function getDisplayStats() {
   if (statsViewMode === 'total') return stats;
   const older = setSnapshots[statsViewSetIdx - 2] || {};
@@ -916,7 +931,8 @@ function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
     players: JSON.parse(JSON.stringify(players)),
     mode: typeof mode !== 'undefined' ? mode : 'equipe',
     duration: formatDuration(timerSeconds),
-    stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB }
+    stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB },
+    setSnapshots: setSnapshots.map(sn => aggregateStats(sn))
   };
   let hist = [];
   try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
@@ -1428,7 +1444,39 @@ function exportPDF() {
   });
   doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
 
-  // ══ 3. DÉTAIL — PAR JOUEUR OU PAR ÉQUIPE (selon le mode choisi) ═════════════
+  // ══ 3. DÉTAIL PAR SET ════════════════════════════════════════════════════
+  if (setSnapshots.length > 0 || !matchOver) {
+    sectionTitle('DÉTAIL PAR SET', [245,197,24]);
+    doc.setFontSize(9); doc.setTextColor(74,100,148);
+    doc.text('Set', M, y);
+    doc.text('Winners A/B', M+55, y);
+    doc.text('Fautes A/B', M+105, y);
+    doc.text('Points A/B', W-M, y, {align:'right'});
+    y+=4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=6;
+
+    const setRow = (label, d, sh) => {
+      ensureSpace(8);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(245,197,24);
+      doc.text(label + (sh ? ' (' + sh.a + '-' + sh.b + ')' : ''), M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+      doc.text((d.wA||0) + ' / ' + (d.wB||0), M+55, y);
+      doc.text((d.fA||0) + ' / ' + (d.fB||0), M+105, y);
+      doc.text((d.pA||0) + ' / ' + (d.pB||0), W-M, y, {align:'right'});
+      y+=8;
+    };
+
+    setSnapshots.forEach((snap, i) => {
+      const d = diffStats(aggregateStats(snap), aggregateStats(setSnapshots[i-1] || {}));
+      setRow('Set ' + (i+1), d, setHistory[i]);
+    });
+    if (!matchOver) {
+      const d = diffStats(aggregateStats(stats), aggregateStats(setSnapshots[setSnapshots.length-1] || {}));
+      setRow('Set ' + (setSnapshots.length+1) + ' (en cours)', d, null);
+    }
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y+=10;
+  }
+
+  // ══ 4. DÉTAIL — PAR JOUEUR OU PAR ÉQUIPE (selon le mode choisi) ═════════════
   const pdfShotTable = (title, prefix, titleColor) => {
     ensureSpace(20);
     doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...titleColor);
@@ -1493,7 +1541,7 @@ function exportPDF() {
     pdfShotTable('Fautes directes — détail par coup', 'f', [239,68,68]);
   }
 
-  // ══ 4. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
+  // ══ 5. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
   sectionTitle('JOURNAL DU MATCH COMPLET', [245,197,24]);
   [...matchLog].reverse().forEach(entry => {
     ensureSpace(6);

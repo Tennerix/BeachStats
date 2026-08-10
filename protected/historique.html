@@ -302,6 +302,35 @@ function generatePDF(id) {
   });
   doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y += 10;
 
+  if (record.setSnapshots && record.setSnapshots.length > 0) {
+    sectionTitle('DÉTAIL PAR SET', [245,197,24]);
+    doc.setFontSize(9); doc.setTextColor(74,100,148);
+    doc.text('Set', M, y);
+    doc.text('Winners A/B', M+55, y);
+    doc.text('Fautes A/B', M+105, y);
+    doc.text('Points A/B', W-M, y, {align:'right'});
+    y += 4; doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y += 6;
+
+    record.setSnapshots.forEach((snap, i) => {
+      const prev = record.setSnapshots[i-1] || {wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
+      const d = {
+        wA: (snap.wA||0)-(prev.wA||0), wB: (snap.wB||0)-(prev.wB||0),
+        fA: (snap.fA||0)-(prev.fA||0), fB: (snap.fB||0)-(prev.fB||0),
+        pA: (snap.pA||0)-(prev.pA||0), pB: (snap.pB||0)-(prev.pB||0),
+      };
+      const sh = setHist[i];
+      ensureSpace(8);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(245,197,24);
+      doc.text('Set ' + (i+1) + (sh ? ' (' + sh.a + '-' + sh.b + ')' : ''), M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(226,234,248);
+      doc.text(d.wA + ' / ' + d.wB, M+55, y);
+      doc.text(d.fA + ' / ' + d.fB, M+105, y);
+      doc.text(d.pA + ' / ' + d.pB, W-M, y, {align:'right'});
+      y += 8;
+    });
+    doc.setDrawColor(30,53,96); doc.line(M,y,W-M,y); y += 10;
+  }
+
   if (record.matchLog && record.matchLog.length) {
     sectionTitle('JOURNAL DU MATCH COMPLET', [245,197,24]);
     [...record.matchLog].reverse().forEach(entry => {
