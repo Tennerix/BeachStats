@@ -173,7 +173,7 @@ function render() {
   const hist = loadHistory();
   const content = document.getElementById('content');
   if (hist.length === 0) {
-    content.innerHTML = '<div class="empty">Aucun match sauvegardé pour l\'instant.<br>Termine un match pour le voir apparaître ici.</div>';
+    content.innerHTML = '<div class="empty">Aucun match sauvegardé pour l\'instant.<br>Termines un match pour le voir apparaître ici.</div>';
     return;
   }
   content.innerHTML = '<div class="match-list">' + hist.map(m => {

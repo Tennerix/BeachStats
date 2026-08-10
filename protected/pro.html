@@ -245,6 +245,14 @@ body{
 }
 .zone-tab:hover{color:var(--text);border-color:var(--muted)}
 .zone-tab.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+/* Le thème Glacier a un fond et un doré très clairs (quasi blancs) : le texte
+   des onglets sélectionnés devient illisible (blanc sur blanc). On force un
+   bleu profond, légèrement dégradé, pour rester lisible sur le fond doré. */
+[data-theme="glacier"] .zone-tab.active{color:#0a2e52}
+[data-theme="glacier"] .zone-tab.active .zt-label{
+  background:linear-gradient(120deg,#062038 0%,#0f4d7c 55%,#0a2e52 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
 .zone-court-wrap{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .zone-court-item{display:flex;flex-direction:column;align-items:center;gap:6px}
 .zone-court-title{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center}
@@ -1349,7 +1357,7 @@ function initZoneTabs() {
   const tabsEl = document.getElementById('zoneTabs');
   if (!tabsEl) return;
   tabsEl.innerHTML = BASE_SHOTS.map(s =>
-    `<button class="zone-tab${s===zoneMapShot?' active':''}" id="zoneTab_${s}" onclick="selectZoneMapShot('${s}')">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</button>`
+    `<button class="zone-tab${s===zoneMapShot?' active':''}" id="zoneTab_${s}" onclick="selectZoneMapShot('${s}')">${SHOT_ICO[s]} <span class="zt-label">${SHOT_BASE_LBL[s]}</span></button>`
   ).join('');
 }
 
