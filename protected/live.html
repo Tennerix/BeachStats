@@ -48,6 +48,8 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 .team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;text-transform:uppercase}
 .team-row.a .team-name{color:var(--blue)}
 .team-row.b .team-name{color:var(--orange)}
+.team-info{display:flex;flex-direction:column;gap:2px}
+.team-players{font-size:11px;color:var(--muted);font-weight:500}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--muted)}
 .cell.won{color:var(--gold)}
 .cell.point-cell{font-size:28px;color:var(--gold);font-style:italic}
@@ -119,6 +121,8 @@ function renderMatch(state) {
   let statusLine;
   if (state.matchOver) {
     statusLine = 'Match terminé';
+  } else if (state.matchStarted === false) {
+    statusLine = 'Échauffement — le match n\'a pas encore commencé';
   } else if (state.inSuperTiebreak) {
     statusLine = 'Super tie-break en cours';
   } else if (state.inTiebreak) {
@@ -138,6 +142,9 @@ function renderMatch(state) {
       <div class="name">${escapeHtml(state.winner || '—')}</div>
     </div>` : '';
 
+  const labelA = (state.teamLabelA && state.teamLabelA.trim()) || 'Équipe A';
+  const labelB = (state.teamLabelB && state.teamLabelB.trim()) || 'Équipe B';
+
   content.innerHTML = `
     ${winnerBanner}
     <div class="card">
@@ -145,14 +152,20 @@ function renderMatch(state) {
         <span>Équipe</span><span>S1</span><span>S2</span><span>S3</span><span>Points</span>
       </div>
       <div class="team-row a">
-        <div class="team-name">${escapeHtml(state.nameA || 'Équipe A')}</div>
+        <div class="team-info">
+          <div class="team-name">${escapeHtml(labelA)}</div>
+          <div class="team-players">${escapeHtml(state.nameA || '')}</div>
+        </div>
         <div class="cell ${setCols[0].aWon ? 'won' : ''}">${setCols[0].a}</div>
         <div class="cell ${setCols[1].aWon ? 'won' : ''}">${setCols[1].a}</div>
         <div class="cell ${setCols[2].aWon ? 'won' : ''}">${setCols[2].a}</div>
         <div class="cell point-cell">${state.matchOver ? '—' : pointDisplay[0]}</div>
       </div>
       <div class="team-row b">
-        <div class="team-name">${escapeHtml(state.nameB || 'Équipe B')}</div>
+        <div class="team-info">
+          <div class="team-name">${escapeHtml(labelB)}</div>
+          <div class="team-players">${escapeHtml(state.nameB || '')}</div>
+        </div>
         <div class="cell ${setCols[0].bWon ? 'won' : ''}">${setCols[0].b}</div>
         <div class="cell ${setCols[1].bWon ? 'won' : ''}">${setCols[1].b}</div>
         <div class="cell ${setCols[2].bWon ? 'won' : ''}">${setCols[2].b}</div>

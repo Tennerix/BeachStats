@@ -152,9 +152,16 @@ body{
 .team-row:last-child{border-bottom:none}
 .team-info{display:flex;flex-direction:column;gap:3px}
 .team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.team-name-input{
+  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
+  background:none;border:none;border-bottom:1px dashed transparent;color:inherit;width:100%;padding:0 0 1px;
+  outline:none;transition:border-color .15s;
+}
+.team-name-input::placeholder{color:inherit;opacity:1}
+.team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
 .team-players{font-size:11px;color:var(--muted);font-weight:500}
-.team-row.team-a .team-name{color:var(--blue)}
-.team-row.team-b .team-name{color:var(--orange)}
+.team-row.team-a .team-name-input{color:var(--blue)}
+.team-row.team-b .team-name-input{color:var(--orange)}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
@@ -502,7 +509,7 @@ body{
 </div>
 
 <div class="status-bar">
-  <div class="status-pill" id="setPill">Set 1</div>
+  <div class="status-pill" id="setPill">Échauffement</div>
   <div class="status-label" id="statusLabel">En cours</div>
 </div>
 
@@ -542,7 +549,7 @@ body{
   </div>
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
-      <div class="team-name" id="nameA">Équipe A</div>
+      <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
       <div class="team-players" id="playersA">—</div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
@@ -552,7 +559,7 @@ body{
   </div>
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
-      <div class="team-name" id="nameB">Équipe B</div>
+      <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
       <div class="team-players" id="playersB">—</div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
@@ -797,6 +804,19 @@ const players = {
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
 
+// ── NOM D'ÉQUIPE PERSONNALISÉ ────────────────────────────────────────────
+// Optionnel : si laissé vide, le champ affiche simplement le placeholder
+// "Équipe A" / "Équipe B" — aucune valeur n'est alors envoyée nulle part.
+let teamLabelA = '';
+let teamLabelB = '';
+
+function onTeamLabelInput(side) {
+  const val = document.getElementById('teamLabel' + side).value.slice(0, 24);
+  if (side === 'A') teamLabelA = val; else teamLabelB = val;
+  saveProgress();
+  if (liveShareCode) pushLiveState();
+}
+
 // Les noms viennent de l'URL (?j1=...&j2=...) : on les échappe avant toute
 // insertion via innerHTML pour éviter qu'un lien piégé n'exécute du code.
 function escapeHtml(str) {
@@ -934,8 +954,9 @@ function buildLiveState() {
   return {
     kind: 'shots',
     nameA, nameB,
+    teamLabelA, teamLabelB,
     s1, s2, g1, g2, p1, p2,
-    inTiebreak, inSuperTiebreak, matchOver,
+    inTiebreak, inSuperTiebreak, matchOver, matchStarted,
     winner: matchOver ? (s1 > s2 ? nameA : nameB) : null,
     setHistory,
     stats: agg,
@@ -1274,7 +1295,8 @@ function saveProgress() {
   if (matchOver) { clearProgress(); return; }
   const snapshot = {
     p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
-    stats, setSnapshots, history, matchLog, timerSeconds,
+    stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
+    teamLabelA, teamLabelB,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -1315,7 +1337,11 @@ function applyProgress(snap) {
   history = snap.history || [];
   matchLog = snap.matchLog || [];
   timerSeconds = snap.timerSeconds || 0;
-  document.getElementById('setPill').textContent = inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1);
+  matchStarted = snap.matchStarted !== undefined ? snap.matchStarted : true;
+  teamLabelA = snap.teamLabelA || ''; teamLabelB = snap.teamLabelB || '';
+  document.getElementById('teamLabelA').value = teamLabelA;
+  document.getElementById('teamLabelB').value = teamLabelB;
+  document.getElementById('setPill').textContent = !matchStarted ? 'Échauffement' : (inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1));
   document.getElementById('statusLabel').textContent = matchOver ? 'Terminé' : 'En cours';
   rebuildLog();
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
@@ -1334,7 +1360,7 @@ function discardResume() {
   clearProgress();
   document.getElementById('resumeOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('', '🎾 Match démarré');
+  logEvent('', '🎾 Match créé');
 }
 
 function checkResumeOnLoad() {
@@ -1354,10 +1380,15 @@ function resetMatch() {
   setHistory=[]; timerReset(); stats=emptyStats();
   setSnapshots=[]; statsViewMode='total'; statsViewSetIdx=1;
   history=[]; matchLog=[];
-  document.getElementById('setPill').textContent='Set 1';
+  matchStarted=false;
+  teamLabelA=''; teamLabelB='';
+  document.getElementById('teamLabelA').value='';
+  document.getElementById('teamLabelB').value='';
+  document.getElementById('setPill').textContent='Échauffement';
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
   updateDisplay();
+  logEvent('', '🎾 Match créé');
 }
 
 // ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
@@ -1758,6 +1789,7 @@ function renderZoneMap() {
 
 // ── TIMER ────────────────────────────────────────────────────────────────────
 let timerSeconds = 0, timerInterval = null, timerRunning = false;
+let matchStarted = false; // passe à true dès le premier lancement du chrono
   function ensureTimerRunning() {
   if (!timerRunning && !matchOver) timerToggle();
 }
@@ -1770,6 +1802,11 @@ function timerToggle() {
     timerRunning = true;
     document.getElementById('timerStartBtn').textContent = '⏸ Pause';
     document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    if (!matchStarted) {
+      matchStarted = true;
+      document.getElementById('setPill').textContent = 'Set 1';
+      logEvent('', '▶️ Match démarré');
+    }
     timerInterval = setInterval(() => {
       timerSeconds++;
       const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
@@ -2160,7 +2197,7 @@ if (_savedProgress) {
   checkResumeOnLoad();
 } else {
   updateDisplay();
-  logEvent('', '🎾 Match démarré');
+  logEvent('', '🎾 Match créé');
 }
 // ── THÈMES ────────────────────────────────────────────────────────────────
 const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
