@@ -271,3 +271,4 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
 </div>
 </body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+}
