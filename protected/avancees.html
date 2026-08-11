@@ -699,7 +699,7 @@ const SHOT_LBL = {
   rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
   defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🌙', rush:'⚡', defense:'🛡️'};
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
 const ALL_SHOT_KEYS = [
@@ -1409,7 +1409,6 @@ function renderStats() {
   if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
 
   const el = document.getElementById('statsContent');
-  let html = '';
   const ds = getDisplayStats();
 
   const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
@@ -1417,51 +1416,38 @@ function renderStats() {
   const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
   const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
 
-  const bar = (a,b) => {
-    const t=a+b||1;
-    return `<div class="mini-bar"><div class="mini-bar-a" style="width:${Math.round(a/t*100)}%"></div><div class="mini-bar-b" style="width:${Math.round(b/t*100)}%"></div></div>`;
+  // Même présentation que le mode "Stats de base" : gros chiffres + barre
+  // pleine largeur, pour rester lisible même avec le détail par coup.
+  const statRow = (a, b, label) => {
+    const t = a + b || 1;
+    const pctA = Math.round(a / t * 100);
+    return `
+      <div class="stat-row">
+        <div class="stat-val a">${a}</div>
+        <div class="stat-name">${label}</div>
+        <div class="stat-val b">${b}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-bar-wrap"><div class="stat-bar-a" style="width:${pctA}%"></div><div class="stat-bar-b" style="width:${100-pctA}%"></div></div>
+      </div>`;
   };
 
-  // Section Winners
-  html += `<div class="stats-section">
-    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>
-    <table class="stats-table">`;
-  
-  ALL_SHOT_KEYS.forEach(s => {
-    const vA=ds['wA_'+s]||0, vB=ds['wB_'+s]||0;
-    if(vA > 0 || vB > 0) {
-      html += `<tr>
-        <td class="td-a">${vA}</td>
-        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
-        <td class="td-b">${vB}</td>
-      </tr>`;
-    }
-  });
-  html += '</table></div>';
+  let html = '';
+  html += statRow(totWA, totWB, 'Points gagnants');
+  html += statRow(totFA, totFB, 'Fautes directes');
+  html += statRow(ds.pA||0, ds.pB||0, 'Points gagnés');
 
-  // Section Fautes
-  html += `<div class="stats-section">
-    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>
-    <table class="stats-table">`;
-  
-  ALL_SHOT_KEYS.forEach(s => {
-    const vA=ds['fA_'+s]||0, vB=ds['fB_'+s]||0;
-    if(vA > 0 || vB > 0) {
-      html += `<tr>
-        <td class="td-a">${vA}</td>
-        <td class="td-bar">${bar(vA,vB)}<div class="td-lbl">${SHOT_LBL[s]}</div></td>
-        <td class="td-b">${vB}</td>
-      </tr>`;
-    }
-  });
-  html += '</table></div>';
+  const winnerRows = ALL_SHOT_KEYS.filter(s => (ds['wA_'+s]||0) > 0 || (ds['wB_'+s]||0) > 0);
+  if (winnerRows.length) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">🎯 Détail — Points gagnants</div>`;
+    winnerRows.forEach(s => { html += statRow(ds['wA_'+s]||0, ds['wB_'+s]||0, SHOT_LBL[s]); });
+  }
 
-  // Totaux
-  html += `<div class="stats-totals">
-    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
-    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
-    <div class="tot-box"><div class="tot-val"><span class="a">${ds.pA||0}</span><span style="color:var(--muted)">/</span><span class="b">${ds.pB||0}</span></div><div class="tot-lbl">Points Totaux</div></div>
-  </div>`;
+  const fauteRows = ALL_SHOT_KEYS.filter(s => (ds['fA_'+s]||0) > 0 || (ds['fB_'+s]||0) > 0);
+  if (fauteRows.length) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">💥 Détail — Fautes directes</div>`;
+    fauteRows.forEach(s => { html += statRow(ds['fA_'+s]||0, ds['fB_'+s]||0, SHOT_LBL[s]); });
+  }
 
   el.innerHTML = html;
 }
@@ -1478,38 +1464,31 @@ function renderStatsParJoueur() {
     { name: players.j4, team: 'B', cls: 'var(--orange)', num: 4 },
   ];
 
-  const buildPlayerRow = (p, type) => {
+  // Détail par type de coup pour un joueur, dans le même style "gros chiffre"
+  // que le reste (plus lisible qu'un mini-tableau compact).
+  const buildPlayerDetail = (p, type) => {
     const tp = type === 'winner' ? 'w' : 'f';
     const key = tp + p.num + '_';
-    const total = ALL_SHOT_KEYS.reduce((s, sh) => s + (ds[key + sh] || 0), 0);
+    const rows = ALL_SHOT_KEYS.filter(sh => (ds[key + sh] || 0) > 0);
+    if (!rows.length) return '';
 
-    let rows = '';
-    ALL_SHOT_KEYS.forEach(sh => {
+    let html = `<div style="margin-top:.6rem">
+      <div class="stat-name" style="text-align:left;color:${p.cls};margin-bottom:.4rem">${escapeHtml(p.name)}</div>`;
+    rows.forEach(sh => {
       const v = ds[key + sh] || 0;
       const maxV = Math.max(1, ...[1,2,3,4].map(n => ds[tp+n+'_'+sh] || 0));
       const pct = Math.round(v / maxV * 100);
-      if (v > 0) {
-        rows += `<tr>
-          <td style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:.28rem .5rem .28rem 0;width:1%">${SHOT_LBL[sh]}</td>
-          <td style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:${p.cls};text-align:right;padding:.28rem .5rem;white-space:nowrap;width:1%">${v}</td>
-          <td style="padding:.28rem 0;width:100%">
-            <div style="height:5px;border-radius:4px;background:var(--bg)">
-              <div style="width:${pct}%;height:100%;background:${p.cls};border-radius:4px;transition:width .3s"></div>
-            </div>
-          </td>
-        </tr>`;
-      }
+      html += `
+        <div class="stat-row" style="grid-template-columns:1fr auto;margin-bottom:.35rem">
+          <div class="stat-name" style="text-align:left">${SHOT_LBL[sh]}</div>
+          <div class="stat-val" style="color:${p.cls};font-size:18px">${v}</div>
+        </div>
+        <div class="stat-row" style="margin-bottom:.35rem">
+          <div class="stat-bar-wrap"><div style="width:${pct}%;background:${p.cls};transition:width .4s"></div></div>
+        </div>`;
     });
-
-    if (!rows) return '';
-
-    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;margin-bottom:.4rem;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
-        <span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:${p.cls}">${escapeHtml(p.name)}</span>
-        <span style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px">TOTAL <span style="color:${p.cls};font-size:15px;margin-left:3px">${total}</span></span>
-      </div>
-      <table style="width:100%;border-collapse:collapse">${rows}</table>
-    </div>`;
+    html += `</div>`;
+    return html;
   };
 
   const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
@@ -1517,28 +1496,47 @@ function renderStatsParJoueur() {
   const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
   const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
 
-  let html = `
-    <div class="stat-row"><div class="stat-val a">${totWA}</div><div class="stat-name">Points gagnants</div><div class="stat-val b">${totWB}</div></div>
-    <div class="stat-row"><div class="stat-val a">${totFA}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${totFB}</div></div>`;
+  const statRow = (a, b, label) => {
+    const t = a + b || 1;
+    const pctA = Math.round(a / t * 100);
+    return `
+      <div class="stat-row">
+        <div class="stat-val a">${a}</div>
+        <div class="stat-name">${label}</div>
+        <div class="stat-val b">${b}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-bar-wrap"><div class="stat-bar-a" style="width:${pctA}%"></div><div class="stat-bar-b" style="width:${100-pctA}%"></div></div>
+      </div>`;
+  };
 
-  // Section Winners
-  html += `<div class="stats-section">
-    <div class="stats-section-title w">🎯 Points gagnants — <span style="color:var(--blue)">${totWA}</span> / <span style="color:var(--orange)">${totWB}</span></div>`;
-  playerDefs.forEach(p => { html += buildPlayerRow(p, 'winner'); });
-  html += `</div>`;
+  let html = statRow(totWA, totWB, 'Points gagnants') + statRow(totFA, totFB, 'Fautes directes') + statRow(ds.pA||0, ds.pB||0, 'Points gagnés');
 
-  // Section Fautes
-  html += `<div class="stats-section">
-    <div class="stats-section-title f">💥 Fautes directes — <span style="color:var(--blue)">${totFA}</span> / <span style="color:var(--orange)">${totFB}</span></div>`;
-  playerDefs.forEach(p => { html += buildPlayerRow(p, 'faute'); });
-  html += `</div>`;
-
-  // Totaux
-  html += `<div class="stats-totals">
-    <div class="tot-box"><div class="tot-val"><span class="a">${totWA}</span><span style="color:var(--muted)">/</span><span class="b">${totWB}</span></div><div class="tot-lbl">Winners</div></div>
-    <div class="tot-box"><div class="tot-val"><span class="a">${totFA}</span><span style="color:var(--muted)">/</span><span class="b">${totFB}</span></div><div class="tot-lbl">Fautes</div></div>
-    <div class="tot-box"><div class="tot-val"><span class="a">${ds.pA||0}</span><span style="color:var(--muted)">/</span><span class="b">${ds.pB||0}</span></div><div class="tot-lbl">Points Totaux</div></div>
+  // Récap rapide par joueur — même présentation que le mode "Stats de base".
+  html += `<div class="stat-row" style="grid-template-columns:1fr 60px 60px;margin-top:1.2rem;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px">
+    <div class="stat-name" style="text-align:left">Joueur</div>
+    <div class="stat-name">W</div>
+    <div class="stat-name">F</div>
   </div>`;
+  playerDefs.forEach(p => {
+    const w = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['w'+p.num+'_'+sh]||0),0);
+    const f = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['f'+p.num+'_'+sh]||0),0);
+    html += `<div class="stat-row" style="grid-template-columns:1fr 60px 60px;align-items:center">
+      <div class="stat-name" style="text-align:left;color:var(--text);font-size:13px">${escapeHtml(p.name)}</div>
+      <div class="stat-val" style="text-align:center;color:var(--green);font-size:20px">${w}</div>
+      <div class="stat-val" style="text-align:center;color:var(--red);font-size:20px">${f}</div>
+    </div>`;
+  });
+
+  // Détail par type de coup, par joueur
+  const winnerDetail = playerDefs.map(p => buildPlayerDetail(p, 'winner')).join('');
+  if (winnerDetail) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">🎯 Détail — Points gagnants</div>${winnerDetail}`;
+  }
+  const fauteDetail = playerDefs.map(p => buildPlayerDetail(p, 'faute')).join('');
+  if (fauteDetail) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">💥 Détail — Fautes directes</div>${fauteDetail}`;
+  }
 
   el.innerHTML = html;
 }
