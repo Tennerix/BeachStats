@@ -7,5 +7,11 @@
     "binding": "ASSETS",
     "html_handling": "none",
     "run_worker_first": true
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "MATCH_LIVE",
+      "id": "90df2c3f04504025b453aa9efbda7a45"
+    }
+  ]
 }
