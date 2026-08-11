@@ -5,6 +5,11 @@ const COOKIE_NAME = "beachstats_access";
 const COOKIE_MAX_AGE_DAYS = 30;
 const MAX_DEVICES = 3;
 
+// ── PARTAGE EN DIRECT (spectateurs) ──────────────────────────────────────
+const LIVE_CODE_RE = /^[a-zA-Z0-9]{4,12}$/;
+const LIVE_TTL_SECONDS = 6 * 3600; // une entrée expire automatiquement après 6h
+const LIVE_MAX_BODY_BYTES = 20000; // garde-fou anti-abus, largement suffisant pour un état de match
+
 // tier: null = accès libre, aucune vérification. Sinon 'avancees' ou 'pro'.
 const ROUTES = {
   "/":              { file: "/index.html",         tier: null },
@@ -12,6 +17,7 @@ const ROUTES = {
   "/base":          { file: "/base.html",           tier: null },
   "/intermediaire": { file: "/intermediaire.html",  tier: null },
   "/historique":    { file: "/historique.html",     tier: null },
+  "/live":          { file: "/live.html",           tier: null },
   "/avancees":      { file: "/avancees.html",       tier: "avancees" },
   "/pro":           { file: "/pro.html",            tier: "pro" },
 };
@@ -37,6 +43,13 @@ function escapeHtml(str) {
   }[c]));
 }
 
+function jsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -51,9 +64,15 @@ export default {
     // peu importe la page où il se trouve.
     if (url.pathname === "/api/tier") {
       const session = await readSessionCookie(request, env);
-      return new Response(JSON.stringify({ tier: session ? session.tier : null }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ tier: session ? session.tier : null });
+    }
+
+    // Partage en direct : un scoreur pousse l'état du match (POST), et
+    // n'importe qui muni du lien/code peut le relire (GET) en lecture
+    // seule — aucune authentification requise, le "code" fait office de
+    // ticket d'accès pour cette fonctionnalité volontairement légère.
+    if (url.pathname.startsWith("/api/live/")) {
+      return handleLive(request, env, url);
     }
 
     const route = ROUTES[url.pathname];
@@ -83,6 +102,51 @@ export default {
     }
   },
 };
+
+async function handleLive(request, env, url) {
+  const code = url.pathname.replace("/api/live/", "").split("?")[0].trim();
+
+  if (!LIVE_CODE_RE.test(code)) {
+    return jsonResponse({ error: "Code invalide." }, 400);
+  }
+  if (!env.MATCH_LIVE) {
+    // Le binding KV n'a pas encore été créé/lié côté Cloudflare.
+    return jsonResponse({ error: "Le partage en direct n'est pas encore configuré sur ce déploiement." }, 500);
+  }
+
+  const key = "live:" + code;
+
+  if (request.method === "POST") {
+    const raw = await request.text();
+    if (raw.length > LIVE_MAX_BODY_BYTES) {
+      return jsonResponse({ error: "Données trop volumineuses." }, 413);
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return jsonResponse({ error: "JSON invalide." }, 400);
+    }
+    parsed.updatedAt = Date.now();
+    await env.MATCH_LIVE.put(key, JSON.stringify(parsed), { expirationTtl: LIVE_TTL_SECONDS });
+    return jsonResponse({ ok: true });
+  }
+
+  if (request.method === "GET") {
+    const stored = await env.MATCH_LIVE.get(key);
+    if (!stored) {
+      return jsonResponse({ error: "Ce match n'est plus disponible (terminé depuis longtemps, ou code invalide)." }, 404);
+    }
+    return new Response(stored, { headers: { "Content-Type": "application/json" } });
+  }
+
+  if (request.method === "DELETE") {
+    await env.MATCH_LIVE.delete(key);
+    return jsonResponse({ ok: true });
+  }
+
+  return jsonResponse({ error: "Méthode non supportée." }, 405);
+}
 
 async function handleVerify(request, env, url) {
   const form = await request.formData();
@@ -207,4 +271,3 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
 </div>
 </body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
-}
