@@ -320,6 +320,46 @@ body{
 .timer-btn.pause:hover{background:rgba(245,197,24,.12)}
 .timer-btn.stop{border-color:var(--red);color:var(--red)}
 .timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+.timer-btn.live{border-color:var(--blue);color:var(--blue)}
+.timer-btn.live:hover{background:rgba(59,130,246,.12)}
+.timer-btn.live.active{background:var(--blue);color:#fff}
+.timer-btn.live.active::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:6px;animation:live-pulse 1.4s ease-in-out infinite}
+@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.live-modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
+  align-items:center;justify-content:center;padding:1rem;
+}
+.live-modal-backdrop.show{display:flex}
+.live-modal{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.4rem;max-width:420px;width:100%;
+}
+.live-modal-title{
+  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;
+  letter-spacing:1px;margin-bottom:.9rem;
+}
+.live-modal-body p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:.8rem}
+.live-link-row{display:flex;gap:8px;margin-bottom:.6rem}
+.live-link-row input{
+  flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.6rem .7rem;color:var(--text);font-size:13px;
+}
+.live-link-row button{
+  background:var(--gold);border:none;border-radius:8px;padding:.6rem 1rem;
+  font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;font-size:12px;color:#0a0f1a;cursor:pointer;flex-shrink:0;
+}
+.live-modal-note{font-size:11px !important;color:var(--muted)}
+.live-modal-actions{display:flex;gap:8px;margin-top:1rem}
+.live-modal-actions button{
+  flex:1;padding:.6rem;border-radius:8px;font-family:Barlow Condensed,sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+}
+.live-stop-btn{background:none;border:1px solid var(--red);color:var(--red)}
+.live-stop-btn:hover{background:rgba(239,68,68,.12)}
+.live-close-btn{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.live-close-btn:hover{background:var(--hover)}
 
 /* ── SHOT MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.88);z-index:50;align-items:flex-end;justify-content:center;padding:1rem}
@@ -427,6 +467,25 @@ body{
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
     <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+    <button class="timer-btn live" id="liveShareBtn" onclick="toggleLiveShare()">📡 Live</button>
+  </div>
+</div>
+
+<div class="live-modal-backdrop" id="liveModalBackdrop" onclick="closeLiveModal(event)">
+  <div class="live-modal" onclick="event.stopPropagation()">
+    <div class="live-modal-title">📡 Partage en direct</div>
+    <div class="live-modal-body" id="liveModalBody">
+      <p>Toute personne avec ce lien peut suivre le score et les stats en direct, sans pouvoir rien modifier.</p>
+      <div class="live-link-row">
+        <input type="text" id="liveLinkInput" readonly>
+        <button onclick="copyLiveLink()" id="liveCopyBtn">Copier</button>
+      </div>
+      <p class="live-modal-note">Le lien reste actif tant que tu marques des points (ou pendant 6h max).</p>
+    </div>
+    <div class="live-modal-actions">
+      <button class="live-stop-btn" onclick="stopLiveShare()">Arrêter le partage</button>
+      <button class="live-close-btn" onclick="closeLiveModal()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -761,6 +820,87 @@ function setStatsView(mode, idx) {
   renderStats();
 }
 
+// ── PARTAGE EN DIRECT ────────────────────────────────────────────────────
+// Un simple lien de lecture seule : on pousse régulièrement l'état du match
+// vers le Worker (qui le stocke temporairement), et quiconque a le lien peut
+// le consulter via /live?code=xxxxxx sans pouvoir interagir avec le match.
+let liveShareCode = null;
+let liveSharePushTimer = null;
+
+function genLiveCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans caractères ambigus
+  let out = '';
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function buildLiveState() {
+  const agg = aggregateStats(stats);
+  return {
+    kind: 'shots',
+    nameA, nameB,
+    s1, s2, g1, g2, p1, p2,
+    inTiebreak, inSuperTiebreak, matchOver,
+    winner: matchOver ? (s1 > s2 ? nameA : nameB) : null,
+    setHistory,
+    stats: agg,
+  };
+}
+
+async function pushLiveState() {
+  if (!liveShareCode) return;
+  try {
+    await fetch('/api/live/' + liveShareCode, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildLiveState()),
+    });
+  } catch (e) { /* échec silencieux : le partage reprendra à la prochaine action */ }
+}
+
+function toggleLiveShare() {
+  if (liveShareCode) {
+    openLiveModal();
+    return;
+  }
+  liveShareCode = genLiveCode();
+  document.getElementById('liveShareBtn').classList.add('active');
+  pushLiveState();
+  liveSharePushTimer = setInterval(pushLiveState, 5000);
+  openLiveModal();
+}
+
+function openLiveModal() {
+  const link = window.location.origin + '/live?code=' + liveShareCode;
+  document.getElementById('liveLinkInput').value = link;
+  document.getElementById('liveModalBackdrop').classList.add('show');
+}
+
+function closeLiveModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('liveModalBackdrop').classList.remove('show');
+}
+
+function copyLiveLink() {
+  const input = document.getElementById('liveLinkInput');
+  input.select();
+  navigator.clipboard?.writeText(input.value).catch(() => {});
+  const btn = document.getElementById('liveCopyBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Copié !';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function stopLiveShare() {
+  if (liveSharePushTimer) { clearInterval(liveSharePushTimer); liveSharePushTimer = null; }
+  if (liveShareCode) {
+    fetch('/api/live/' + liveShareCode, { method: 'DELETE' }).catch(() => {});
+  }
+  liveShareCode = null;
+  document.getElementById('liveShareBtn').classList.remove('active');
+  closeLiveModal();
+}
+
 // ── SAVE STATE ────────────────────────────────────────────────────────────────
 function saveState() {
   history.push({
@@ -963,6 +1103,7 @@ function undo() {
 
 function updateDisplay() {
   saveProgress();
+  if (liveShareCode) pushLiveState();
   let ptA, ptB;
   if (inSuperTiebreak || inTiebreak) {
     ptA=p1; ptB=p2;

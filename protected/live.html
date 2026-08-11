@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beach Tennis – En direct</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080f1e; --surface:#0d1829; --card:#111e35; --border:#1e3560;
+  --gold:#f5c518; --blue:#3b82f6; --orange:#f97316; --green:#22c55e;
+  --red:#ef4444; --text:#e2eaf8; --muted:#4a6494;
+}
+body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;align-items:center;padding:0 1rem 4rem}
+
+.header{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 0 1rem}
+.header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;
+  text-transform:uppercase;color:var(--gold)}
+.header-logo span{color:var(--text);opacity:.5}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:Barlow Condensed,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.state-msg{width:100%;max-width:560px;background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:2.5rem 1.5rem;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+
+.card{width:100%;max-width:560px;background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:1.4rem 1.5rem;margin-bottom:1rem}
+
+.winner-banner{display:none;width:100%;max-width:560px;background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(245,197,24,.03));
+  border:1px solid var(--gold);border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:1rem;text-align:center}
+.winner-banner.show{display:block}
+.winner-banner .lbl{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:.3rem}
+.winner-banner .name{font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;text-transform:uppercase}
+
+.score-header{display:grid;grid-template-columns:1fr 44px 44px 44px 64px;gap:6px;padding:.6rem .9rem;
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted)}
+.team-row{display:grid;grid-template-columns:1fr 44px 44px 44px 64px;gap:6px;align-items:center;
+  padding:.8rem .9rem;border-radius:12px}
+.team-row.a{background:rgba(59,130,246,.08)}
+.team-row.b{background:rgba(249,115,22,.08)}
+.team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;text-transform:uppercase}
+.team-row.a .team-name{color:var(--blue)}
+.team-row.b .team-name{color:var(--orange)}
+.cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--muted)}
+.cell.won{color:var(--gold)}
+.cell.point-cell{font-size:28px;color:var(--gold);font-style:italic}
+.status-line{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:.6rem}
+
+.stats-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.9rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-val{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900}
+.stat-val.a{color:var(--blue);text-align:right}
+.stat-val.b{color:var(--orange);text-align:left}
+.stat-name{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);text-align:center}
+
+.footer-note{width:100%;max-width:560px;text-align:center;font-size:11px;color:var(--muted);margin-top:.5rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Beach<span>/</span>Stats</div>
+  <div class="live-badge" id="liveBadge"><span class="live-dot"></span>En direct</div>
+</div>
+
+<div id="content">
+  <div class="state-msg">Connexion au match…</div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const code = (params.get('code') || '').trim();
+const content = document.getElementById('content');
+const liveBadge = document.getElementById('liveBadge');
+
+let pollTimer = null;
+let hasEverLoaded = false;
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function renderError(msg) {
+  liveBadge.style.opacity = '.35';
+  content.innerHTML = `<div class="state-msg">${escapeHtml(msg)}</div>`;
+}
+
+function renderMatch(state) {
+  liveBadge.style.opacity = '1';
+  const aWon = state.matchOver && state.winner === state.nameA;
+  const bWon = state.matchOver && state.winner === state.nameB;
+
+  const setHist = state.setHistory || [];
+  const setCols = [1, 2, 3].map(i => {
+    const idx = i - 1;
+    if (idx < setHist.length) {
+      const sh = setHist[idx];
+      return { a: sh.a, b: sh.b, aWon: sh.a > sh.b, bWon: sh.b > sh.a };
+    } else if (idx === setHist.length && !state.matchOver) {
+      return { a: state.g1 ?? '—', b: state.g2 ?? '—', current: true };
+    }
+    return { a: '—', b: '—' };
+  });
+
+  let statusLine;
+  if (state.matchOver) {
+    statusLine = 'Match terminé';
+  } else if (state.inSuperTiebreak) {
+    statusLine = 'Super tie-break en cours';
+  } else if (state.inTiebreak) {
+    statusLine = 'Tie-break en cours';
+  } else {
+    statusLine = 'Set ' + (setHist.length + 1) + ' en cours';
+  }
+
+  const pointDisplay = (state.inSuperTiebreak || state.inTiebreak)
+    ? [state.p1 ?? 0, state.p2 ?? 0]
+    : [['0','15','30','40'][state.p1] ?? '0', ['0','15','30','40'][state.p2] ?? '0'];
+
+  const s = state.stats || {};
+  const winnerBanner = state.matchOver ? `
+    <div class="winner-banner show">
+      <div class="lbl">🏆 Vainqueur</div>
+      <div class="name">${escapeHtml(state.winner || '—')}</div>
+    </div>` : '';
+
+  content.innerHTML = `
+    ${winnerBanner}
+    <div class="card">
+      <div class="score-header">
+        <span>Équipe</span><span>S1</span><span>S2</span><span>S3</span><span>Points</span>
+      </div>
+      <div class="team-row a">
+        <div class="team-name">${escapeHtml(state.nameA || 'Équipe A')}</div>
+        <div class="cell ${setCols[0].aWon ? 'won' : ''}">${setCols[0].a}</div>
+        <div class="cell ${setCols[1].aWon ? 'won' : ''}">${setCols[1].a}</div>
+        <div class="cell ${setCols[2].aWon ? 'won' : ''}">${setCols[2].a}</div>
+        <div class="cell point-cell">${state.matchOver ? '—' : pointDisplay[0]}</div>
+      </div>
+      <div class="team-row b">
+        <div class="team-name">${escapeHtml(state.nameB || 'Équipe B')}</div>
+        <div class="cell ${setCols[0].bWon ? 'won' : ''}">${setCols[0].b}</div>
+        <div class="cell ${setCols[1].bWon ? 'won' : ''}">${setCols[1].b}</div>
+        <div class="cell ${setCols[2].bWon ? 'won' : ''}">${setCols[2].b}</div>
+        <div class="cell point-cell">${state.matchOver ? '—' : pointDisplay[1]}</div>
+      </div>
+      <div class="status-line">${statusLine}</div>
+    </div>
+
+    <div class="card">
+      <div class="stats-title">Stats du match</div>
+      <div class="stat-row">
+        <div class="stat-val a">${s.wA||0}</div><div class="stat-name">Winners</div><div class="stat-val b">${s.wB||0}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-val a">${s.fA||0}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${s.fB||0}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-val a">${s.pA||0}</div><div class="stat-name">Points gagnés</div><div class="stat-val b">${s.pB||0}</div>
+      </div>
+    </div>
+
+    <div class="footer-note">Mis à jour automatiquement toutes les quelques secondes</div>
+  `;
+}
+
+async function poll() {
+  if (!code) {
+    renderError("Lien invalide : aucun code de match fourni.");
+    return;
+  }
+  try {
+    const res = await fetch('/api/live/' + encodeURIComponent(code), { cache: 'no-store' });
+    if (res.status === 404) {
+      if (!hasEverLoaded) {
+        renderError("En attente que le scoreur démarre le partage…");
+      } else {
+        renderError("Ce match n'est plus partagé (terminé ou expiré).");
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      }
+      return;
+    }
+    if (!res.ok) {
+      renderError("Impossible de récupérer le match pour le moment.");
+      return;
+    }
+    const state = await res.json();
+    hasEverLoaded = true;
+    renderMatch(state);
+  } catch (e) {
+    renderError("Connexion impossible. Nouvelle tentative dans quelques secondes…");
+  }
+}
+
+poll();
+pollTimer = setInterval(poll, 4000);
+</script>
+</body>
+</html>
