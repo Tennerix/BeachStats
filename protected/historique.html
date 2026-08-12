@@ -770,7 +770,7 @@ function generateProPDF(record) {
   const gridRows = Math.ceil(zoneEntities.length / gridCols);
   const zcGap = 8;
   const zcNetGap = 5;
-  const zcCourtW = zoneEntities.length > 2 ? 46 : 78;
+  const NON_ROULE_RATIO = 1.8; // hauteur = largeur × ce ratio (agrandi pour bien remplir la page)
 
   const zoneColor = (w, f) => {
     if (w === 0 && f === 0) return ZONE_EMPTY;
@@ -780,7 +780,15 @@ function generateProPDF(record) {
 
   BASE_SHOTS.forEach((shotKey, shotIdx) => {
     const isRoule = shotKey === 'roule';
-    const courtL = isRoule ? zcCourtW * 2 : zcCourtW * 0.9;
+
+    // Taille calculée dynamiquement pour chaque coup, comme si la page était
+    // vierge (244mm de haut utilisables) : les terrains remplissent le plus
+    // possible la largeur ET la hauteur disponibles, sans jamais déborder.
+    const maxCourtLFromHeight = (244 / gridRows) - 22;
+    const maxWFromHeight = isRoule ? maxCourtLFromHeight / 2 : maxCourtLFromHeight / NON_ROULE_RATIO;
+    const maxWFromWidth = (W - 2*M - (gridCols-1)*zcGap) / gridCols;
+    const zcCourtW = Math.min(maxWFromWidth, maxWFromHeight);
+    const courtL = isRoule ? zcCourtW * 2 : zcCourtW * NON_ROULE_RATIO;
     const bandH = isRoule ? courtL / 3 : null;
     const visualOrder = isRoule ? [...ROULE_DEPTH_VARIANTS].reverse() : null;
 
