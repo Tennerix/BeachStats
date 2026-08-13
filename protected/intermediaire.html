@@ -687,6 +687,7 @@ body{
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
 const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const SHOT_LBL = {
   service:'Service', smash:'Smash', roule:'Bras roulé',
   retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'
@@ -1669,32 +1670,72 @@ function exportPDF() {
 
   if (setSnapshots.length > 0 || !matchOver) {
     sectionTitle('DÉTAIL PAR SET', theme.gold);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...theme.muted);
-    doc.text('Set', M, y);
-    doc.text('Winners A/B', M+55, y);
-    doc.text('Fautes A/B', M+105, y);
-    doc.text('Points A/B', W-M, y, {align:'right'});
-    y+=4; doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=6;
 
-    const setRow = (label, d, sh, idx) => {
-      ensureSpace(8);
-      if (idx % 2 === 0) stripe(y, 8);
-      doc.setFont(TF,'bold'); doc.setFontSize(10); doc.setTextColor(...theme.gold);
+    // Regroupe les stats d'un diff brut (par coup + zone) en simples totaux
+    // par TYPE de coup (service, smash, bras roulé...), sans entrer dans le
+    // détail des zones/variantes — exactement ce qu'on veut afficher en petit.
+    const shotTypeTotals = (rawDiff, wp, fp) => {
+      return BASE_SHOTS.map(shotKey => {
+        let w = 0, f = 0;
+        ALL_SHOT_KEYS.forEach(k => {
+          if (k.indexOf(shotKey + '_') === 0) {
+            w += rawDiff[wp+k] || 0;
+            f += rawDiff[fp+k] || 0;
+          }
+        });
+        return { shotKey, w, f };
+      }).filter(x => x.w > 0 || x.f > 0);
+    };
+
+    const playerNamesShort = [players.j1, players.j2, players.j3, players.j4];
+
+    // Entités affichées pour chaque set : 4 joueurs, ou les 2 équipes.
+    const setEntities = statsMode === 'joueur'
+      ? [1,2,3,4].map(n => ({ name: playerNamesShort[n-1], color: n<=2?theme.blue:theme.orange, wp:'w'+n+'_', fp:'f'+n+'_' }))
+      : [ {name:'ÉQUIPE A', color:theme.blue, wp:'wA_', fp:'fA_'}, {name:'ÉQUIPE B', color:theme.orange, wp:'wB_', fp:'fB_'} ];
+
+    const setRow = (label, sh, idx, rawDiff) => {
+      ensureSpace(14);
+      if (idx > 0) { doc.setDrawColor(...theme.border); doc.setLineWidth(0.2); doc.line(M, y-3, W-M, y-3); }
+      doc.setFont(TF,'bold'); doc.setFontSize(11); doc.setTextColor(...theme.gold);
       doc.text(label + (sh ? ' (' + sh.a + '-' + sh.b + ')' : ''), M, y);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...theme.text);
-      doc.text((d.wA||0) + ' / ' + (d.wB||0), M+55, y);
-      doc.text((d.fA||0) + ' / ' + (d.fB||0), M+105, y);
-      doc.text((d.pA||0) + ' / ' + (d.pB||0), W-M, y, {align:'right'});
-      y+=8;
+      y += 8;
+
+      setEntities.forEach(ent => {
+        const totals = shotTypeTotals(rawDiff, ent.wp, ent.fp);
+        const totW = totals.reduce((s,t)=>s+t.w,0);
+        const totF = totals.reduce((s,t)=>s+t.f,0);
+
+        ensureSpace(10);
+        doc.setFont(TF,'bold'); doc.setFontSize(11); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.name) + '  —  Winners : ' + totW + '   Fautes : ' + totF, M+2, y);
+        y += 5.5;
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...theme.muted);
+        const line = totals.length
+          ? totals.map(t => SHOT_BASE_LBL[t.shotKey] + ' : ' + t.w + 'G/' + t.f + 'F').join('   •   ')
+          : 'Aucun coup enregistré sur ce set';
+        const wrapped = doc.splitTextToSize(line, W-2*M-4);
+        wrapped.forEach(l => {
+          ensureSpace(4);
+          doc.text(l, M+2, y);
+          y += 4;
+        });
+        y += 3;
+      });
+
+      y += 2;
     };
 
     setSnapshots.forEach((snap, i) => {
-      const d = diffStats(aggregateStats(snap), aggregateStats(setSnapshots[i-1] || {}));
-      setRow('Set ' + (i+1), d, setHistory[i], i);
+      const prevSnap = setSnapshots[i-1] || {};
+      const rawDiff = diffStats(snap, prevSnap);
+      setRow('Set ' + (i+1), setHistory[i], i, rawDiff);
     });
     if (!matchOver) {
-      const d = diffStats(aggregateStats(stats), aggregateStats(setSnapshots[setSnapshots.length-1] || {}));
-      setRow('Set ' + (setSnapshots.length+1) + ' (en cours)', d, null, setSnapshots.length);
+      const prevSnap = setSnapshots[setSnapshots.length-1] || {};
+      const rawDiff = diffStats(stats, prevSnap);
+      setRow('Set ' + (setSnapshots.length+1) + ' (en cours)', null, setSnapshots.length, rawDiff);
     }
     doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=10;
   }
