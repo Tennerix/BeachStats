@@ -713,8 +713,8 @@ const nameB = players.j3 + ' / ' + players.j4;
 // ── NOM D'ÉQUIPE PERSONNALISÉ ────────────────────────────────────────────
 // Optionnel : si laissé vide, le champ affiche simplement le placeholder
 // "Équipe A" / "Équipe B" — aucune valeur n'est alors envoyée nulle part.
-let teamLabelA = '';
-let teamLabelB = '';
+let teamLabelA = _p.get('teamA') || '';
+let teamLabelB = _p.get('teamB') || '';
 
 function onTeamLabelInput(side) {
   const val = document.getElementById('teamLabel' + side).value.slice(0, 24);
@@ -734,6 +734,8 @@ function escapeHtml(str) {
 function initNames() {
   document.getElementById('playersA').textContent = nameA;
   document.getElementById('playersB').textContent = nameB;
+  document.getElementById('teamLabelA').value = teamLabelA;
+  document.getElementById('teamLabelB').value = teamLabelB;
   const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
   const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
   document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;

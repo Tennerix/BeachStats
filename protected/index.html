@@ -77,17 +77,24 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display
 .hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
 .hero img{width:100%;display:block;object-fit:cover;max-height:260px}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid var(--gold);color:var(--gold);font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
-.history-btn{position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:6px;background:rgba(10,22,40,.78);border:1.5px solid var(--muted);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 12px 6px 10px;border-radius:20px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:border-color .18s,color .18s}
+.hero-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:.85rem}
+.history-btn{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--muted);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 12px 6px 10px;border-radius:20px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:border-color .18s,color .18s}
 .history-btn i{font-size:15px}
 .history-btn:hover{border-color:var(--gold);color:var(--gold)}
-.theme-hero-btn{position:absolute;top:14px;left:16px;z-index:5}
 .bt-card{width:100%;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:1.75rem 1.5rem;margin-top:1.5rem;box-shadow:0 4px 32px rgba(0,0,0,.45)}
 .bt-title{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:var(--text);text-align:center;text-transform:uppercase;letter-spacing:3px;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:center;gap:8px}
 .bt-title .hl{color:var(--gold)}
 .bt-title i{font-size:20px;color:var(--gold)}
-.team-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-left:4px}
+.team-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-left:4px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .team-label.a{color:var(--blue)}
 .team-label.b{color:var(--orange)}
+.team-name-input{
+  background:none;border:none;outline:none;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:inherit;text-align:right;flex:1;min-width:0;
+  border-bottom:1px dashed transparent;padding-bottom:1px;transition:border-color .15s;
+}
+.team-name-input::placeholder{color:inherit;opacity:.55}
+.team-name-input:hover,.team-name-input:focus{border-bottom-color:currentColor}
 .names-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
 .player-slot{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;transition:border-color .2s}
 .player-slot:focus-within{border-color:var(--gold)}
@@ -135,6 +142,11 @@ input:checked+.slider:before{transform:translateX(26px)}
 .btn-stat.intermediaire i{color:var(--green)}
 .btn-stat.pro{border-left:3px solid var(--purple)}
 .btn-stat.pro i{color:var(--purple)}
+.paid-badge{
+  font-family:Barlow Condensed,sans-serif;font-size:9.5px;font-weight:900;letter-spacing:1px;
+  color:#0a0f1a;background:var(--gold);padding:2px 7px;border-radius:10px;
+  text-transform:uppercase;flex-shrink:0;white-space:nowrap;
+}
 .stat-row .info-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:42px;height:47px;justify-content:center;flex-shrink:0}
 .stat-row .info-btn:hover,.stat-row .info-btn.active{border-color:var(--gold)}
 .stat-row .info-tooltip{top:calc(100% + 8px);left:auto;right:0;width:100%}
@@ -149,7 +161,10 @@ input:checked+.slider:before{transform:translateX(26px)}
 <div class="page-wrapper">
   <div class="hero">
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
-    <div class="theme-switch-wrap theme-hero-btn">
+    <div class="hero-badge">Interface Stats v1.0</div>
+  </div>
+  <div class="hero-actions">
+    <div class="theme-switch-wrap">
       <div class="theme-select-pill">
         <i class="ti ti-palette"></i>
         <select id="themeSelect" aria-label="Changer de thème" onchange="onThemeSelectChange(this)">
@@ -165,17 +180,22 @@ input:checked+.slider:before{transform:translateX(26px)}
       </div>
     </div>
     <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i>Historique</button>
-    <div class="hero-badge">Interface Stats v1.0</div>
   </div>
   <div class="bt-card">
     <p class="bt-title"><i class="ti ti-users"></i>Equipes &amp; <span class="hl">Joueurs</span></p>
-    <div class="team-label a">Equipe A</div>
+    <div class="team-label a">
+      <span>Equipe A</span>
+      <input type="text" id="teamA" class="team-name-input" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+    </div>
     <div class="names-grid">
       <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" placeholder="Joueur 1"></div>
       <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" placeholder="Joueur 2"></div>
     </div>
     <div class="vs-divider"><span>VS</span></div>
-    <div class="team-label b">Equipe B</div>
+    <div class="team-label b">
+      <span>Equipe B</span>
+      <input type="text" id="teamB" class="team-name-input" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+    </div>
     <div class="names-grid">
       <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" placeholder="Joueur 3"></div>
       <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" placeholder="Joueur 4"></div>
@@ -224,7 +244,7 @@ input:checked+.slider:before{transform:translateX(26px)}
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i>Stats avancees<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i>Stats avancees<span class="paid-badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-avancees" aria-label="Explication Stats avancees" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-avancees">
           <p>Relève le <b>type de coup</b>, s'il est joué en <b>coup droit ou en revers</b>, ainsi que les <b>zones de service</b>.</p>
@@ -232,7 +252,7 @@ input:checked+.slider:before{transform:translateX(26px)}
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i>Stats pro<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i>Stats pro<span class="paid-badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-pro" aria-label="Explication Stats pro" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-pro">
           <p>Le mode le plus complet : <b>tous les types de coups</b>, <b>toutes les zones</b> du terrain, avec un <b>schéma de statistiques</b> détaillé.</p>
@@ -276,8 +296,10 @@ function getParams() {
   const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
   const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
   const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
+  const teamA = encodeURIComponent(document.getElementById('teamA').value.trim());
+  const teamB = encodeURIComponent(document.getElementById('teamB').value.trim());
   const mode = document.getElementById('modeToggle').checked ? 'joueur' : 'equipe';
-  return `j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}&mode=${mode}`;
+  return `j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}&mode=${mode}&teamA=${teamA}&teamB=${teamB}`;
 }
 
 function goToSavancee() { window.location.href = `/avancees?${getParams()}`; }
