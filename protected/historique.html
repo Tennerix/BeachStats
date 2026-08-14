@@ -103,8 +103,20 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
   border-radius:8px;cursor:pointer}
 .btn-clear:hover{background:rgba(239,68,68,.12)}
 
-.empty{width:100%;max-width:580px;background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:2.5rem 1.5rem;text-align:center;color:var(--muted);font-size:14px}
+.empty{
+  width:100%;max-width:580px;background:var(--card);border:1.5px dashed var(--border);border-radius:20px;
+  padding:3rem 1.5rem;text-align:center;
+}
+.empty-icon{font-size:42px;margin-bottom:1rem;opacity:.8;line-height:1}
+.empty-title{font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;letter-spacing:1px;
+  text-transform:uppercase;color:var(--text);margin-bottom:.6rem}
+.empty-text{color:var(--muted);font-size:13.5px;line-height:1.6;max-width:360px;margin:0 auto 1.6rem}
+.empty-cta{
+  background:var(--gold);color:#0a0f1a;border:none;font-family:Barlow Condensed,sans-serif;font-size:12px;
+  font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:.75rem 1.5rem;border-radius:20px;
+  cursor:pointer;transition:opacity .15s;text-decoration:none;display:inline-block;
+}
+.empty-cta:hover{opacity:.85}
 
 .match-list{width:100%;max-width:580px;display:flex;flex-direction:column;gap:12px}
 .match-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.1rem 1.3rem;
@@ -269,7 +281,7 @@ function render() {
   const hist = loadHistory();
   const content = document.getElementById('content');
   if (hist.length === 0) {
-    content.innerHTML = '<div class="empty">Aucun match sauvegardé pour l\'instant.<br>Termines un match pour le voir apparaître ici.</div>';
+    content.innerHTML = '<div class="empty"><div class="empty-icon">🏖️</div><div class="empty-title">Aucun match pour l\'instant</div><div class="empty-text">Termines un match pour le voir apparaître ici, avec toutes ses statistiques et son PDF téléchargeable à tout moment.</div><a class="empty-cta" href="/">← Commencer un match</a></div>';
     return;
   }
   content.innerHTML = '<div class="match-list">' + hist.map(m => {

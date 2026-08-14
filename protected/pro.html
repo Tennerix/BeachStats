@@ -131,6 +131,9 @@ body{
 }
 .status-pill{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:4px 14px;border-radius:20px}
 [data-theme="glacier"] .status-pill{color:#0a2e52}
+[data-theme="sunset"] .status-pill{color:#3a140a}
+[data-theme="lagoon"] .status-pill{color:#04302c}
+[data-theme="magma"] .status-pill{color:#3a0a02}
 .status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 
 /* ── SCOREBOARD ── */
@@ -166,6 +169,9 @@ body{
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
 [data-theme="glacier"] .cell.sets-cell span.won{color:#0a2e52}
+[data-theme="sunset"] .cell.sets-cell span.won{color:#3a140a}
+[data-theme="lagoon"] .cell.sets-cell span.won{color:#04302c}
+[data-theme="magma"] .cell.sets-cell span.won{color:#3a0a02}
 .cell.set-score{
   font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
   text-align:center;color:var(--muted);
@@ -264,12 +270,28 @@ body{
 }
 .zone-tab:hover{color:var(--text);border-color:var(--muted)}
 .zone-tab.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
-/* Le thème Glacier a un fond et un doré très clairs (quasi blancs) : le texte
-   des onglets sélectionnés devient illisible (blanc sur blanc). On force un
-   bleu profond, légèrement dégradé, pour rester lisible sur le fond doré. */
+/* Sunset, Lagon, Magma et Glacier ont un fond en dégradé : color:var(--bg)
+   n'est pas une couleur valide dans ce cas et le texte des onglets sélectionnés
+   retombe sur une couleur claire, illisible sur le fond doré. On force une
+   teinte profonde et légèrement dégradée, assortie à chaque thème. */
 [data-theme="glacier"] .zone-tab.active{color:#0a2e52}
 [data-theme="glacier"] .zone-tab.active .zt-label{
   background:linear-gradient(120deg,#062038 0%,#0f4d7c 55%,#0a2e52 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+[data-theme="sunset"] .zone-tab.active{color:#3a140a}
+[data-theme="sunset"] .zone-tab.active .zt-label{
+  background:linear-gradient(120deg,#2a0d06 0%,#5c2410 55%,#3a140a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+[data-theme="lagoon"] .zone-tab.active{color:#04302c}
+[data-theme="lagoon"] .zone-tab.active .zt-label{
+  background:linear-gradient(120deg,#022018 0%,#0a4a42 55%,#04302c 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+[data-theme="magma"] .zone-tab.active{color:#3a0a02}
+[data-theme="magma"] .zone-tab.active .zt-label{
+  background:linear-gradient(120deg,#260601 0%,#5c1204 55%,#3a0a02 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .zone-court-wrap{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
