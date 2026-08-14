@@ -4,6 +4,12 @@
 <script>(function(){var t=localStorage.getItem('beachstats_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#090f1a">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BeachStats">
 <title>Beach Tennis – Historique</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -145,6 +151,17 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
   letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
 .btn-pdf:hover{background:rgba(34,197,94,.12)}
 </style>
+
+<script>
+// Enregistrement du service worker (mode hors ligne). Échec silencieux si
+// non supporté ou si le fichier n'est pas encore déployé, pour ne jamais
+// bloquer le chargement normal de la page.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
 </head>
 <body>
 

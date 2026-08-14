@@ -4,6 +4,12 @@
 <script>(function(){var t=localStorage.getItem('beachstats_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#090f1a">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BeachStats">
 <title>Beach Tennis - Stats</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
@@ -156,6 +162,17 @@ input:checked+.slider:before{transform:translateX(26px)}
 .contact-link:hover{color:var(--gold)}
 @media(max-width:380px){.names-grid{grid-template-columns:1fr}.bt-title{font-size:17px;letter-spacing:2px}.btn-stat{font-size:13px;padding:11px 12px}.hero img{max-height:180px}.stat-row .info-btn{width:38px;height:43px}}
 </style>
+
+<script>
+// Enregistrement du service worker (mode hors ligne). Échec silencieux si
+// non supporté ou si le fichier n'est pas encore déployé, pour ne jamais
+// bloquer le chargement normal de la page.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
 </head>
 <body>
 <div class="page-wrapper">
