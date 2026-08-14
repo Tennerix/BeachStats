@@ -103,6 +103,12 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
   border-radius:8px;cursor:pointer}
 .btn-clear:hover{background:rgba(239,68,68,.12)}
 
+.data-actions{width:100%;max-width:580px;display:flex;gap:10px;margin-bottom:1.2rem}
+.btn-data{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:9px 12px;border-radius:8px;cursor:pointer;transition:all .18s}
+.btn-data:hover{border-color:var(--gold);color:var(--gold)}
+
 .empty{
   width:100%;max-width:580px;background:var(--card);border:1.5px dashed var(--border);border-radius:20px;
   padding:3rem 1.5rem;text-align:center;
@@ -164,6 +170,12 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 <div class="page-title">
   <span>Historique des matchs</span>
   <button class="btn-clear" onclick="clearHistory()">🗑 Tout effacer</button>
+</div>
+
+<div class="data-actions">
+  <button class="btn-data" onclick="exportHistory()">⬇ Exporter</button>
+  <button class="btn-data" onclick="document.getElementById('importFile').click()">⬆ Importer</button>
+  <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importHistory(event)">
 </div>
 
 <div id="content"></div>
@@ -269,6 +281,92 @@ function loadHistory() {
   let hist = [];
   try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
   return hist.sort((a,b) => b.id - a.id); // plus récent en premier
+}
+
+// ── EXPORT / IMPORT DE L'HISTORIQUE ─────────────────────────────────────────
+// Tout l'historique vit dans le localStorage du navigateur : il disparaît si
+// on change d'appareil, de navigateur, ou qu'on vide le cache. Ces deux
+// fonctions permettent de le sauvegarder dans un fichier, et de le
+// réimporter plus tard (sur ce même appareil ou un autre).
+function exportHistory() {
+  const hist = loadHistory();
+  if (!hist.length) {
+    alert('Aucun match à exporter pour le moment.');
+    return;
+  }
+  const payload = {
+    app: 'BeachStats',
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    matches: hist,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'BeachStats_Historique_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importHistory(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let data;
+    try {
+      data = JSON.parse(e.target.result);
+    } catch (err) {
+      alert("Ce fichier n'est pas lisible : ce n'est pas un export BeachStats valide.");
+      event.target.value = '';
+      return;
+    }
+
+    // Accepte à la fois le format d'export ({matches:[...]}) et un simple
+    // tableau brut, au cas où quelqu'un modifie le fichier à la main.
+    const incoming = Array.isArray(data) ? data : data.matches;
+    if (!Array.isArray(incoming)) {
+      alert("Ce fichier n'est pas un export BeachStats valide.");
+      event.target.value = '';
+      return;
+    }
+
+    // Fusion avec l'historique déjà présent sur cet appareil, sans doublons
+    // (un match déjà connu — même id — n'est pas réimporté par-dessus).
+    const existing = loadHistory();
+    const existingIds = new Set(existing.map(m => m.id));
+    let added = 0;
+    incoming.forEach(m => {
+      if (m && typeof m === 'object' && m.id != null && !existingIds.has(m.id)) {
+        existing.push(m);
+        existingIds.add(m.id);
+        added++;
+      }
+    });
+
+    try {
+      localStorage.setItem('beachstats_history', JSON.stringify(existing));
+    } catch (err) {
+      alert("Impossible d'enregistrer les matchs importés (stockage plein ?).");
+      event.target.value = '';
+      return;
+    }
+
+    event.target.value = '';
+    render();
+    alert(added > 0
+      ? added + ' match' + (added > 1 ? 's' : '') + ' importé' + (added > 1 ? 's' : '') + ' avec succès.'
+      : 'Aucun nouveau match à importer : ils sont déjà tous présents dans ton historique.');
+  };
+  reader.onerror = function() {
+    alert('Erreur lors de la lecture du fichier.');
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function formatDate(iso) {
