@@ -80,6 +80,25 @@ body{transition:background-color .25s ease,color .25s ease}
 .theme-select-pill select option{background:var(--card);color:var(--text)}
 body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding:0 1rem 3rem}
 .page-wrapper{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:stretch}
+.install-banner{
+  display:none;align-items:center;gap:12px;width:100%;max-width:520px;
+  background:var(--card);border:1.5px solid var(--gold);border-radius:16px;
+  padding:.9rem 1rem;margin-bottom:1rem;box-shadow:0 4px 20px rgba(0,0,0,.35);
+}
+.install-banner-icon{font-size:26px;flex-shrink:0}
+.install-banner-text{flex:1;min-width:0;font-size:13px;line-height:1.45;color:var(--text)}
+.install-banner-text strong{display:block;font-family:Barlow Condensed,sans-serif;font-size:13px;
+  font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+.install-banner-action{
+  flex-shrink:0;background:var(--gold);color:#0a0f1a;border:none;font-family:Barlow Condensed,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:.55rem 1rem;
+  border-radius:14px;cursor:pointer;white-space:nowrap;
+}
+.install-banner-close{
+  flex-shrink:0;background:none;border:none;color:var(--muted);font-size:18px;line-height:1;
+  cursor:pointer;padding:4px;
+}
+.install-banner-close:hover{color:var(--text)}
 .hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
 .hero img{width:100%;display:block;object-fit:cover;max-height:260px}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid var(--gold);color:var(--gold);font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
@@ -175,6 +194,14 @@ if ('serviceWorker' in navigator) {
 </script>
 </head>
 <body>
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-icon">📲</div>
+  <div class="install-banner-text">
+    <strong>Installe BeachStats</strong>
+    <span id="installBannerInstructions"></span>
+  </div>
+  <button class="install-banner-close" onclick="dismissInstallBanner()" aria-label="Fermer">✕</button>
+</div>
 <div class="page-wrapper">
   <div class="hero">
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
@@ -365,6 +392,69 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sel) sel.value = current;
   checkTier();
 });
+
+// ── BANNIÈRE D'INSTALLATION (PWA) ────────────────────────────────────────
+// iOS Safari ne propose jamais de bouton d'installation automatique (c'est
+// une limitation d'Apple) : on affiche donc les instructions manuelles.
+// Sur Android/Chrome, l'événement natif "beforeinstallprompt" permet un vrai
+// bouton "Installer" en un clic. Rien ne s'affiche si l'appli est déjà
+// installée, ou si la personne a déjà fermé la bannière une fois.
+(function() {
+  const DISMISS_KEY = 'beachstats_install_dismissed';
+  if (localStorage.getItem(DISMISS_KEY)) return;
+
+  const isStandalone = (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (isStandalone) return; // déjà installée
+
+  const ua = window.navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isSafari = isIOS && /Safari/.test(ua) && !/CriOS|FxiOS/.test(ua);
+
+  let deferredPrompt = null;
+
+  function showInstallBanner(type) {
+    const banner = document.getElementById('installBanner');
+    const textEl = document.getElementById('installBannerInstructions');
+    if (!banner || !textEl) return;
+
+    if (type === 'ios') {
+      textEl.innerHTML = 'Appuie sur <b>Partager</b> puis <b>« Sur l\'écran d\'accueil »</b>';
+    } else {
+      textEl.textContent = "Ajoute l'appli sur ton écran d'accueil pour y accéder plus vite, même hors ligne.";
+      if (!banner.querySelector('.install-banner-action')) {
+        const btn = document.createElement('button');
+        btn.className = 'install-banner-action';
+        btn.textContent = 'Installer';
+        btn.onclick = async function() {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+          }
+          dismissInstallBanner();
+        };
+        banner.insertBefore(btn, banner.querySelector('.install-banner-close'));
+      }
+    }
+    banner.style.display = 'flex';
+  }
+
+  window.dismissInstallBanner = function() {
+    localStorage.setItem(DISMISS_KEY, '1');
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+  };
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner('android');
+  });
+
+  if (isSafari) {
+    setTimeout(function() { showInstallBanner('ios'); }, 1200);
+  }
+})();
 </script>
 </body>
 </html>
