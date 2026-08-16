@@ -531,6 +531,46 @@ body{
 }
 .correction-btn.a:hover{border-color:var(--blue);color:var(--blue)}
 .correction-btn.b:hover{border-color:var(--orange);color:var(--orange)}
+
+.server-indicator{
+  display:flex;align-items:center;gap:8px;width:100%;background:var(--card);
+  border:1px solid var(--gold);border-radius:12px;padding:.6rem .9rem;margin-bottom:1rem;
+}
+.server-indicator.team-a{border-color:var(--blue)}
+.server-indicator.team-b{border-color:var(--orange)}
+.server-ball{font-size:16px;flex-shrink:0}
+.server-indicator span{font-size:12.5px;color:var(--muted)}
+.server-indicator .server-name{color:var(--text);font-family:Barlow Condensed,sans-serif;
+  font-weight:900;letter-spacing:.5px}
+.server-change-btn{
+  margin-left:auto;flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:10.5px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;padding:.3rem .7rem;border-radius:14px;cursor:pointer;
+}
+.server-change-btn:hover{color:var(--text);border-color:var(--muted)}
+
+.server-modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:110;
+  align-items:center;justify-content:center;padding:1rem;
+}
+.server-modal-backdrop.show{display:flex}
+.server-modal-box{
+  background:var(--card);border:1px solid var(--gold);border-radius:16px;
+  padding:1.6rem 1.4rem;max-width:380px;width:100%;text-align:center;
+}
+.server-modal-title{
+  font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:.5px;
+  color:var(--text);margin-bottom:.3rem;
+}
+.server-modal-box::before{content:'🎾';display:block;font-size:30px;margin-bottom:.5rem}
+.server-modal-btns{display:flex;flex-direction:column;gap:10px;margin-top:1.1rem}
+.server-modal-btn{
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;
+  padding:.75rem;border-radius:10px;cursor:pointer;transition:all .15s;
+}
+.server-modal-btn.team-a:hover{border-color:var(--blue);color:var(--blue)}
+.server-modal-btn.team-b:hover{border-color:var(--orange);color:var(--orange)}
 .timer-btn{
   padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
   background:var(--surface);color:var(--text);
@@ -616,6 +656,19 @@ if ('serviceWorker' in navigator) {
       <button class="correction-btn b" onclick="addManualPoint(2)">+1 Point</button>
       <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
     </div>
+  </div>
+</div>
+
+<div class="server-indicator" id="serverIndicator" style="display:none">
+  <span class="server-ball">🎾</span>
+  <span>Au service : <strong class="server-name"></strong></span>
+  <button type="button" class="server-change-btn" onclick="cycleServerManually()">Changer</button>
+</div>
+
+<div class="server-modal-backdrop" id="serverModal">
+  <div class="server-modal-box">
+    <div class="server-modal-title" id="serverModalTitle">Qui sert en premier ?</div>
+    <div class="server-modal-btns" id="serverModalBtns"></div>
   </div>
 </div>
 
@@ -710,6 +763,12 @@ let history=[];
 let matchLog=[];
 let matchOver=false;
 let stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
+
+// ── SERVICE (qui sert actuellement) ──────────────────────────────────────
+let serverTeamAFirst = null;
+let serverTeamBFirst = null;
+let matchGameCount = 0;
+let serverManualAdjustment = 0;
 
 const TP=["0","15","30","40"];
 
@@ -812,6 +871,11 @@ function winGame(player){
   if(player===1) g1++; else g2++;
   logEvent(player===1?nameA:nameB,"remporte le jeu → "+g1+"-"+g2);
 
+  matchGameCount++;
+  if (matchGameCount === 1 && !serverTeamBFirst && !matchOver) {
+    askFirstServer('B');
+  }
+
   // Si c'était un tie-break, le set est gagné 7/6
   if(wasTiebreak){
     winSet(player); return;
@@ -840,6 +904,74 @@ function winGame(player){
     }
   }
   updateDisplay();
+}
+
+// ── SERVICE : calcul du serveur actuel ───────────────────────────────────
+function computeCurrentServer() {
+  if (!serverTeamAFirst) return null;
+
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+
+  const turnIndex = matchGameCount + tiebreakOffset + serverManualAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+
+  const secondA = serverTeamAFirst === 'j1' ? 'j2' : 'j1';
+  const secondB = serverTeamBFirst ? (serverTeamBFirst === 'j3' ? 'j4' : 'j3') : null;
+
+  switch (residue) {
+    case 0: return { team: 'A', key: serverTeamAFirst };
+    case 1: return serverTeamBFirst ? { team: 'B', key: serverTeamBFirst } : { team: 'B', key: null };
+    case 2: return { team: 'A', key: secondA };
+    case 3: return serverTeamBFirst ? { team: 'B', key: secondB } : { team: 'B', key: null };
+  }
+}
+
+function updateServerBadge() {
+  const el = document.getElementById('serverIndicator');
+  if (!el) return;
+  const server = computeCurrentServer();
+  if (!server || !server.key) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.querySelector('.server-name').textContent = players[server.key] || (server.team === 'A' ? nameA : nameB);
+  el.className = 'server-indicator ' + (server.team === 'A' ? 'team-a' : 'team-b');
+}
+
+function askFirstServer(team) {
+  const modal = document.getElementById('serverModal');
+  const title = document.getElementById('serverModalTitle');
+  const btnsWrap = document.getElementById('serverModalBtns');
+  if (!modal) return;
+  title.textContent = team === 'A'
+    ? 'Qui sert en premier ?'
+    : 'Et en face, qui sert en premier ?';
+  const p1key = team === 'A' ? 'j1' : 'j3';
+  const p2key = team === 'A' ? 'j2' : 'j4';
+  btnsWrap.innerHTML = '';
+  [p1key, p2key].forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'server-modal-btn ' + (team === 'A' ? 'team-a' : 'team-b');
+    btn.textContent = players[key];
+    btn.onclick = () => {
+      if (team === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
+      modal.classList.remove('show');
+      updateServerBadge();
+      saveProgress();
+    };
+    btnsWrap.appendChild(btn);
+  });
+  modal.classList.add('show');
+}
+
+function cycleServerManually() {
+  if (!serverTeamAFirst) { askFirstServer('A'); return; }
+  if (!serverTeamBFirst) { askFirstServer('B'); return; }
+  serverManualAdjustment++;
+  updateServerBadge();
+  saveProgress();
 }
 
 function winSet(player, scoreOverride){
@@ -932,6 +1064,7 @@ function undo(){
 // ── DISPLAY ──────────────────────────────────────────────────────────────────
 function updateDisplay(){
   saveProgress();
+  updateServerBadge();
   // Points display
   let ptA,ptB;
   if(inSuperTiebreak||inTiebreak){
@@ -994,6 +1127,7 @@ function saveProgress() {
   const snapshot = {
     p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
     stats, history, matchLog, timerSeconds,
+    serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -1034,6 +1168,10 @@ function applyProgress(snap) {
   history = snap.history || [];
   matchLog = snap.matchLog || [];
   timerSeconds = snap.timerSeconds || 0;
+  serverTeamAFirst = snap.serverTeamAFirst || null;
+  serverTeamBFirst = snap.serverTeamBFirst || null;
+  matchGameCount = snap.matchGameCount || 0;
+  serverManualAdjustment = snap.serverManualAdjustment || 0;
   document.getElementById('setPill').textContent = inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1);
   document.getElementById('statusLabel').textContent = matchOver ? 'Terminé' : 'En cours';
   rebuildLog();
@@ -1073,6 +1211,7 @@ function resetMatch() {
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
   setHistory=[];
   timerReset();
+  serverTeamAFirst=null; serverTeamBFirst=null; matchGameCount=0; serverManualAdjustment=0;
   stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
   history=[];matchLog=[];
   document.getElementById('setPill').textContent='Set 1';
@@ -1196,6 +1335,7 @@ function timerToggle() {
     document.getElementById('timerStartBtn').textContent = '⏸ Pause';
     document.getElementById('timerStartBtn').className = 'timer-btn pause';
     document.getElementById('timerDisplay').classList.add('running');
+    if (!serverTeamAFirst) askFirstServer('A');
     timerInterval = setInterval(() => {
       timerSeconds++;
       const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
