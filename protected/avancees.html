@@ -326,6 +326,35 @@ body{
 }
 .timer-display.running{color:#fff}
 .timer-btns{display:flex;gap:8px}
+
+.correction-toggle{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--surface);border:1px dashed var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:.6rem;border-radius:10px;cursor:pointer;margin-bottom:.8rem;
+  transition:all .15s;
+}
+.correction-toggle:hover{color:var(--text);border-color:var(--muted)}
+.correction-toggle-arrow{font-size:11px;transition:transform .2s}
+.correction-toggle.open .correction-toggle-arrow{transform:rotate(180deg)}
+.correction-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem 1.1rem;margin-bottom:1rem}
+.correction-panel.open{display:block}
+.correction-hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:.9rem}
+.correction-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.correction-col{display:flex;flex-direction:column;gap:6px}
+.correction-col-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-bottom:2px}
+.correction-col-label.a{color:var(--blue)}
+.correction-col-label.b{color:var(--orange)}
+.correction-btn{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.55rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.correction-btn.a:hover{border-color:var(--blue);color:var(--blue)}
+.correction-btn.b:hover{border-color:var(--orange);color:var(--orange)}
+
 .timer-btn{
   padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
   background:var(--surface);color:var(--text);
@@ -500,6 +529,26 @@ if ('serviceWorker' in navigator) {
   <div class="timer-btns">
     <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
     <button class="timer-btn live" id="liveShareBtn" onclick="toggleLiveShare()">📡 Live</button>
+  </div>
+</div>
+
+<button type="button" class="correction-toggle" onclick="toggleCorrectionPanel()">
+  <span>⚙️ Rattraper le score</span>
+  <i class="correction-toggle-arrow" id="correctionArrow">▾</i>
+</button>
+<div class="correction-panel" id="correctionPanel">
+  <p class="correction-hint">Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié. N'affecte jamais les statistiques par coup.</p>
+  <div class="correction-grid">
+    <div class="correction-col">
+      <div class="correction-col-label a">Équipe A</div>
+      <button class="correction-btn a" onclick="addManualPoint(1)">+1 Point</button>
+      <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+    </div>
+    <div class="correction-col">
+      <div class="correction-col-label b">Équipe B</div>
+      <button class="correction-btn b" onclick="addManualPoint(2)">+1 Point</button>
+      <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+    </div>
   </div>
 </div>
 
@@ -1017,24 +1066,57 @@ function scorePoint(player, type) {
   const scoreLabel = scoreSnapshot(player);
   logPoint(teamName, type, shot, playerNumForLog, scoreLabel);
 
+  advancePoint(player);
+}
+
+// Logique de progression du score (jeu / tie-break / super tie-break),
+// commune à un point marqué normalement et à un point ajouté manuellement
+// (bouton de rattrapage) — seule la partie "stats" diffère entre les deux.
+function advancePoint(player) {
   if (inSuperTiebreak) {
     if (player === 1) p1++; else p2++;
-    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) { winSet(player, {a:p1, b:p2}); return; }
-    updateDisplay(); return;
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
+      winSet(player, {a:p1, b:p2});
+    } else {
+      updateDisplay();
+    }
+    return;
   }
-
   if (inTiebreak) {
     if (player === 1) p1++; else p2++;
-    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) { winGame(player); }
-    updateDisplay(); return;
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
+      winGame(player);
+    } else {
+      updateDisplay();
+    }
+    return;
   }
-
   if (player === 1) p1++; else p2++;
   if (p1 > 3 || p2 > 3) {
     if (p1 > p2) winGame(1); else winGame(2);
-    return;
+  } else {
+    updateDisplay();
   }
-  updateDisplay();
+}
+
+// ── RATTRAPAGE DE SCORE (corrections manuelles) ──────────────────────────
+// Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié,
+// sans que ça compte dans les statistiques par coup (aucun type de coup
+// n'est demandé, ce n'est pas une vraie action de jeu).
+function addManualPoint(player) {
+  if (matchOver) return;
+  ensureTimerRunning();
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Point ajouté manuellement');
+  advancePoint(player);
+}
+
+function addManualGame(player) {
+  if (matchOver) return;
+  ensureTimerRunning();
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Jeu ajouté manuellement');
+  winGame(player);
 }
 
 function winGame(player) {
@@ -1146,8 +1228,45 @@ function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
   let hist = [];
   try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
   hist.push(record);
-  try { localStorage.setItem('beachstats_history', JSON.stringify(hist)); }
-  catch(e) { console.error('Sauvegarde impossible', e); }
+
+  // Le stockage local du navigateur est limité (souvent 5-10 Mo). Les données
+  // complètes (statsFull/setSnapshotsFull) rendent chaque match assez lourd,
+  // surtout en mode Pro : si l'espace vient à manquer, on ne doit JAMAIS
+  // perdre le match silencieusement. On retente en 3 niveaux, du plus complet
+  // au plus léger, avant d'avertir clairement en dernier recours.
+  const trySaveHistory = (arr) => {
+    try { localStorage.setItem('beachstats_history', JSON.stringify(arr)); return true; }
+    catch(e) { return false; }
+  };
+
+  if (trySaveHistory(hist)) return;
+
+  // Niveau 2 : on retire le détail complet de CE match (le PDF régénéré
+  // depuis l'historique sera alors la version simple, mais le match reste).
+  const last = hist[hist.length - 1];
+  delete last.statsFull;
+  delete last.setSnapshotsFull;
+  if (trySaveHistory(hist)) {
+    console.warn('Stockage presque plein : match sauvegardé en version allégée (sans détail complet).');
+    return;
+  }
+
+  // Niveau 3 : on libère de la place en retirant le détail complet des plus
+  // anciens matchs (du plus vieux au plus récent), un par un.
+  for (let i = 0; i < hist.length - 1; i++) {
+    if (hist[i].statsFull || hist[i].setSnapshotsFull) {
+      delete hist[i].statsFull;
+      delete hist[i].setSnapshotsFull;
+      if (trySaveHistory(hist)) {
+        console.warn("Stockage plein : détail complet retiré d'anciens matchs pour faire de la place.");
+        return;
+      }
+    }
+  }
+
+  // Rien n'a fonctionné : le match n'a vraiment pas pu être sauvegardé.
+  // On prévient clairement plutôt que de le perdre en silence.
+  alert("Ton match n'a pas pu être sauvegardé : la mémoire de stockage de ton navigateur est pleine.\n\nVa dans l'Historique et utilise « Exporter » pour sauvegarder tes matchs dans un fichier, puis « Tout effacer » pour libérer de la place.");
 }
 
 function undo() {
@@ -1578,6 +1697,11 @@ let matchStarted = false; // passe à true dès le premier lancement du chrono
   function ensureTimerRunning() {
   if (!timerRunning && !matchOver) timerToggle();
 }
+function toggleCorrectionPanel() {
+  document.getElementById('correctionPanel').classList.toggle('open');
+  document.querySelector('.correction-toggle').classList.toggle('open');
+}
+
 function timerToggle() {
   if (timerRunning) {
     clearInterval(timerInterval); timerRunning = false;

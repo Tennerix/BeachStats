@@ -503,6 +503,34 @@ body{
 }
 .timer-display.running{color:#fff}
 .timer-btns{display:flex;gap:8px}
+
+.correction-toggle{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--surface);border:1px dashed var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:.6rem;border-radius:10px;cursor:pointer;margin-bottom:.8rem;
+  transition:all .15s;
+}
+.correction-toggle:hover{color:var(--text);border-color:var(--muted)}
+.correction-toggle-arrow{font-size:11px;transition:transform .2s}
+.correction-toggle.open .correction-toggle-arrow{transform:rotate(180deg)}
+.correction-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem 1.1rem;margin-bottom:1rem}
+.correction-panel.open{display:block}
+.correction-hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:.9rem}
+.correction-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.correction-col{display:flex;flex-direction:column;gap:6px}
+.correction-col-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-bottom:2px}
+.correction-col-label.a{color:var(--blue)}
+.correction-col-label.b{color:var(--orange)}
+.correction-btn{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.55rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.correction-btn.a:hover{border-color:var(--blue);color:var(--blue)}
+.correction-btn.b:hover{border-color:var(--orange);color:var(--orange)}
 .timer-btn{
   padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
   background:var(--surface);color:var(--text);
@@ -568,6 +596,26 @@ if ('serviceWorker' in navigator) {
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
     <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+  </div>
+</div>
+
+<button type="button" class="correction-toggle" onclick="toggleCorrectionPanel()">
+  <span>⚙️ Rattraper le score</span>
+  <i class="correction-toggle-arrow" id="correctionArrow">▾</i>
+</button>
+<div class="correction-panel" id="correctionPanel">
+  <p class="correction-hint">Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié.</p>
+  <div class="correction-grid">
+    <div class="correction-col">
+      <div class="correction-col-label a">Équipe A</div>
+      <button class="correction-btn a" onclick="addManualPoint(1)">+1 Point</button>
+      <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+    </div>
+    <div class="correction-col">
+      <div class="correction-col-label b">Équipe B</div>
+      <button class="correction-btn b" onclick="addManualPoint(2)">+1 Point</button>
+      <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+    </div>
   </div>
 </div>
 
@@ -705,14 +753,21 @@ function saveState(){
 function scorePoint(player){
   if(matchOver) return;
   saveState();
+  advancePoint(player);
+}
 
+// Logique de progression du score (jeu / tie-break / super tie-break),
+// commune à un point marqué normalement et à un point ajouté manuellement
+// (bouton de rattrapage).
+function advancePoint(player) {
   if(inSuperTiebreak){
     if(player===1) p1++; else p2++;
     if((p1>=10||p2>=10) && Math.abs(p1-p2)>=2){
       winSet(player, {a:p1, b:p2});
-      return;
+    } else {
+      updateDisplay();
     }
-    updateDisplay(); return;
+    return;
   }
 
   if(inTiebreak){
@@ -720,27 +775,35 @@ function scorePoint(player){
     if((p1>=7||p2>=7) && Math.abs(p1-p2)>=2){
       logEvent(player===1?nameA:nameB,"remporte le Tie-Break !");
       winGame(player);
+    } else {
+      updateDisplay();
     }
-    updateDisplay(); return;
+    return;
   }
 
   // Normal game — No-Ad rule
   if(player===1) p1++; else p2++;
-
-  // Check deuce / no-ad → at 3-3 (40-40) next point wins game
-  if(p1===3 && p2===3){
-    // both at 40 → next point wins (no-ad)
-    // fall through, will be caught below
-  }
   if(p1>3||p2>3){
-    // no-ad: whoever reaches "4" (i.e., got the deciding point) wins
     if(p1>p2) winGame(1); else winGame(2);
-    return;
+  } else {
+    updateDisplay();
   }
-  if(p1===3 && p2===3){
-    // just arrived at deuce; display handled in updateDisplay
-  }
-  updateDisplay();
+}
+
+// ── RATTRAPAGE DE SCORE (corrections manuelles) ──────────────────────────
+// Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié.
+function addManualPoint(player) {
+  if (matchOver) return;
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Point ajouté manuellement');
+  advancePoint(player);
+}
+
+function addManualGame(player) {
+  if (matchOver) return;
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Jeu ajouté manuellement');
+  winGame(player);
 }
 
 function winGame(player){
@@ -1115,6 +1178,11 @@ function exportPDF(){
 let timerSeconds = 0;
 let timerInterval = null;
 let timerRunning = false;
+
+function toggleCorrectionPanel() {
+  document.getElementById('correctionPanel').classList.toggle('open');
+  document.querySelector('.correction-toggle').classList.toggle('open');
+}
 
 function timerToggle() {
   if (timerRunning) {
