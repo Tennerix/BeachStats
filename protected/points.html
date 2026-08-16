@@ -524,6 +524,7 @@ body{
   letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-bottom:2px}
 .correction-col-label.a{color:var(--blue)}
 .correction-col-label.b{color:var(--orange)}
+.correction-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .correction-btn{
   background:var(--surface);border:1px solid var(--border);color:var(--text);
   font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;
@@ -531,6 +532,14 @@ body{
 }
 .correction-btn.a:hover{border-color:var(--blue);color:var(--blue)}
 .correction-btn.b:hover{border-color:var(--orange);color:var(--orange)}
+.correction-btn.minus{opacity:.72}
+.correction-btn.minus:hover{opacity:1;border-color:var(--red);color:var(--red)}
+.correction-super-btn{
+  width:100%;margin-top:12px;background:var(--surface);border:1px dashed var(--gold);color:var(--gold);
+  font-family:Barlow Condensed,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.65rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.correction-super-btn:hover{background:rgba(245,197,24,.12)}
 
 .server-indicator{
   display:flex;align-items:center;gap:8px;width:100%;background:var(--card);
@@ -563,11 +572,17 @@ body{
   color:var(--text);margin-bottom:.3rem;
 }
 .server-modal-box::before{content:'🎾';display:block;font-size:30px;margin-bottom:.5rem}
-.server-modal-btns{display:flex;flex-direction:column;gap:10px;margin-top:1.1rem}
+.server-modal-btns{display:flex;flex-direction:column;gap:14px;margin-top:1.1rem}
+.server-modal-group{display:flex;flex-direction:column;gap:6px}
+.server-modal-group-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;text-align:left}
+.server-modal-group-label.team-a{color:var(--blue)}
+.server-modal-group-label.team-b{color:var(--orange)}
+.server-modal-group-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .server-modal-btn{
   background:var(--surface);border:1.5px solid var(--border);color:var(--text);
-  font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;
-  padding:.75rem;border-radius:10px;cursor:pointer;transition:all .15s;
+  font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;
+  padding:.7rem .4rem;border-radius:10px;cursor:pointer;transition:all .15s;
 }
 .server-modal-btn.team-a:hover{border-color:var(--blue);color:var(--blue)}
 .server-modal-btn.team-b:hover{border-color:var(--orange);color:var(--orange)}
@@ -648,15 +663,28 @@ if ('serviceWorker' in navigator) {
   <div class="correction-grid">
     <div class="correction-col">
       <div class="correction-col-label a">Équipe A</div>
-      <button class="correction-btn a" onclick="addManualPoint(1)">+1 Point</button>
-      <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+      <div class="correction-btn-row">
+        <button class="correction-btn a minus" onclick="removeManualPoint(1)">−1 Pt</button>
+        <button class="correction-btn a" onclick="addManualPoint(1)">+1 Pt</button>
+      </div>
+      <div class="correction-btn-row">
+        <button class="correction-btn a minus" onclick="removeManualGame(1)">−1 Jeu</button>
+        <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+      </div>
     </div>
     <div class="correction-col">
       <div class="correction-col-label b">Équipe B</div>
-      <button class="correction-btn b" onclick="addManualPoint(2)">+1 Point</button>
-      <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+      <div class="correction-btn-row">
+        <button class="correction-btn b minus" onclick="removeManualPoint(2)">−1 Pt</button>
+        <button class="correction-btn b" onclick="addManualPoint(2)">+1 Pt</button>
+      </div>
+      <div class="correction-btn-row">
+        <button class="correction-btn b minus" onclick="removeManualGame(2)">−1 Jeu</button>
+        <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+      </div>
     </div>
   </div>
+  <button type="button" class="correction-super-btn" onclick="jumpToSuperTiebreak()">⏩ Passer directement à 1 set partout (Super Tie-Break)</button>
 </div>
 
 <div class="server-indicator" id="serverIndicator" style="display:none">
@@ -765,6 +793,7 @@ let matchOver=false;
 let stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
 
 // ── SERVICE (qui sert actuellement) ──────────────────────────────────────
+let firstServingTeam = null;
 let serverTeamAFirst = null;
 let serverTeamBFirst = null;
 let matchGameCount = 0;
@@ -811,6 +840,9 @@ function saveState(){
 // ── SCORE LOGIC ──────────────────────────────────────────────────────────────
 function scorePoint(player){
   if(matchOver) return;
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
   saveState();
   advancePoint(player);
 }
@@ -853,6 +885,9 @@ function advancePoint(player) {
 // Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié.
 function addManualPoint(player) {
   if (matchOver) return;
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
   saveState();
   logEvent(player === 1 ? nameA : nameB, '➕ Point ajouté manuellement');
   advancePoint(player);
@@ -860,9 +895,45 @@ function addManualPoint(player) {
 
 function addManualGame(player) {
   if (matchOver) return;
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
   saveState();
   logEvent(player === 1 ? nameA : nameB, '➕ Jeu ajouté manuellement');
   winGame(player);
+}
+
+function removeManualPoint(player) {
+  if (matchOver) return;
+  saveState();
+  if (player === 1) { if (p1 > 0) p1--; } else { if (p2 > 0) p2--; }
+  logEvent(player === 1 ? nameA : nameB, '➖ Point retiré manuellement');
+  updateDisplay();
+}
+
+function removeManualGame(player) {
+  if (matchOver) return;
+  saveState();
+  if (player === 1) { if (g1 > 0) g1--; } else { if (g2 > 0) g2--; }
+  if (matchGameCount > 0) matchGameCount--;
+  logEvent(player === 1 ? nameA : nameB, '➖ Jeu retiré manuellement');
+  updateDisplay();
+}
+
+// Raccourci pour rejoindre un match déjà à 1 set partout : place directement
+// le score sur 1-1 et démarre le Super Tie-Break, sans avoir à rejouer les
+// jeux/points des 2 sets précédents un par un.
+function jumpToSuperTiebreak() {
+  if (matchOver) return;
+  if (!confirm("Passer directement à 1 set partout et démarrer le Super Tie-Break ?\n\nCette action remplace le score actuel des sets.")) return;
+  saveState();
+  s1 = 1; s2 = 1;
+  g1 = 0; g2 = 0; p1 = 0; p2 = 0;
+  inTiebreak = false; inSuperTiebreak = true;
+  document.getElementById('setPill').textContent = 'Super Tie-Break';
+  document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+  logEvent('', '⏩ Passage direct au Super Tie-Break (1 set partout)');
+  updateDisplay();
 }
 
 function winGame(player){
@@ -872,8 +943,9 @@ function winGame(player){
   logEvent(player===1?nameA:nameB,"remporte le jeu → "+g1+"-"+g2);
 
   matchGameCount++;
-  if (matchGameCount === 1 && !serverTeamBFirst && !matchOver) {
-    askFirstServer('B');
+  if (matchGameCount === 1 && firstServingTeam && !matchOver) {
+    const otherKnown = firstServingTeam === 'A' ? serverTeamBFirst : serverTeamAFirst;
+    if (!otherKnown) askSecondTeamServer();
   }
 
   // Si c'était un tie-break, le set est gagné 7/6
@@ -908,7 +980,7 @@ function winGame(player){
 
 // ── SERVICE : calcul du serveur actuel ───────────────────────────────────
 function computeCurrentServer() {
-  if (!serverTeamAFirst) return null;
+  if (!firstServingTeam) return null;
 
   let tiebreakOffset = 0;
   if (inTiebreak || inSuperTiebreak) {
@@ -919,15 +991,19 @@ function computeCurrentServer() {
   const turnIndex = matchGameCount + tiebreakOffset + serverManualAdjustment;
   const residue = ((turnIndex % 4) + 4) % 4;
 
-  const secondA = serverTeamAFirst === 'j1' ? 'j2' : 'j1';
-  const secondB = serverTeamBFirst ? (serverTeamBFirst === 'j3' ? 'j4' : 'j3') : null;
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const team = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const withinTeamTurn = Math.floor(residue / 2) % 2;
 
-  switch (residue) {
-    case 0: return { team: 'A', key: serverTeamAFirst };
-    case 1: return serverTeamBFirst ? { team: 'B', key: serverTeamBFirst } : { team: 'B', key: null };
-    case 2: return { team: 'A', key: secondA };
-    case 3: return serverTeamBFirst ? { team: 'B', key: secondB } : { team: 'B', key: null };
+  const secondA = serverTeamAFirst === 'j1' ? 'j2' : (serverTeamAFirst === 'j2' ? 'j1' : null);
+  const secondB = serverTeamBFirst === 'j3' ? 'j4' : (serverTeamBFirst === 'j4' ? 'j3' : null);
+
+  if (team === 'A') {
+    if (!serverTeamAFirst) return { team: 'A', key: null };
+    return { team: 'A', key: withinTeamTurn === 0 ? serverTeamAFirst : secondA };
   }
+  if (!serverTeamBFirst) return { team: 'B', key: null };
+  return { team: 'B', key: withinTeamTurn === 0 ? serverTeamBFirst : secondB };
 }
 
 function updateServerBadge() {
@@ -940,35 +1016,75 @@ function updateServerBadge() {
   el.className = 'server-indicator ' + (server.team === 'A' ? 'team-a' : 'team-b');
 }
 
-function askFirstServer(team) {
+function serverQuestionNeeded() {
+  if (!firstServingTeam) return 'initial';
+  if (matchGameCount >= 1) {
+    const otherKnown = firstServingTeam === 'A' ? serverTeamBFirst : serverTeamAFirst;
+    if (!otherKnown) return 'second';
+  }
+  return null;
+}
+
+function askInitialServer() {
   const modal = document.getElementById('serverModal');
   const title = document.getElementById('serverModalTitle');
   const btnsWrap = document.getElementById('serverModalBtns');
   if (!modal) return;
-  title.textContent = team === 'A'
-    ? 'Qui sert en premier ?'
-    : 'Et en face, qui sert en premier ?';
-  const p1key = team === 'A' ? 'j1' : 'j3';
-  const p2key = team === 'A' ? 'j2' : 'j4';
+  title.textContent = 'Qui sert en premier ?';
   btnsWrap.innerHTML = '';
-  [p1key, p2key].forEach(key => {
-    const btn = document.createElement('button');
-    btn.className = 'server-modal-btn ' + (team === 'A' ? 'team-a' : 'team-b');
-    btn.textContent = players[key];
-    btn.onclick = () => {
-      if (team === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
-      modal.classList.remove('show');
-      updateServerBadge();
-      saveProgress();
-    };
-    btnsWrap.appendChild(btn);
+  buildServerTeamGroup(btnsWrap, 'A', ['j1','j2'], (team, key) => {
+    firstServingTeam = team; serverTeamAFirst = key;
+    modal.classList.remove('show');
+    updateServerBadge(); saveProgress();
+  });
+  buildServerTeamGroup(btnsWrap, 'B', ['j3','j4'], (team, key) => {
+    firstServingTeam = team; serverTeamBFirst = key;
+    modal.classList.remove('show');
+    updateServerBadge(); saveProgress();
   });
   modal.classList.add('show');
 }
 
+function askSecondTeamServer() {
+  const team = firstServingTeam === 'A' ? 'B' : 'A';
+  const modal = document.getElementById('serverModal');
+  const title = document.getElementById('serverModalTitle');
+  const btnsWrap = document.getElementById('serverModalBtns');
+  if (!modal) return;
+  title.textContent = 'Et en face, qui sert en premier ?';
+  btnsWrap.innerHTML = '';
+  buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
+    if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
+    modal.classList.remove('show');
+    updateServerBadge(); saveProgress();
+  });
+  modal.classList.add('show');
+}
+
+function buildServerTeamGroup(container, team, keys, onPick) {
+  const group = document.createElement('div');
+  group.className = 'server-modal-group';
+  const label = document.createElement('div');
+  label.className = 'server-modal-group-label team-' + team.toLowerCase();
+  label.textContent = 'Équipe ' + team;
+  group.appendChild(label);
+  const row = document.createElement('div');
+  row.className = 'server-modal-group-row';
+  keys.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'server-modal-btn team-' + team.toLowerCase();
+    btn.textContent = players[key];
+    btn.onclick = () => onPick(team, key);
+    row.appendChild(btn);
+  });
+  group.appendChild(row);
+  container.appendChild(group);
+}
+
 function cycleServerManually() {
-  if (!serverTeamAFirst) { askFirstServer('A'); return; }
-  if (!serverTeamBFirst) { askFirstServer('B'); return; }
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
   serverManualAdjustment++;
   updateServerBadge();
   saveProgress();
@@ -1127,7 +1243,7 @@ function saveProgress() {
   const snapshot = {
     p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
     stats, history, matchLog, timerSeconds,
-    serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
+    firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -1168,6 +1284,7 @@ function applyProgress(snap) {
   history = snap.history || [];
   matchLog = snap.matchLog || [];
   timerSeconds = snap.timerSeconds || 0;
+  firstServingTeam = snap.firstServingTeam || null;
   serverTeamAFirst = snap.serverTeamAFirst || null;
   serverTeamBFirst = snap.serverTeamBFirst || null;
   matchGameCount = snap.matchGameCount || 0;
@@ -1211,7 +1328,7 @@ function resetMatch() {
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
   setHistory=[];
   timerReset();
-  serverTeamAFirst=null; serverTeamBFirst=null; matchGameCount=0; serverManualAdjustment=0;
+  firstServingTeam=null; serverTeamAFirst=null; serverTeamBFirst=null; matchGameCount=0; serverManualAdjustment=0;
   stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0};
   history=[];matchLog=[];
   document.getElementById('setPill').textContent='Set 1';
@@ -1335,7 +1452,7 @@ function timerToggle() {
     document.getElementById('timerStartBtn').textContent = '⏸ Pause';
     document.getElementById('timerStartBtn').className = 'timer-btn pause';
     document.getElementById('timerDisplay').classList.add('running');
-    if (!serverTeamAFirst) askFirstServer('A');
+    if (!firstServingTeam) askInitialServer();
     timerInterval = setInterval(() => {
       timerSeconds++;
       const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
