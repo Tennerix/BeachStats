@@ -876,13 +876,30 @@ function generateProPDF(record) {
     y+=4;
   });
 
-  // ══ TOILES D'ARAIGNÉE — vue globale + par zone ══════════════════════════
+  // ══ 5. TOILES D'ARAIGNÉE — vue globale + par zone ═══════════════════════
+  // Un point par coup précis (27 catégories : Service, S+1 ×4, Retour ×2,
+  // Smash ×3, Bras roulé ×3, Amorti ×2, Lob ×3, Rush ×3, Défense ×6), sans
+  // jamais la grille de zones qui surchargeait le PDF. Gagnants (vert) et
+  // fautes (rouge) sont superposés sur LA MÊME toile par entité — chacun
+  // avec sa propre échelle pour bien ressortir, quelle que soit l'ampleur
+  // relative des deux — et 6 vues au total (globale, puis Zone 1 à 5).
   sectionTitle('PROFIL PAR COUP (TOILE D\u2019ARAIGNÉE)', theme.gold);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...theme.muted);
   const introText = "Chaque pointe de la toile représente un type de coup précis. Plus le point s'éloigne du centre, plus le total est élevé — comparé au meilleur total observé sur cette vue.";
   const introLines = doc.splitTextToSize(introText, W - 2*M);
   introLines.forEach(l => { ensureSpace(5); doc.text(l, M, y); y += 4.2; });
-  y += 4;
+  y += 2;
+
+  // Légende unique (vert/rouge), affichée une seule fois pour toute la section.
+  ensureSpace(8);
+  doc.setFillColor(...theme.green); doc.circle(M+1.5, y-1.3, 1.5, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...theme.green);
+  doc.text('Points gagnants', M+5, y);
+  const legendGap = M + 5 + doc.getTextWidth('Points gagnants') + 10;
+  doc.setFillColor(...theme.red); doc.circle(legendGap, y-1.3, 1.5, 'F');
+  doc.setTextColor(...theme.red);
+  doc.text('Fautes directes', legendGap+4, y);
+  y += 9;
 
   const radarEntities = statsMode === 'joueur'
     ? [
@@ -896,6 +913,8 @@ function generateProPDF(record) {
         {label: nameB, color:theme.orange, wp:'wB_', fp:'fB_'},
       ];
 
+  // Totaux par catégorie de coup pour une entité, toutes zones confondues ou
+  // filtrés sur une zone précise (zoneFilter = null -> vue globale).
   const computeCategoryTotals = (wp, fp, zoneFilter) => {
     const zones = zoneFilter ? [zoneFilter] : ZONES;
     return LEAF_SHOT_CATEGORIES.map(cat => {
@@ -909,12 +928,16 @@ function generateProPDF(record) {
     });
   };
 
-  const drawRadarChart = (cx, cy, radius, categories, getVal, maxVal, color) => {
+  // Dessine une toile d'araignée à N pointes centrée sur (cx, cy), avec les
+  // gagnants (vert) ET les fautes (rouge) superposés — chacun normalisé sur
+  // sa propre échelle (maxW / maxF) pour bien ressortir indépendamment.
+  const drawCombinedRadarChart = (cx, cy, radius, categories, maxW, maxF) => {
     const n = categories.length;
     const angleStep = (2 * Math.PI) / n;
     const startAngle = -Math.PI / 2;
     const angleOf = i => startAngle + i * angleStep;
 
+    // Anneaux concentriques (grille de fond)
     const rings = 4;
     doc.setDrawColor(...theme.border); doc.setLineWidth(0.15);
     for (let r = 1; r <= rings; r++) {
@@ -925,7 +948,8 @@ function generateProPDF(record) {
       }
     }
 
-    doc.setFontSize(3.6); doc.setFont('helvetica','normal'); doc.setTextColor(...theme.muted);
+    // Axes + étiquettes
+    doc.setFontSize(4.2); doc.setFont('helvetica','normal'); doc.setTextColor(...theme.muted);
     for (let i = 0; i < n; i++) {
       const a = angleOf(i);
       const cosA = Math.cos(a), sinA = Math.sin(a);
@@ -933,39 +957,53 @@ function generateProPDF(record) {
       doc.line(cx, cy, cx+radius*cosA, cy+radius*sinA);
       const lx = cx + (radius + 2) * cosA, ly = cy + (radius + 2) * sinA + 1;
       const align = cosA > 0.2 ? 'left' : (cosA < -0.2 ? 'right' : 'center');
-      doc.text(categories[i].label, lx, ly, {align, maxWidth: 20});
+      doc.text(categories[i].label, lx, ly, {align, maxWidth: 24});
     }
 
-    const pts = categories.map((cat, i) => {
+    const buildPts = (valFn, maxV) => categories.map((cat, i) => {
       const a = angleOf(i);
-      const val = maxVal > 0 ? Math.min(1, getVal(cat) / maxVal) : 0;
+      const val = maxV > 0 ? Math.min(1, valFn(cat) / maxV) : 0;
       const rr = radius * val;
       return [cx + rr*Math.cos(a), cy + rr*Math.sin(a)];
     });
-    try {
-      doc.saveGraphicsState();
-      doc.setGState(new doc.GState({opacity: 0.22}));
+
+    const drawPolygon = (pts, color, opacity) => {
+      try {
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({opacity}));
+        doc.setFillColor(...color);
+        const linesArg = pts.slice(1).map((p,i) => [p[0]-pts[i][0], p[1]-pts[i][1]]);
+        doc.lines(linesArg, pts[0][0], pts[0][1], [1,1], 'F', true);
+        doc.restoreGraphicsState();
+      } catch(e) {}
+      doc.setDrawColor(...color); doc.setLineWidth(0.8);
+      for (let i = 0; i < pts.length; i++) {
+        const next = (i+1) % pts.length;
+        doc.line(pts[i][0], pts[i][1], pts[next][0], pts[next][1]);
+      }
       doc.setFillColor(...color);
-      const linesArg = pts.slice(1).map((p,i) => [p[0]-pts[i][0], p[1]-pts[i][1]]);
-      doc.lines(linesArg, pts[0][0], pts[0][1], [1,1], 'F', true);
-      doc.restoreGraphicsState();
-    } catch(e) {}
-    doc.setDrawColor(...color); doc.setLineWidth(0.7);
-    for (let i = 0; i < n; i++) {
-      const next = (i+1) % n;
-      doc.line(pts[i][0], pts[i][1], pts[next][0], pts[next][1]);
-    }
-    doc.setFillColor(...color);
-    pts.forEach(p => doc.circle(p[0], p[1], 0.55, 'F'));
+      pts.forEach(p => doc.circle(p[0], p[1], 0.6, 'F'));
+    };
+
+    // Les fautes en dessous (plus discrètes), les gagnants au-dessus (plus
+    // opaques) pour que la forme "positive" ressorte davantage au premier coup d'œil.
+    drawPolygon(buildPts(c => c.f, maxF), theme.red, 0.22);
+    drawPolygon(buildPts(c => c.w, maxW), theme.green, 0.30);
   };
 
+  // Une "vue" = globale (zoneFilter null) ou une zone précise (1 à 5).
   const radarViews = [
     { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
     ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
   ];
 
-  const radarRadius = 24;
-  const radarBlockH = radarRadius * 2 + 22;
+  // Grille 2 colonnes : une seule toile par entité permet de l'agrandir et
+  // d'afficher 2 entités côte à côte (au lieu d'une seule à la fois avant).
+  const radarRadius = 30;
+  const radarGridCols = 2;
+  const radarGridRows = Math.ceil(radarEntities.length / radarGridCols);
+  const radarCellW = (W - 2*M - 10) / radarGridCols;
+  const radarCellH = radarRadius * 2 + 20;
 
   radarViews.forEach((view, viewIdx) => {
     ensureSpace(16);
@@ -975,35 +1013,34 @@ function generateProPDF(record) {
     doc.text('Vue ' + (viewIdx+1) + ' / ' + radarViews.length, W-M, y, {align:'right'});
     y += 10;
 
+    // Échelle commune (max observé) pour toutes les entités de cette vue,
+    // séparément pour les gagnants et les fautes.
     const allTotals = radarEntities.map(ent => computeCategoryTotals(ent.wp, ent.fp, view.zoneFilter));
     const maxW = Math.max(1, ...allTotals.flat().map(c => c.w));
     const maxF = Math.max(1, ...allTotals.flat().map(c => c.f));
 
-    radarEntities.forEach((ent, i) => {
-      const totals = allTotals[i];
-      const totW = totals.reduce((s,c)=>s+c.w,0);
-      const totF = totals.reduce((s,c)=>s+c.f,0);
+    for (let row = 0; row < radarGridRows; row++) {
+      ensureSpace(radarCellH);
+      const rowY = y;
+      for (let col = 0; col < radarGridCols; col++) {
+        const idx = row * radarGridCols + col;
+        if (idx >= radarEntities.length) continue;
+        const ent = radarEntities[idx];
+        const totals = allTotals[idx];
+        const totW = totals.reduce((s,c)=>s+c.w,0);
+        const totF = totals.reduce((s,c)=>s+c.f,0);
 
-      ensureSpace(radarBlockH);
-      doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
-      doc.text(stripEmoji(ent.label) + '  —  Winners : ' + totW + '   Fautes : ' + totF, M, y);
-      const chartsTop = y + 8;
-      const cxGreen = M + 46, cxRed = W - M - 46;
-      const cy = chartsTop + radarRadius;
+        const cellX = M + col * (radarCellW + 10);
+        const cx = cellX + radarCellW / 2;
 
-      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...theme.green);
-      doc.text('POINTS GAGNANTS', cxGreen, chartsTop - 2, {align:'center'});
-      doc.setTextColor(...theme.red);
-      doc.text('FAUTES DIRECTES', cxRed, chartsTop - 2, {align:'center'});
+        doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.label) + '  —  W : ' + totW + '   F : ' + totF, cx, rowY, {align:'center'});
 
-      drawRadarChart(cxGreen, cy, radarRadius, totals, c => c.w, maxW, theme.green);
-      drawRadarChart(cxRed, cy, radarRadius, totals, c => c.f, maxF, theme.red);
-
-      y = cy + radarRadius + 12;
-      if (i < radarEntities.length - 1) {
-        doc.setDrawColor(...theme.border); doc.setLineWidth(0.2); doc.line(M, y-6, W-M, y-6);
+        const cy = rowY + 8 + radarRadius;
+        drawCombinedRadarChart(cx, cy, radarRadius, totals, maxW, maxF);
       }
-    });
+      y = rowY + radarCellH;
+    }
 
     if (viewIdx < radarViews.length - 1) {
       doc.setDrawColor(...theme.gold); doc.setLineWidth(0.4);
