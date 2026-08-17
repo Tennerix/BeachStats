@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>(function(){var t=localStorage.getItem('beachstats_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#090f1a">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BeachStats">
+<title>Beach Tennis – Stats Avancées</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#080f1e;
+  --surface:#0d1829;
+  --card:#111e35;
+  --border:#1e3560;
+  --hover:#162040;
+  --gold:#f5c518;
+  --blue:#3b82f6;
+  --orange:#f97316;
+  --green:#22c55e;
+  --red:#ef4444;
+  --purple:#a855f7;
+  --text:#e2eaf8;
+  --muted:#4a6494;
+}
+[data-theme="light"]{
+  --bg:#eef1f6; --surface:#e7ecf3; --card:#f7f9fc; --hover:#dde4ee; --border:#aebad2;
+  --gold:#b3860f; --blue:#3b66c4; --orange:#c9601e; --green:#1f8a4c; --purple:#7c4bc4;
+  --red:#c23a3a; --text:#2c3646; --muted:#748094;
+}
+[data-theme="neon"]{
+  --bg:#050214; --surface:#0d0620; --card:#140a2e; --hover:#1c0f3d; --border:#3d1a6b;
+  --gold:#ffe600; --blue:#00e5ff; --orange:#ff2e97; --green:#39ff14; --purple:#c644ff;
+  --red:#ff2e5f; --text:#f2ecff; --muted:#8c6bc9;
+}
+[data-theme="sunset"]{
+  --bg:linear-gradient(180deg,#200a12 0%,#4a1f16 22%,#b8531f 48%,#f0c542 62%,#6b2a52 84%,#241130 100%);
+  --surface:linear-gradient(135deg,#3c1a14 0%,#6b3420 100%);
+  --card:linear-gradient(150deg,#481f18 0%,#7a3f22 100%);
+  --hover:linear-gradient(135deg,#5c2a1c 0%,#8a4a26 100%);
+  --border:#a35a35;
+  --gold:#ffcb3d; --blue:#5ec8f5; --orange:#ff7f3f; --green:#3fd9ae; --purple:#e488a8;
+  --red:#ef4a4a; --text:#fff8ec; --muted:#e0b89f;
+}
+[data-theme="lagoon"]{
+  --bg:linear-gradient(180deg,#02141a 0%,#053b3f 22%,#0a6e6e 48%,#17d6d0 62%,#0a4a5c 84%,#02121e 100%);
+  --surface:linear-gradient(135deg,#04262b 0%,#0a4a4a 100%);
+  --card:linear-gradient(150deg,#063339 0%,#0d5555 100%);
+  --hover:linear-gradient(135deg,#0a4045 0%,#116868 100%);
+  --border:#1ec9c9;
+  --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7; --purple:#7c83fd;
+  --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
+}
+[data-theme="magma"]{
+  --bg:linear-gradient(180deg,#0a0302 0%,#380a04 22%,#8a1c04 48%,#ff5b0f 62%,#5c0f0f 84%,#120303 100%);
+  --surface:linear-gradient(135deg,#2e0a06 0%,#66190a 100%);
+  --card:linear-gradient(150deg,#3d0e08 0%,#7d2308 100%);
+  --hover:linear-gradient(135deg,#4d140b 0%,#992e0e 100%);
+  --border:#ff5c1a;
+  --gold:#ffc300; --blue:#3fa9ff; --orange:#ff4b00; --green:#a4d84a; --purple:#ff2e88;
+  --red:#ff2020; --text:#fff2e0; --muted:#d98a5c;
+}
+[data-theme="glacier"]{
+  --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
+  --surface:linear-gradient(135deg,#04182a 0%,#0a3550 100%);
+  --card:linear-gradient(150deg,#082238 0%,#0e3d5c 100%);
+  --hover:linear-gradient(135deg,#0c2d46 0%,#155070 100%);
+  --border:#3fa0cf;
+  --gold:#d6faff; --blue:#7fd8ff; --orange:#ffb4a8; --green:#9dfcd8; --purple:#b8c6ff;
+  --red:#ff8fa3; --text:#eaf9ff; --muted:#6f93ab;
+}
+/* ── SÉLECTEUR DE THÈME ── */
+body{transition:background-color .25s ease,color .25s ease}
+.theme-switch-wrap{position:relative}
+.theme-menu{position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px;display:none;flex-direction:column;gap:2px;z-index:30;min-width:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.theme-menu.open{display:flex}
+.theme-swatch{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);
+  font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.theme-swatch:hover{background:var(--surface)}
+.theme-swatch.active{outline:1px solid var(--gold)}
+.theme-swatch.locked{opacity:.55}
+.theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
+.theme-swatch.locked .lock-badge{display:flex}
+.sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
+.sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
+.sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
+.sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
+.sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
+.sw-magma{background:linear-gradient(135deg,#0a0302,#ff5b0f)}
+.sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
+
+body{
+  font-family:Barlow,sans-serif;
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 1rem 4rem;
+}
+
+/* ── HEADER ── */
+.header{
+  width:100%;max-width:580px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 0 1rem;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.2rem;flex-wrap:wrap;row-gap:8px;}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+@media(max-width:480px){
+  .header-logo{font-size:18px}
+  .header-back{font-size:11px;padding:5px 9px}
+}
+.header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+.header-logo span{color:var(--text);opacity:.5}
+.header-back{background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .18s}
+.header-back:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:.75rem 1.4rem;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:1rem;
+}
+.status-pill{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:4px 14px;border-radius:20px}
+[data-theme="glacier"] .status-pill{color:#0a2e52}
+[data-theme="sunset"] .status-pill{color:#3a140a}
+[data-theme="lagoon"] .status-pill{color:#04302c}
+[data-theme="magma"] .status-pill{color:#3a0a02}
+.status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* ── SCOREBOARD ── */
+.scoreboard{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,.5);margin-bottom:1rem;
+}
+.score-header{
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;
+  padding:.6rem 1.4rem;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.score-header span{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center}
+.score-header span:first-child{text-align:left}
+.team-row{
+  display:grid;grid-template-columns:1fr 44px 44px 44px 80px;align-items:center;
+  padding:1rem 1.4rem;border-bottom:1px solid var(--border);transition:background .15s;
+}
+.team-row:last-child{border-bottom:none}
+.team-info{display:flex;flex-direction:column;gap:3px}
+.team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.team-name-input{
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:none;border:none;border-bottom:1px dashed transparent;color:var(--muted);width:100%;padding:0 0 1px;
+  outline:none;transition:border-color .15s;
+}
+.team-name-input::placeholder{color:inherit;opacity:1}
+.team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
+.team-players{font-size:15px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;
+  letter-spacing:.3px;display:flex;flex-direction:column;line-height:1.25}
+.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-row.team-a .team-players{color:var(--blue)}
+.team-row.team-b .team-players{color:var(--orange)}
+.cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
+.cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
+.cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
+[data-theme="glacier"] .cell.sets-cell span.won{color:#0a2e52}
+[data-theme="sunset"] .cell.sets-cell span.won{color:#3a140a}
+[data-theme="lagoon"] .cell.sets-cell span.won{color:#04302c}
+[data-theme="magma"] .cell.sets-cell span.won{color:#3a0a02}
+.cell.set-score{
+  font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
+  text-align:center;color:var(--muted);
+}
+.cell.set-score.active{color:var(--text)}
+.cell.set-score.won{color:var(--gold)}
+.cell.point-cell{font-size:36px;color:var(--gold);font-style:italic}
+
+/* ── STATS CARD ── */
+.stats-card{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:1.2rem 1.4rem;margin-bottom:1rem;
+}
+.stats-title{
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:1rem;display:flex;align-items:center;gap:8px;
+}
+.stats-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.stats-view-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.sv-chip{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.4rem .75rem;border-radius:20px;cursor:pointer;transition:all .15s}
+.sv-chip:hover{color:var(--text);border-color:var(--muted)}
+.sv-chip.active{background:var(--gold);border-color:var(--gold);color:#0a0f1a}
+
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:.7rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-val{
+  font-family:Barlow Condensed,sans-serif;font-size:24px;font-weight:900;
+}
+.stat-val.a{color:var(--blue);text-align:right}
+.stat-val.b{color:var(--orange);text-align:left}
+.stat-name{
+  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:center;
+  white-space:nowrap;
+}
+.stat-bar-wrap{grid-column:1/-1;display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--surface)}
+.stat-bar-a{background:var(--blue);transition:width .4s}
+.stat-bar-b{background:var(--orange);transition:width .4s}
+
+/* ── ACTIONS ── */
+.team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
+.team-ctrl-label{
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
+}
+.team-ctrl-label.a{color:var(--blue)}
+.team-ctrl-label.b{color:var(--orange)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-winner,.btn-faute{
+  padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
+  transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;
+  font-family:Barlow Condensed,sans-serif;
+}
+.btn-winner:active,.btn-faute:active{transform:scale(.96)}
+.btn-icon{font-size:22px}
+.btn-main{font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.btn-sub{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.6}
+.btn-winner.a{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.a:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-winner.b{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+.btn-winner.b:hover{background:rgba(34,197,94,.22);transform:scale(1.02)}
+.btn-faute.a{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.a:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+.btn-faute.b{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red)}
+.btn-faute.b:hover{background:rgba(239,68,68,.2);transform:scale(1.02)}
+
+.actions{width:100%;max-width:580px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem}
+.btn-action{
+  padding:.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-action:hover{background:var(--hover);border-color:var(--muted)}
+.btn-action.undo{border-color:#f59e0b;color:#f59e0b}
+.btn-action.undo:hover{background:rgba(245,158,11,.12)}
+.btn-action.reset{border-color:var(--red);color:var(--red)}
+.btn-action.reset:hover{background:rgba(239,68,68,.12)}
+.btn-action.pdf{border-color:var(--green);color:var(--green)}
+.btn-action.pdf:hover{background:rgba(34,197,94,.12)}
+
+/* ── LOG ── */
+.log-wrap{width:100%;max-width:580px}
+.log-title{font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:4px}
+.log-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.log-entry{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem 1rem;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;
+}
+.log-entry .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-entry.dot-a .dot{background:var(--blue)}
+.log-entry.dot-b .dot{background:var(--orange)}
+.log-entry.dot-w .dot{background:var(--green)}
+.log-entry.dot-f .dot{background:var(--red)}
+.log-entry.event .dot{background:var(--gold)}
+.log-tag{
+  margin-left:auto;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;
+}
+.log-tag.winner{background:rgba(34,197,94,.15);color:var(--green)}
+.log-tag.faute{background:rgba(239,68,68,.15);color:var(--red)}
+
+/* ── WINNER OVERLAY ── */
+.winner-overlay{
+  display:none;position:fixed;inset:0;background:rgba(8,15,30,.92);z-index:100;
+  align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;padding:2rem;
+}
+.winner-overlay.show{display:flex}
+.winner-box{
+  background:var(--card);border:2px solid var(--gold);border-radius:24px;
+  padding:2.5rem 2rem;text-align:center;max-width:400px;width:100%;
+  box-shadow:0 0 80px rgba(245,197,24,.2);
+}
+.winner-trophy{font-size:60px;margin-bottom:1rem}
+.winner-label{font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.5rem}
+.winner-name{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:.4rem}
+.winner-score{font-family:Barlow Condensed,sans-serif;font-size:16px;color:var(--muted);letter-spacing:1px;margin-bottom:1.2rem}
+.winner-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.4rem}
+.ws-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem}
+.ws-val{font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900}
+.ws-val.a{color:var(--blue)}
+.ws-val.b{color:var(--orange)}
+.ws-lbl{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.winner-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.winner-btn{padding:.7rem 1.4rem;border-radius:10px;border:1.5px solid;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.winner-btn.primary{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1)}
+.winner-btn.primary:hover{background:rgba(245,197,24,.25)}
+.winner-btn.secondary{border-color:var(--border);color:var(--muted);background:none}
+.winner-btn.secondary:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── TIMER ── */
+.timer-wrap{
+  width:100%;max-width:580px;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:.9rem 1.4rem;margin-bottom:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.timer-display{
+  font-family:Barlow Condensed,sans-serif;font-size:38px;font-weight:900;
+  letter-spacing:4px;color:var(--gold);font-variant-numeric:tabular-nums;
+  min-width:110px;
+}
+.timer-display.running{color:#fff}
+.timer-btns{display:flex;gap:8px}
+
+.correction-toggle{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--surface);border:1px dashed var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:.6rem;border-radius:10px;cursor:pointer;margin-bottom:.8rem;
+  transition:all .15s;
+}
+.correction-toggle:hover{color:var(--text);border-color:var(--muted)}
+.correction-toggle-arrow{font-size:11px;transition:transform .2s}
+.correction-toggle.open .correction-toggle-arrow{transform:rotate(180deg)}
+.correction-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem 1.1rem;margin-bottom:1rem}
+.correction-panel.open{display:block}
+.correction-hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:.9rem}
+.correction-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.correction-col{display:flex;flex-direction:column;gap:6px}
+.correction-col-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-bottom:2px}
+.correction-col-label.a{color:var(--blue)}
+.correction-col-label.b{color:var(--orange)}
+.correction-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.correction-btn{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.55rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.correction-btn.a:hover{border-color:var(--blue);color:var(--blue)}
+.correction-btn.b:hover{border-color:var(--orange);color:var(--orange)}
+.correction-btn.minus{opacity:.72}
+.correction-btn.minus:hover{opacity:1;border-color:var(--red);color:var(--red)}
+.correction-super-btn{
+  width:100%;margin-top:12px;background:var(--surface);border:1px dashed var(--gold);color:var(--gold);
+  font-family:Barlow Condensed,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:.65rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.correction-super-btn:hover{background:rgba(245,197,24,.12)}
+
+.server-indicator{
+  display:flex;align-items:center;gap:8px;width:100%;background:var(--card);
+  border:1px solid var(--gold);border-radius:12px;padding:.6rem .9rem;margin-bottom:1rem;
+}
+.server-indicator.team-a{border-color:var(--blue)}
+.server-indicator.team-b{border-color:var(--orange)}
+.server-ball{font-size:16px;flex-shrink:0}
+.server-indicator span{font-size:12.5px;color:var(--muted)}
+.server-indicator .server-name{color:var(--text);font-family:Barlow Condensed,sans-serif;
+  font-weight:900;letter-spacing:.5px}
+.server-change-btn{
+  margin-left:auto;flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:10.5px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;padding:.3rem .7rem;border-radius:14px;cursor:pointer;
+}
+.server-change-btn:hover{color:var(--text);border-color:var(--muted)}
+
+.server-modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:110;
+  align-items:center;justify-content:center;padding:1rem;
+}
+.server-modal-backdrop.show{display:flex}
+.server-modal-box{
+  background:var(--card);border:1px solid var(--gold);border-radius:16px;
+  padding:1.6rem 1.4rem;max-width:380px;width:100%;text-align:center;
+}
+.server-modal-title{
+  font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:.5px;
+  color:var(--text);margin-bottom:.3rem;
+}
+.server-modal-box::before{content:'🎾';display:block;font-size:30px;margin-bottom:.5rem}
+.server-modal-btns{display:flex;flex-direction:column;gap:14px;margin-top:1.1rem}
+.server-modal-group{display:flex;flex-direction:column;gap:6px}
+.server-modal-group-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;text-align:left}
+.server-modal-group-label.team-a{color:var(--blue)}
+.server-modal-group-label.team-b{color:var(--orange)}
+.server-modal-group-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.server-modal-btn{
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;
+  padding:.7rem .4rem;border-radius:10px;cursor:pointer;transition:all .15s;
+}
+.server-modal-btn.team-a:hover{border-color:var(--blue);color:var(--blue)}
+.server-modal-btn.team-b:hover{border-color:var(--orange);color:var(--orange)}
+
+
+.timer-btn{
+  padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;
+}
+.timer-btn:hover{background:var(--hover);border-color:var(--muted)}
+.timer-btn.start{border-color:var(--green);color:var(--green)}
+.timer-btn.start:hover{background:rgba(34,197,94,.12)}
+.timer-btn.pause{border-color:var(--gold);color:var(--gold)}
+.timer-btn.pause:hover{background:rgba(245,197,24,.12)}
+.timer-btn.stop{border-color:var(--red);color:var(--red)}
+.timer-btn.stop:hover{background:rgba(239,68,68,.12)}
+.timer-btn.live{border-color:var(--blue);color:var(--blue)}
+.timer-btn.live:hover{background:rgba(59,130,246,.12)}
+.timer-btn.live.active{background:var(--blue);color:#fff}
+.timer-btn.live.active::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:6px;animation:live-pulse 1.4s ease-in-out infinite}
+@keyframes live-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.live-modal-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;
+  align-items:center;justify-content:center;padding:1rem;
+}
+.live-modal-backdrop.show{display:flex}
+.live-modal{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.4rem;max-width:420px;width:100%;
+}
+.live-modal-title{
+  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;
+  letter-spacing:1px;margin-bottom:.9rem;
+}
+.live-modal-body p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:.8rem}
+.live-link-row{display:flex;gap:8px;margin-bottom:.6rem}
+.live-link-row input{
+  flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.6rem .7rem;color:var(--text);font-size:13px;
+}
+.live-link-row button{
+  background:var(--gold);border:none;border-radius:8px;padding:.6rem 1rem;
+  font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;font-size:12px;color:#0a0f1a;cursor:pointer;flex-shrink:0;
+}
+.live-modal-note{font-size:11px !important;color:var(--muted)}
+.live-modal-actions{display:flex;gap:8px;margin-top:1rem}
+.live-modal-actions button{
+  flex:1;padding:.6rem;border-radius:8px;font-family:Barlow Condensed,sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+}
+.live-stop-btn{background:none;border:1px solid var(--red);color:var(--red)}
+.live-stop-btn:hover{background:rgba(239,68,68,.12)}
+.live-close-btn{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.live-close-btn:hover{background:var(--hover)}
+
+/* ── SHOT MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(8,15,30,.88);z-index:50;align-items:flex-end;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 20px 20px;width:100%;max-width:520px;padding:1.4rem 1.2rem 1.8rem;box-shadow:0 -8px 48px rgba(0,0,0,.6)}
+.modal-context{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:1rem;color:var(--text)}
+.modal-context span{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+
+/* Shot Grid Layout */
+.shot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.shot-group{display:flex;flex-direction:column;gap:5px;background:rgba(255,255,255,0.03);padding:8px;border-radius:14px;border:1px solid var(--border)}
+.shot-back{grid-column:1 / -1;background:none;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:2px}
+.shot-back:hover{border-color:var(--gold);color:var(--gold)}
+.shot-group-title{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:2px}
+.shot-sub-row{display:flex;flex-wrap:wrap;gap:6px}
+.shot-sub-row .shot-btn{flex:1 1 calc(50% - 3px)}
+
+.shot-btn{padding:.7rem .3rem;border-radius:12px;border:2px solid;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.2;text-align:center}
+.shot-btn:active{transform:scale(.95)}
+.shot-btn .s-ico{font-size:20px}
+.shot-btn.type-winner{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08)}
+.shot-btn.type-winner:hover{background:rgba(34,197,94,.2)}
+.shot-btn.type-faute{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+.shot-btn.type-faute:hover{background:rgba(239,68,68,.2)}
+
+.modal-cancel{width:100%;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+/* ── ADVANCED STATS TABLE ── */
+.stats-section{margin-bottom:.8rem}
+.stats-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.stats-section-title.w{color:var(--green)}
+.stats-section-title.f{color:var(--red)}
+.stats-table{width:100%;border-collapse:collapse}
+.stats-table tr{border-bottom:1px solid var(--border)}
+.stats-table tr:last-child{border-bottom:none}
+.stats-table td{padding:.35rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;vertical-align:middle}
+.stats-table .td-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;line-height:1.1}
+.stats-table .td-a{color:var(--blue);text-align:right;font-size:18px;width:36px}
+.stats-table .td-b{color:var(--orange);text-align:left;font-size:18px;width:36px}
+.stats-table .td-bar{padding:0 .4rem}
+.mini-bar{height:5px;border-radius:4px;overflow:hidden;background:var(--surface);display:flex}
+.mini-bar-a{background:var(--blue);transition:width .3s}
+.mini-bar-b{background:var(--orange);transition:width .3s}
+.stats-totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:.6rem}
+.tot-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem;text-align:center}
+.tot-val{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:900;display:flex;justify-content:center;gap:8px}
+.tot-val span.a{color:var(--blue)}
+.tot-val span.b{color:var(--orange)}
+.tot-lbl{font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* ── STATS PAR JOUEUR ── */
+.player-stats-section{margin-bottom:1rem}
+.player-stats-header{
+  font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:.3rem .5rem;border-radius:6px;margin-bottom:.4rem;
+  display:inline-block;
+}
+.player-stats-header.pa{background:rgba(59,130,246,.15);color:var(--blue)}
+.player-stats-header.pb{background:rgba(249,115,22,.15);color:var(--orange)}
+.player-stats-table{width:100%;border-collapse:collapse;margin-bottom:.3rem}
+.player-stats-table tr{border-bottom:1px solid var(--border)}
+.player-stats-table tr:last-child{border-bottom:none}
+.player-stats-table td{padding:.3rem .2rem;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;vertical-align:middle}
+.player-stats-table .td-lbl{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.player-stats-table .td-val{font-size:17px;font-weight:900;text-align:center;width:32px}
+.player-stats-table .td-val.pa{color:var(--blue)}
+.player-stats-table .td-val.pb{color:var(--orange)}
+.player-pair-divider{height:1px;background:var(--border);margin:.4rem 0 .6rem}
+
+@media(max-width:440px){
+  .score-header,.team-row{grid-template-columns:1fr 36px 36px 36px 64px;padding:.8rem .7rem}
+  .cell.point-cell{font-size:28px}
+  .shot-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<script>
+// Enregistrement du service worker (mode hors ligne). Échec silencieux si
+// non supporté ou si le fichier n'est pas encore déployé, pour ne jamais
+// bloquer le chargement normal de la page.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Beach<span>/</span>Stats</div>
+  <div class="header-actions">
+    <div class="theme-switch-wrap">
+      <button class="header-back" onclick="toggleThemeMenu(event)" aria-label="Changer de theme">Theme</button>
+      <div class="theme-menu" id="themeMenu">
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span>Sombre</button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="magma" onclick="setTheme('magma')"><span class="sw sw-magma"></span>Magma<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
+      </div>
+    </div>
+    <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
+    <button class="header-back" onclick="window.location.href='/'">← Accueil</button>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-pill" id="setPill">Échauffement</div>
+  <div class="status-label" id="statusLabel">En cours</div>
+</div>
+
+<div class="timer-wrap">
+  <div class="timer-display" id="timerDisplay">00:00</div>
+  <div class="timer-btns">
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
+    <button class="timer-btn live" id="liveShareBtn" onclick="toggleLiveShare()">📡 Live</button>
+  </div>
+</div>
+
+<button type="button" class="correction-toggle" onclick="toggleCorrectionPanel()">
+  <span>⚙️ Rattraper le score</span>
+  <i class="correction-toggle-arrow" id="correctionArrow">▾</i>
+</button>
+<div class="correction-panel" id="correctionPanel">
+  <p class="correction-hint">Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié. N'affecte jamais les statistiques par coup.</p>
+  <div class="correction-grid">
+    <div class="correction-col">
+      <div class="correction-col-label a">Équipe A</div>
+      <div class="correction-btn-row">
+        <button class="correction-btn a minus" onclick="removeManualPoint(1)">−1 Pt</button>
+        <button class="correction-btn a" onclick="addManualPoint(1)">+1 Pt</button>
+      </div>
+      <div class="correction-btn-row">
+        <button class="correction-btn a minus" onclick="removeManualGame(1)">−1 Jeu</button>
+        <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+      </div>
+    </div>
+    <div class="correction-col">
+      <div class="correction-col-label b">Équipe B</div>
+      <div class="correction-btn-row">
+        <button class="correction-btn b minus" onclick="removeManualPoint(2)">−1 Pt</button>
+        <button class="correction-btn b" onclick="addManualPoint(2)">+1 Pt</button>
+      </div>
+      <div class="correction-btn-row">
+        <button class="correction-btn b minus" onclick="removeManualGame(2)">−1 Jeu</button>
+        <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="correction-super-btn" onclick="jumpToSuperTiebreak()">⏩ Passer directement à 1 set partout (Super Tie-Break)</button>
+</div>
+
+<div class="server-indicator" id="serverIndicator" style="display:none">
+  <span class="server-ball">🎾</span>
+  <span>Au service : <strong class="server-name"></strong></span>
+  <button type="button" class="server-change-btn" onclick="cycleServerManually()">Changer</button>
+</div>
+
+<div class="server-modal-backdrop" id="serverModal">
+  <div class="server-modal-box">
+    <div class="server-modal-title" id="serverModalTitle">Qui sert en premier ?</div>
+    <div class="server-modal-btns" id="serverModalBtns"></div>
+  </div>
+</div>
+
+<div class="live-modal-backdrop" id="liveModalBackdrop" onclick="closeLiveModal(event)">
+  <div class="live-modal" onclick="event.stopPropagation()">
+    <div class="live-modal-title">📡 Partage en direct</div>
+    <div class="live-modal-body" id="liveModalBody">
+      <p>Toute personne avec ce lien peut suivre le score et les stats en direct, sans pouvoir rien modifier.</p>
+      <div class="live-link-row">
+        <input type="text" id="liveLinkInput" readonly>
+        <button onclick="copyLiveLink()" id="liveCopyBtn">Copier</button>
+      </div>
+      <p class="live-modal-note">Le lien reste actif tant que tu marques des points (ou pendant 6h max).</p>
+    </div>
+    <div class="live-modal-actions">
+      <button class="live-stop-btn" onclick="stopLiveShare()">Arrêter le partage</button>
+      <button class="live-close-btn" onclick="closeLiveModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="scoreboard">
+  <div class="score-header" id="scoreHeader">
+    <span>Équipe</span>
+    <span>S1</span>
+    <span>S2</span>
+    <span>S3</span>
+    <span>Points</span>
+  </div>
+  <div class="team-row team-a" id="rowA">
+    <div class="team-info">
+      <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span><span class="player-name" id="playerNameJ2">—</span></div>
+    </div>
+    <div class="cell set-score" id="setA1">—</div>
+    <div class="cell set-score" id="setA2">—</div>
+    <div class="cell set-score" id="setA3">—</div>
+    <div class="cell point-cell" id="ptA">0</div>
+  </div>
+  <div class="team-row team-b" id="rowB">
+    <div class="team-info">
+      <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span><span class="player-name" id="playerNameJ4">—</span></div>
+    </div>
+    <div class="cell set-score" id="setB1">—</div>
+    <div class="cell set-score" id="setB2">—</div>
+    <div class="cell set-score" id="setB3">—</div>
+    <div class="cell point-cell" id="ptB">0</div>
+  </div>
+</div>
+
+<div class="team-controls">
+  <div class="team-ctrl-label a" id="lblA">Équipe A</div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls">
+  <div class="team-ctrl-label b" id="lblB">Équipe B</div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner')">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute')">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ1" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ1"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',1)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',1)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ2" style="display:none">
+  <div class="team-ctrl-label a" id="lblJ2"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner a" onclick="openShotModal(1,'winner',2)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute a" onclick="openShotModal(2,'faute',2)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à B</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ3" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ3"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',3)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',3)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="team-controls" id="joueurCtrlJ4" style="display:none">
+  <div class="team-ctrl-label b" id="lblJ4"></div>
+  <div class="ctrl-row">
+    <button class="btn-winner b" onclick="openShotModal(2,'winner',4)">
+      <span class="btn-icon">🎯</span>
+      <span class="btn-main">Point gagnant</span>
+      <span class="btn-sub">Coup gagnant</span>
+    </button>
+    <button class="btn-faute b" onclick="openShotModal(1,'faute',4)">
+      <span class="btn-icon">💥</span>
+      <span class="btn-main">Faute directe</span>
+      <span class="btn-sub">Point à A</span>
+    </button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+</div>
+
+<div class="stats-card" id="statsCard">
+  <div class="stats-title">Stats détaillées</div>
+  <div class="stats-view-switch" id="statsViewSwitch"></div>
+  <div id="statsContent"></div>
+</div>
+
+<div class="log-wrap">
+  <div class="log-title">Journal du match</div>
+  <div class="log-list" id="logList"></div>
+</div>
+
+<div class="modal-overlay" id="shotModal">
+  <div class="modal">
+    <div class="modal-context" id="modalContext">—</div>
+    <div class="shot-grid" id="shotGrid"></div>
+    <button class="modal-cancel" onclick="closeShotModal()">Annuler</button>
+  </div>
+</div>
+
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-label">Vainqueur du match</div>
+    <div class="winner-name" id="winnerName">—</div>
+    <div class="winner-score" id="winnerScore">—</div>
+    <div class="winner-stats">
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
+        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
+      </div>
+      <div class="ws-box">
+        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
+        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
+      </div>
+    </div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="winner-overlay" id="resumeOverlay">
+  <div class="winner-box">
+    <div class="winner-trophy">💾</div>
+    <div class="winner-label">Match en cours détecté</div>
+    <div class="winner-name" id="resumeMatchup" style="font-size:22px">—</div>
+    <div class="winner-score" id="resumeScoreInfo">—</div>
+    <div class="winner-actions">
+      <button class="winner-btn primary" onclick="confirmResume()">Reprendre ce match</button>
+      <button class="winner-btn secondary" onclick="discardResume()">Nouveau match</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
+const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const SHOT_LBL = {
+  service:'Service', service_1:'Service Z1', service_2:'Service Z2', service_3:'Service Z3', service_4:'Service Z4', service_5:'Service Z5',
+  smash:'Smash',
+  roule:'Bras roulé', roule_amorti:'Bras roulé Amorti', roule_lob:'Bras roulé Lob',
+  retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
+  amorti:'Amorti', amorti_cd:'Amorti CD', amorti_rev:'Amorti REV',
+  lob:'Lob', lob_cd:'Lob CD', lob_rev:'Lob REV', lob_rainbow:'Lob Rainbow',
+  rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
+  defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
+};
+const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
+
+// Liste complète des clés pour les statistiques
+const ALL_SHOT_KEYS = [
+  'service_1', 'service_2', 'service_3', 'service_4', 'service_5',
+  'retour_cd', 'retour_rev',
+  'smash',
+  'roule_amorti', 'roule_lob',
+  'amorti_cd', 'amorti_rev',
+  'lob_cd', 'lob_rev', 'lob_rainbow', 
+  'rush_cd', 'rush_rev', 'rush_rainbow',
+  'defense_cd', 'defense_rev'
+];
+
+// ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
+const _p = new URLSearchParams(window.location.search);
+const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+
+// ── PLAYER NAMES ─────────────────────────────────────────────────────────────
+const players = {
+  j1: _p.get('j1') || 'Joueur 1',
+  j2: _p.get('j2') || 'Joueur 2',
+  j3: _p.get('j3') || 'Joueur 3',
+  j4: _p.get('j4') || 'Joueur 4'
+};
+const nameA = players.j1 + ' / ' + players.j2;
+const nameB = players.j3 + ' / ' + players.j4;
+
+// ── NOM D'ÉQUIPE PERSONNALISÉ ────────────────────────────────────────────
+// Optionnel : si laissé vide, le champ affiche simplement le placeholder
+// "Équipe A" / "Équipe B" — aucune valeur n'est alors envoyée nulle part.
+let teamLabelA = _p.get('teamA') || '';
+let teamLabelB = _p.get('teamB') || '';
+
+function onTeamLabelInput(side) {
+  const val = document.getElementById('teamLabel' + side).value.slice(0, 24);
+  if (side === 'A') teamLabelA = val; else teamLabelB = val;
+  saveProgress();
+  if (liveShareCode) pushLiveState();
+}
+
+// Les noms viennent de l'URL (?j1=...) : on les échappe avant toute
+// insertion via innerHTML pour éviter qu'un lien piégé n'exécute du code.
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function initNames() {
+  document.getElementById('playerNameJ1').textContent = players.j1;
+  document.getElementById('playerNameJ2').textContent = players.j2;
+  document.getElementById('playerNameJ3').textContent = players.j3;
+  document.getElementById('playerNameJ4').textContent = players.j4;
+  document.getElementById('teamLabelA').value = teamLabelA;
+  document.getElementById('teamLabelB').value = teamLabelB;
+  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
+  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
+  if (statsMode === 'joueur') {
+    document.getElementById('lblA').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblB').closest('.team-controls').style.display = 'none';
+    document.getElementById('lblJ1').textContent = players.j1;
+    document.getElementById('lblJ2').textContent = players.j2;
+    document.getElementById('lblJ3').textContent = players.j3;
+    document.getElementById('lblJ4').textContent = players.j4;
+    ['joueurCtrlJ1','joueurCtrlJ2','joueurCtrlJ3','joueurCtrlJ4'].forEach(id => {
+      document.getElementById(id).style.display = '';
+    });
+  }
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let p1=0, p2=0, g1=0, g2=0, s1=0, s2=0;
+let setHistory=[];
+let inTiebreak=false, inSuperTiebreak=false, matchOver=false;
+
+// ── SERVICE (qui sert actuellement) ──────────────────────────────────────
+let firstServingTeam = null;
+let serverTeamAFirst = null;
+let serverTeamBFirst = null;
+let matchGameCount = 0;
+let serverManualAdjustment = 0;
+let pendingCycleAdjustment = null; // cran en attente si "Changer" a dû poser une question avant de l'appliquer
+
+function emptyStats(){
+  const base = {pA:0, pB:0};
+  for(const t of ['A','B']) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+t+'_'+s]=0;
+    }
+  }
+  for(const n of [1,2,3,4]) {
+    for(const tp of ['w','f']) {
+      for(const s of ALL_SHOT_KEYS) base[tp+n+'_'+s]=0;
+    }
+  }
+  return base;
+}
+let stats = emptyStats();
+let history = [];
+let matchLog = [];
+const TP = ['0','15','30','40'];
+
+// ── VUE DES STATS : TOTAL DU MATCH OU PAR SET ───────────────────────────────
+// `stats` cumule toujours l'ensemble du match. À chaque set terminé, on
+// capture une photo de `stats` à cet instant ; les stats d'un set donné sont
+// alors la différence entre deux photos consécutives. Seul le panneau "Stats
+// détaillées" bascule sur cette vue ; la cartographie par zone et le PDF
+// restent basés sur les stats totales du match.
+let setSnapshots = [];        // stats cumulées à la fin de chaque set terminé
+let statsViewMode = 'total';  // 'total' | 'set'
+let statsViewSetIdx = 1;      // numéro du set affiché quand statsViewMode === 'set'
+
+function diffStats(newer, older) {
+  const out = {};
+  Object.keys(newer || {}).forEach(k => {
+    const nv = newer[k], ov = (older || {})[k];
+    if (nv && typeof nv === 'object') {
+      out[k] = diffStats(nv, ov || {});
+    } else {
+      out[k] = (nv || 0) - (ov || 0);
+    }
+  });
+  return out;
+}
+
+// Réduit un objet stats (détaillé par coup/zone) à ses totaux Winners/Fautes/Points
+// par équipe — utilisé pour le récap "Détail par set" du PDF et pour l'historique.
+function aggregateStats(s) {
+  return {
+    wA: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['wA_'+sh]||0),0),
+    wB: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['wB_'+sh]||0),0),
+    fA: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['fA_'+sh]||0),0),
+    fB: ALL_SHOT_KEYS.reduce((t,sh)=>t+(s['fB_'+sh]||0),0),
+    pA: s.pA || 0,
+    pB: s.pB || 0,
+  };
+}
+
+function getDisplayStats() {
+  if (statsViewMode === 'total') return stats;
+  const older = setSnapshots[statsViewSetIdx - 2] || {};
+  const newer = statsViewSetIdx <= setSnapshots.length ? setSnapshots[statsViewSetIdx - 1] : stats;
+  return diffStats(newer, older);
+}
+
+function renderStatsViewSwitch() {
+  const wrap = document.getElementById('statsViewSwitch');
+  if (!wrap) return;
+  const finishedSets = setSnapshots.length;
+  const showCurrent = !matchOver;
+  const totalChips = finishedSets + (showCurrent ? 1 : 0);
+
+  let html = `<button class="sv-chip${statsViewMode==='total'?' active':''}" onclick="setStatsView('total')">Total match</button>`;
+  for (let i = 1; i <= totalChips; i++) {
+    const isCurrent = i === finishedSets + 1 && showCurrent;
+    html += `<button class="sv-chip${statsViewMode==='set'&&statsViewSetIdx===i?' active':''}" onclick="setStatsView('set',${i})">Set ${i}${isCurrent?' (en cours)':''}</button>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function setStatsView(mode, idx) {
+  statsViewMode = mode;
+  if (mode === 'set') statsViewSetIdx = idx;
+  renderStatsViewSwitch();
+  renderStats();
+}
+
+// ── PARTAGE EN DIRECT ────────────────────────────────────────────────────
+// Un simple lien de lecture seule : on pousse régulièrement l'état du match
+// vers le Worker (qui le stocke temporairement), et quiconque a le lien peut
+// le consulter via /live?code=xxxxxx sans pouvoir interagir avec le match.
+let liveShareCode = null;
+let liveSharePushTimer = null;
+
+function genLiveCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans caractères ambigus
+  let out = '';
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function buildLiveState() {
+  const agg = aggregateStats(stats);
+  return {
+    kind: 'shots',
+    nameA, nameB,
+    teamLabelA, teamLabelB,
+    s1, s2, g1, g2, p1, p2,
+    inTiebreak, inSuperTiebreak, matchOver, matchStarted,
+    winner: matchOver ? (s1 > s2 ? nameA : nameB) : null,
+    setHistory,
+    stats: agg,
+  };
+}
+
+async function pushLiveState() {
+  if (!liveShareCode) return;
+  try {
+    await fetch('/api/live/' + liveShareCode, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildLiveState()),
+    });
+  } catch (e) { /* échec silencieux : le partage reprendra à la prochaine action */ }
+}
+
+function toggleLiveShare() {
+  if (liveShareCode) {
+    openLiveModal();
+    return;
+  }
+  liveShareCode = genLiveCode();
+  document.getElementById('liveShareBtn').classList.add('active');
+  pushLiveState();
+  liveSharePushTimer = setInterval(pushLiveState, 5000);
+  openLiveModal();
+}
+
+function openLiveModal() {
+  const link = window.location.origin + '/live?code=' + liveShareCode;
+  document.getElementById('liveLinkInput').value = link;
+  document.getElementById('liveModalBackdrop').classList.add('show');
+}
+
+function closeLiveModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('liveModalBackdrop').classList.remove('show');
+}
+
+function copyLiveLink() {
+  const input = document.getElementById('liveLinkInput');
+  input.select();
+  navigator.clipboard?.writeText(input.value).catch(() => {});
+  const btn = document.getElementById('liveCopyBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Copié !';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+function stopLiveShare() {
+  if (liveSharePushTimer) { clearInterval(liveSharePushTimer); liveSharePushTimer = null; }
+  if (liveShareCode) {
+    fetch('/api/live/' + liveShareCode, { method: 'DELETE' }).catch(() => {});
+  }
+  liveShareCode = null;
+  document.getElementById('liveShareBtn').classList.remove('active');
+  closeLiveModal();
+}
+
+// ── SAVE STATE ────────────────────────────────────────────────────────────────
+function saveState() {
+  history.push({
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory: JSON.parse(JSON.stringify(setHistory)),
+    stats: JSON.parse(JSON.stringify(stats)),
+    setSnapshots: JSON.parse(JSON.stringify(setSnapshots)),
+    pill: document.getElementById('setPill').innerText,
+    status: document.getElementById('statusLabel').innerText
+  });
+}
+
+// ── SCORE LOGIC ───────────────────────────────────────────────────────────────
+function scoreSnapshot(player) {
+  let pp1=p1, pp2=p2;
+  if (player === 1) pp1++; else pp2++;
+  let ptStr;
+  if (inSuperTiebreak || inTiebreak) {
+    ptStr = pp1 + '-' + pp2;
+  } else {
+    let a = TP[Math.min(pp1,3)] || '0';
+    let b = TP[Math.min(pp2,3)] || '0';
+    if (pp1>=3 && pp2>=3) { a='40'; b='40'; }
+    ptStr = a + '-' + b;
+  }
+  return ptStr + ' · Jeu ' + g1 + '-' + g2 + ' · Set ' + s1 + '-' + s2;
+}
+ let pendingShot = null;
+function scorePoint(player, type) {
+  if (matchOver) return;
+  saveState();
+
+  const shot = pendingShot || 'service_1';
+  pendingShot = null;
+
+  if (player === 1) {
+    stats.pA++;
+    if (type === 'winner') stats['wA_'+shot]++; else stats['fB_'+shot]++;
+  } else {
+    stats.pB++;
+    if (type === 'winner') stats['wB_'+shot]++; else stats['fA_'+shot]++;
+  }
+  const playerNumForLog = pendingPlayerNum;
+  if (pendingPlayerNum) {
+    if (type === 'winner') stats['w'+pendingPlayerNum+'_'+shot]++;
+    else stats['f'+pendingPlayerNum+'_'+shot]++;
+    pendingPlayerNum = null;
+  }
+
+  const teamName = player === 1 ? nameA : nameB;
+  const scoreLabel = scoreSnapshot(player);
+  logPoint(teamName, type, shot, playerNumForLog, scoreLabel);
+
+  advancePoint(player);
+}
+
+// Logique de progression du score (jeu / tie-break / super tie-break),
+// commune à un point marqué normalement et à un point ajouté manuellement
+// (bouton de rattrapage) — seule la partie "stats" diffère entre les deux.
+function advancePoint(player) {
+  if (inSuperTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 10 || p2 >= 10) && Math.abs(p1 - p2) >= 2) {
+      winSet(player, {a:p1, b:p2});
+    } else {
+      updateDisplay();
+    }
+    return;
+  }
+  if (inTiebreak) {
+    if (player === 1) p1++; else p2++;
+    if ((p1 >= 7 || p2 >= 7) && Math.abs(p1 - p2) >= 2) {
+      winGame(player);
+    } else {
+      updateDisplay();
+    }
+    return;
+  }
+  if (player === 1) p1++; else p2++;
+  if (p1 > 3 || p2 > 3) {
+    if (p1 > p2) winGame(1); else winGame(2);
+  } else {
+    updateDisplay();
+  }
+}
+
+// ── RATTRAPAGE DE SCORE (corrections manuelles) ──────────────────────────
+// Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié,
+// sans que ça compte dans les statistiques par coup (aucun type de coup
+// n'est demandé, ce n'est pas une vraie action de jeu).
+function addManualPoint(player) {
+  if (matchOver) return;
+  ensureTimerRunning();
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Point ajouté manuellement');
+  advancePoint(player);
+}
+
+function addManualGame(player) {
+  if (matchOver) return;
+  ensureTimerRunning();
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
+  saveState();
+  logEvent(player === 1 ? nameA : nameB, '➕ Jeu ajouté manuellement');
+  winGame(player);
+}
+
+function removeManualPoint(player) {
+  if (matchOver) return;
+  saveState();
+  if (player === 1) { if (p1 > 0) p1--; } else { if (p2 > 0) p2--; }
+  logEvent(player === 1 ? nameA : nameB, '➖ Point retiré manuellement');
+  updateDisplay();
+}
+
+function removeManualGame(player) {
+  if (matchOver) return;
+  saveState();
+  if (player === 1) { if (g1 > 0) g1--; } else { if (g2 > 0) g2--; }
+  if (matchGameCount > 0) matchGameCount--;
+  logEvent(player === 1 ? nameA : nameB, '➖ Jeu retiré manuellement');
+  updateDisplay();
+}
+
+// Raccourci pour rejoindre un match déjà à 1 set partout : place directement
+// le score sur 1-1 et démarre le Super Tie-Break, sans avoir à rejouer les
+// jeux/points des 2 sets précédents un par un.
+function jumpToSuperTiebreak() {
+  if (matchOver) return;
+  if (!confirm("Passer directement à 1 set partout et démarrer le Super Tie-Break ? Cette action remplace le score actuel des sets.")) return;
+  saveState();
+  s1 = 1; s2 = 1;
+  g1 = 0; g2 = 0; p1 = 0; p2 = 0;
+  inTiebreak = false; inSuperTiebreak = true;
+  document.getElementById('setPill').textContent = 'Super Tie-Break';
+  document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+  logEvent('', '⏩ Passage direct au Super Tie-Break (1 set partout)');
+  updateDisplay();
+}
+
+function winGame(player) {
+  const wasTiebreak = inTiebreak;
+  p1=0; p2=0; inTiebreak=false;
+  if (player === 1) g1++; else g2++;
+  logEvent(player===1 ? nameA : nameB, 'remporte le jeu (' + g1 + '-' + g2 + ')');
+
+  matchGameCount++;
+  if (matchGameCount === 1 && firstServingTeam && !matchOver) {
+    const otherKnown = firstServingTeam === 'A' ? serverTeamBFirst : serverTeamAFirst;
+    if (!otherKnown) askSecondTeamServer();
+  }
+
+  if (wasTiebreak) { winSet(player); return; }
+  const maxG = Math.max(g1,g2), minG = Math.min(g1,g2);
+  if (maxG >= 6 && maxG - minG >= 2) { winSet(player); return; }
+
+  if (g1 === 6 && g2 === 6) {
+    if (s1 === 1 && s2 === 1) {
+      inSuperTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Super Tie-Break';
+      document.getElementById('statusLabel').textContent = "10 pts";
+    } else {
+      inTiebreak=true; p1=0; p2=0;
+      document.getElementById('setPill').textContent = 'Tie-Break';
+      document.getElementById('statusLabel').textContent = "7 pts";
+    }
+  }
+  updateDisplay();
+}
+
+// ── SERVICE : calcul du serveur actuel ───────────────────────────────────
+// Index de tour de service continu depuis le début du match : +1 à chaque
+// jeu normal terminé, et +1 tous les 2 points pendant un tie-break/super
+// tie-break (le tout premier point d'un tie-break ne compte qu'à lui seul,
+// comme au vrai tennis). Le reste (mod 4) alterne entre l'équipe qui sert en
+// premier (firstServingTeam) et l'autre, chacune alternant ses 2 joueurs à
+// chaque fois que c'est son tour.
+function computeCurrentServer() {
+  if (!firstServingTeam) return null;
+
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+
+  const turnIndex = matchGameCount + tiebreakOffset + serverManualAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const team = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const withinTeamTurn = Math.floor(residue / 2) % 2;
+
+  const secondA = serverTeamAFirst === 'j1' ? 'j2' : (serverTeamAFirst === 'j2' ? 'j1' : null);
+  const secondB = serverTeamBFirst === 'j3' ? 'j4' : (serverTeamBFirst === 'j4' ? 'j3' : null);
+
+  if (team === 'A') {
+    if (!serverTeamAFirst) return { team: 'A', key: null };
+    return { team: 'A', key: withinTeamTurn === 0 ? serverTeamAFirst : secondA };
+  }
+  if (!serverTeamBFirst) return { team: 'B', key: null };
+  return { team: 'B', key: withinTeamTurn === 0 ? serverTeamBFirst : secondB };
+}
+
+function updateServerBadge() {
+  const el = document.getElementById('serverIndicator');
+  const server = computeCurrentServer();
+
+  // Balle 🎾 à côté du prénom du joueur qui sert actuellement, dans le
+  // tableau de score (en plus du badge dédié ci-dessous).
+  ['j1','j2','j3','j4'].forEach(key => {
+    const span = document.getElementById('playerName' + key.toUpperCase());
+    if (!span) return;
+    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+  });
+
+  if (!el) return;
+  if (!server || !server.key) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.querySelector('.server-name').textContent = players[server.key] || (server.team === 'A' ? nameA : nameB);
+  el.className = 'server-indicator ' + (server.team === 'A' ? 'team-a' : 'team-b');
+}
+
+function serverQuestionNeeded() {
+  if (!firstServingTeam) return 'initial';
+  if (matchGameCount >= 1) {
+    const otherKnown = firstServingTeam === 'A' ? serverTeamBFirst : serverTeamAFirst;
+    if (!otherKnown) return 'second';
+  }
+  return null;
+}
+
+function askInitialServer() {
+  const modal = document.getElementById('serverModal');
+  const title = document.getElementById('serverModalTitle');
+  const btnsWrap = document.getElementById('serverModalBtns');
+  if (!modal) return;
+  title.textContent = 'Qui sert en premier ?';
+  btnsWrap.innerHTML = '';
+  // On ne demande QUE le 1er serveur de l'équipe qui commence : on ne sait
+  // pas toujours à l'avance qui servira côté adverse. La question "en face"
+  // n'arrive donc que juste avant le 2e jeu (voir winGame) — ou plus tôt si
+  // "Changer" en a besoin avant ça.
+  buildServerTeamGroup(btnsWrap, 'A', ['j1','j2'], (team, key) => {
+    firstServingTeam = team; serverTeamAFirst = key;
+    modal.classList.remove('show');
+    updateServerBadge(); saveProgress();
+  });
+  buildServerTeamGroup(btnsWrap, 'B', ['j3','j4'], (team, key) => {
+    firstServingTeam = team; serverTeamBFirst = key;
+    modal.classList.remove('show');
+    updateServerBadge(); saveProgress();
+  });
+  modal.classList.add('show');
+}
+
+function askSecondTeamServer() {
+  const team = firstServingTeam === 'A' ? 'B' : 'A';
+  const modal = document.getElementById('serverModal');
+  const title = document.getElementById('serverModalTitle');
+  const btnsWrap = document.getElementById('serverModalBtns');
+  if (!modal) return;
+  title.textContent = 'Et en face, qui sert en premier ?';
+  btnsWrap.innerHTML = '';
+  buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
+    if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
+    modal.classList.remove('show');
+    if (pendingCycleAdjustment !== null) {
+      serverManualAdjustment = pendingCycleAdjustment;
+      pendingCycleAdjustment = null;
+    }
+    updateServerBadge(); saveProgress();
+  });
+  modal.classList.add('show');
+}
+
+function buildServerTeamGroup(container, team, keys, onPick) {
+  const group = document.createElement('div');
+  group.className = 'server-modal-group';
+  const label = document.createElement('div');
+  label.className = 'server-modal-group-label team-' + team.toLowerCase();
+  label.textContent = 'Équipe ' + team;
+  group.appendChild(label);
+  const row = document.createElement('div');
+  row.className = 'server-modal-group-row';
+  keys.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'server-modal-btn team-' + team.toLowerCase();
+    btn.textContent = players[key];
+    btn.onclick = () => onPick(team, key);
+    row.appendChild(btn);
+  });
+  group.appendChild(row);
+  container.appendChild(group);
+}
+
+function cycleServerManually() {
+  if (!firstServingTeam) { askInitialServer(); return; }
+
+  const nextAdjustment = serverManualAdjustment + 1;
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+  const turnIndex = matchGameCount + tiebreakOffset + nextAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const nextTeam = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const nextTeamKnown = nextTeam === 'A' ? serverTeamAFirst : serverTeamBFirst;
+
+  if (!nextTeamKnown) { pendingCycleAdjustment = nextAdjustment; askSecondTeamServer(); return; }
+
+  serverManualAdjustment = nextAdjustment;
+  updateServerBadge();
+  saveProgress();
+}
+
+function winSet(player, scoreOverride){
+  const wasSuperTiebreak = inSuperTiebreak;
+  setHistory.push(scoreOverride || {a:g1,b:g2});
+  setSnapshots.push(JSON.parse(JSON.stringify(stats)));
+  p1=0; p2=0; g1=0; g2=0; 
+  inTiebreak=false; 
+  inSuperTiebreak=false;
+
+  if(player===1) s1++; else s2++;
+  if (wasSuperTiebreak) {
+    logEvent(player===1?nameA:nameB,"remporte le super tie-break ("+scoreOverride.a+"-"+scoreOverride.b+") et le match !");
+  } else {
+    logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
+  }
+
+  // Si une équipe a 2 sets, elle gagne le match
+  if(s1===2 || s2===2){
+    winMatch(player); 
+    return;
+  }
+
+  // SI ON EST À 1-1 : On active immédiatement le Super Tie-Break pour le 3ème set
+  if(s1===1 && s2===1){
+    inSuperTiebreak = true;
+    document.getElementById('setPill').textContent = "Super Tie-Break";
+    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+    logEvent("", "⚡ Début du Super Tie-Break (3e set) !");
+  } else {
+    // Passage au set 2 normal
+    document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
+    document.getElementById('statusLabel').textContent = "En cours";
+  }
+  
+  updateDisplay();
+}
+
+function winMatch(player) {
+  matchOver = true;
+  if(timerRunning) timerToggle();
+  const winner = player === 1 ? nameA : nameB;
+  document.getElementById('winnerName').textContent = winner;
+  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
+  
+  const _totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const _totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const _totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const _totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+  
+  document.getElementById('ws-wA').textContent = _totWA;
+  document.getElementById('ws-wB').textContent = _totWB;
+  document.getElementById('ws-fA').textContent = _totFA;
+  document.getElementById('ws-fB').textContent = _totFB;
+  document.getElementById('winnerOverlay').classList.add('show');
+  logEvent(winner, '🏆 VICTOIRE !');
+  saveMatchToHistory(winner, _totWA, _totWB, _totFA, _totFB);
+  clearProgress();
+  updateDisplay();
+}
+
+// ── SAUVEGARDE DE L'HISTORIQUE (localStorage) ────────────────────────────────
+function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
+  const record = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    page: 'Savancee',
+    nameA, nameB,
+    winner,
+    sets: s1 + '-' + s2,
+    setDetail: setHistory.map(sh => sh.a + '/' + sh.b).join('  '),
+    setHistory: JSON.parse(JSON.stringify(setHistory)),
+    matchLog: JSON.parse(JSON.stringify(matchLog)),
+    players: JSON.parse(JSON.stringify(players)),
+    mode: typeof mode !== 'undefined' ? mode : 'equipe',
+    teamLabelA, teamLabelB,
+    duration: formatDuration(timerSeconds),
+    stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB },
+    // Données complètes (détail par coup/joueur) : nécessaires pour régénérer,
+    // depuis l'historique, le même PDF détaillé que celui téléchargeable en direct.
+    statsFull: JSON.parse(JSON.stringify(stats)),
+    setSnapshotsFull: JSON.parse(JSON.stringify(setSnapshots)),
+    setSnapshots: setSnapshots.map(sn => aggregateStats(sn))
+  };
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('beachstats_history')) || []; } catch(e) { hist = []; }
+  hist.push(record);
+
+  // Le stockage local du navigateur est limité (souvent 5-10 Mo). Les données
+  // complètes (statsFull/setSnapshotsFull) rendent chaque match assez lourd,
+  // surtout en mode Pro : si l'espace vient à manquer, on ne doit JAMAIS
+  // perdre le match silencieusement. On retente en 3 niveaux, du plus complet
+  // au plus léger, avant d'avertir clairement en dernier recours.
+  const trySaveHistory = (arr) => {
+    try { localStorage.setItem('beachstats_history', JSON.stringify(arr)); return true; }
+    catch(e) { return false; }
+  };
+
+  if (trySaveHistory(hist)) return;
+
+  // Niveau 2 : on retire le détail complet de CE match (le PDF régénéré
+  // depuis l'historique sera alors la version simple, mais le match reste).
+  const last = hist[hist.length - 1];
+  delete last.statsFull;
+  delete last.setSnapshotsFull;
+  if (trySaveHistory(hist)) {
+    console.warn('Stockage presque plein : match sauvegardé en version allégée (sans détail complet).');
+    return;
+  }
+
+  // Niveau 3 : on libère de la place en retirant le détail complet des plus
+  // anciens matchs (du plus vieux au plus récent), un par un.
+  for (let i = 0; i < hist.length - 1; i++) {
+    if (hist[i].statsFull || hist[i].setSnapshotsFull) {
+      delete hist[i].statsFull;
+      delete hist[i].setSnapshotsFull;
+      if (trySaveHistory(hist)) {
+        console.warn("Stockage plein : détail complet retiré d'anciens matchs pour faire de la place.");
+        return;
+      }
+    }
+  }
+
+  // Rien n'a fonctionné : le match n'a vraiment pas pu être sauvegardé.
+  // On prévient clairement plutôt que de le perdre en silence.
+  alert("Ton match n'a pas pu être sauvegardé : la mémoire de stockage de ton navigateur est pleine.\n\nVa dans l'Historique et utilise « Exporter » pour sauvegarder tes matchs dans un fichier, puis « Tout effacer » pour libérer de la place.");
+}
+
+function undo() {
+  if (matchOver) { matchOver=false; document.getElementById('winnerOverlay').classList.remove('show'); }
+  if (history.length === 0) return;
+  const last = history.pop();
+  p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
+  inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  setHistory=last.setHistory||[];
+  stats = JSON.parse(JSON.stringify(last.stats));
+  setSnapshots = JSON.parse(JSON.stringify(last.setSnapshots || []));
+  if (statsViewMode === 'set' && statsViewSetIdx > setSnapshots.length + 1) {
+    statsViewMode = 'total';
+  }
+  document.getElementById('setPill').innerText = last.pill;
+  document.getElementById('statusLabel').innerText = last.status;
+  const list = document.getElementById('logList');
+  if (list.firstChild) list.removeChild(list.firstChild);
+  matchLog.shift();
+  updateDisplay();
+}
+
+function updateDisplay() {
+  saveProgress();
+  if (liveShareCode) pushLiveState();
+  updateServerBadge();
+  let ptA, ptB;
+  if (inSuperTiebreak || inTiebreak) {
+    ptA=p1; ptB=p2;
+  } else {
+    ptA=TP[p1]||'0'; ptB=TP[p2]||'0';
+    if (p1===3 && p2===3) { ptA='40'; ptB='40'; }
+  }
+  document.getElementById('ptA').textContent = ptA;
+  document.getElementById('ptB').textContent = ptB;
+  for(let i=1;i<=3;i++){
+    const cellA=document.getElementById('setA'+i);
+    const cellB=document.getElementById('setB'+i);
+    if(i-1 < setHistory.length){
+      const sh=setHistory[i-1];
+      cellA.textContent=sh.a; cellB.textContent=sh.b;
+      cellA.className='cell set-score '+(sh.a>sh.b?'won':'');
+      cellB.className='cell set-score '+(sh.b>sh.a?'won':'');
+    } else if(i-1 === setHistory.length){
+      cellA.textContent=g1; cellB.textContent=g2;
+      cellA.className='cell set-score active';
+      cellB.className='cell set-score active';
+    } else {
+      cellA.textContent='—'; cellB.textContent='—';
+      cellA.className='cell set-score'; cellB.className='cell set-score';
+    }
+  }
+  renderStatsViewSwitch();
+  renderStats();
+}
+
+function logPoint(winnerTeam, type, shot, playerNum, scoreLabel) {
+  const isA = winnerTeam === nameA;
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const label = (type === 'winner' ? '🎯 ' : '💥 ') + SHOT_LBL[shot];
+  const dotClass = type === 'winner' ? (isA ? 'dot-a' : 'dot-b') : (isA ? 'dot-b' : 'dot-a');
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayTeam = playerNum
+    ? playerNames[playerNum]
+    : (type === 'winner' ? winnerTeam : (isA ? nameB : nameA));
+
+  const entry = {team: displayTeam, type, shot, time, msg: label, score: scoreLabel};
+  const className = 'log-entry ' + dotClass;
+  const html = `<span class="dot"></span><span>${time} — <strong>${escapeHtml(displayTeam)}</strong> <span style="color:var(--gold);font-family:Barlow Condensed,sans-serif;font-weight:700">${scoreLabel}</span></span><span class="log-tag ${type}">${label}</span>`;
+  entry._dom = {className, html};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = html;
+  list.prepend(div);
+}
+
+function logEvent(team, msg) {
+  const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const entry = {team, msg, time};
+  const className = 'log-entry event';
+  const html = `<span class="dot"></span><span>${time}${team?' — <strong>'+escapeHtml(team)+'</strong>':''} ${msg}</span>`;
+  entry._dom = {className, html};
+  matchLog.unshift(entry);
+  const list = document.getElementById('logList');
+  const div = document.createElement('div');
+  div.className = className;
+  div.innerHTML = html;
+  list.prepend(div);
+}
+
+// ── SAUVEGARDE DU MATCH EN COURS (protège d'un rafraîchissement accidentel) ──
+const PROGRESS_KEY = 'beachstats_inprogress_avancees';
+
+function saveProgress() {
+  if (matchOver) { clearProgress(); return; }
+  const snapshot = {
+    p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
+    stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
+    teamLabelA, teamLabelB,
+    firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
+    nameA, nameB, savedAt: Date.now(),
+  };
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(PROGRESS_KEY); } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    if (snap.p1===0 && snap.p2===0 && snap.g1===0 && snap.g2===0 && snap.s1===0 && snap.s2===0) return null;
+    return snap;
+  } catch(e) { return null; }
+}
+
+function rebuildLog() {
+  const list = document.getElementById('logList');
+  list.innerHTML = '';
+  matchLog.forEach(entry => {
+    if (!entry._dom) return;
+    const div = document.createElement('div');
+    div.className = entry._dom.className;
+    div.innerHTML = entry._dom.html;
+    list.appendChild(div);
+  });
+}
+
+function applyProgress(snap) {
+  p1=snap.p1; p2=snap.p2; g1=snap.g1; g2=snap.g2; s1=snap.s1; s2=snap.s2;
+  setHistory = snap.setHistory || [];
+  inTiebreak = snap.inTiebreak; inSuperTiebreak = snap.inSuperTiebreak; matchOver = snap.matchOver;
+  stats = snap.stats || stats;
+  setSnapshots = snap.setSnapshots || [];
+  history = snap.history || [];
+  matchLog = snap.matchLog || [];
+  timerSeconds = snap.timerSeconds || 0;
+  matchStarted = snap.matchStarted !== undefined ? snap.matchStarted : true;
+  teamLabelA = snap.teamLabelA || ''; teamLabelB = snap.teamLabelB || '';
+  firstServingTeam = snap.firstServingTeam || null;
+  serverTeamAFirst = snap.serverTeamAFirst || null;
+  serverTeamBFirst = snap.serverTeamBFirst || null;
+  matchGameCount = snap.matchGameCount || 0;
+  serverManualAdjustment = snap.serverManualAdjustment || 0;
+  document.getElementById('teamLabelA').value = teamLabelA;
+  document.getElementById('teamLabelB').value = teamLabelB;
+  document.getElementById('setPill').textContent = !matchStarted ? 'Échauffement' : (inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1));
+  document.getElementById('statusLabel').textContent = matchOver ? 'Terminé' : 'En cours';
+  rebuildLog();
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+  const s = String(timerSeconds % 60).padStart(2,'0');
+  document.getElementById('timerDisplay').textContent = m + ':' + s;
+  updateDisplay();
+}
+
+function confirmResume() {
+  const snap = loadProgress();
+  document.getElementById('resumeOverlay').classList.remove('show');
+  if (snap) applyProgress(snap);
+}
+
+function discardResume() {
+  clearProgress();
+  document.getElementById('resumeOverlay').classList.remove('show');
+  updateDisplay();
+  logEvent('', '🎾 Match créé');
+}
+
+function checkResumeOnLoad() {
+  const snap = loadProgress();
+  if (!snap) return;
+  const matchup = (snap.nameA || nameA) + ' vs ' + (snap.nameB || nameB);
+  document.getElementById('resumeMatchup').textContent = matchup;
+  document.getElementById('resumeScoreInfo').textContent = `Sets ${snap.s1}-${snap.s2} · Jeux ${snap.g1}-${snap.g2}`;
+  document.getElementById('resumeOverlay').classList.add('show');
+}
+
+function resetMatch() {
+  if (!confirm('Remettre à zéro ?')) return;
+  clearProgress();
+  p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
+  inTiebreak=false;inSuperTiebreak=false;matchOver=false;
+  setHistory=[]; timerReset(); stats=emptyStats();
+  setSnapshots=[]; statsViewMode='total'; statsViewSetIdx=1;
+  history=[]; matchLog=[];
+  matchStarted=false;
+  firstServingTeam=null; serverTeamAFirst=null; serverTeamBFirst=null; matchGameCount=0; serverManualAdjustment=0;
+  teamLabelA=''; teamLabelB='';
+  document.getElementById('teamLabelA').value='';
+  document.getElementById('teamLabelB').value='';
+  document.getElementById('setPill').textContent='Échauffement';
+  document.getElementById('logList').innerHTML='';
+  document.getElementById('winnerOverlay').classList.remove('show');
+  updateDisplay();
+  logEvent('', '🎾 Match créé');
+}
+
+// ── SHOT MODAL (MIS À JOUR) ──────────────────────────────────────────────────
+let pendingPlayer = null;
+let pendingType = null;
+let pendingPlayerNum = null;
+
+// Variantes disponibles à l'étape 2, par coup côté (CD/REV non pertinents pour le bras roulé)
+const SIDED_VARIANTS = {
+  retour: ['cd', 'rev'],
+  amorti: ['cd', 'rev'],
+  lob: ['cd', 'rev', 'rainbow'],
+  rush: ['cd', 'rev', 'rainbow'],
+  defense: ['cd', 'rev'],
+  roule: ['amorti', 'lob']
+};
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', rainbow: 'Rainbow', amorti: 'Amorti', lob: 'Lob' };
+const SIDED_SHOTS = Object.keys(SIDED_VARIANTS); // coups qui ont une étape de sélection supplémentaire
+
+function openShotModal(player, type, playerNum) {
+  if (matchOver) return;
+  ensureTimerRunning();
+
+  // Tant qu'on ne sait pas qui sert, on affiche la question et on bloque —
+  // pas d'ouverture du choix du type de coup tant qu'elle n'est pas répondue.
+  const pending = serverQuestionNeeded();
+  if (pending === 'initial') { askInitialServer(); return; }
+  if (pending === 'second') { askSecondTeamServer(); return; }
+
+  pendingPlayer = player;
+  pendingType = type;
+  pendingPlayerNum = playerNum || null;
+  
+  const isWinner = type === 'winner';
+  const teamName = player === 1 ? nameA : nameB;
+  const actionTeam = isWinner ? teamName : (player === 1 ? nameB : nameA);
+  const playerNames = { 1: players.j1, 2: players.j2, 3: players.j3, 4: players.j4 };
+  const displayName = playerNum ? playerNames[playerNum] : actionTeam;
+
+  document.getElementById('modalContext').innerHTML = `<span>${isWinner ? '🎯 Point gagnant par' : '💥 Faute directe de'}</span>${escapeHtml(displayName)}`;
+  
+  renderShotCategories();
+  document.getElementById('shotModal').classList.add('show');
+}
+
+// ── ÉTAPE 1 : grandes catégories ─────────────────────────────────────────────
+function renderShotCategories() {
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = '';
+  
+  BASE_SHOTS.forEach(s => {
+    const group = document.createElement('div');
+    group.className = 'shot-group';
+    group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">
+      <span class="s-ico">${SHOT_ICO[s]}</span>${SHOT_LBL[s]}
+    </button>`;
+    grid.appendChild(group);
+  });
+}
+
+// ── ÉTAPE 2 : choix du côté (uniquement pour les coups qui en ont un) ───────
+const SERVICE_ZONES = ['1', '2', '3', '4', '5'];
+
+function selectShotCategory(s) {
+  if (s === 'service') {
+    const btns = SERVICE_ZONES.map(z =>
+      `<button class="shot-btn type-${pendingType}" onclick="confirmShot('service_${z}')">Zone ${z}</button>`
+    ).join('');
+    const grid = document.getElementById('shotGrid');
+    grid.innerHTML = `
+      <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+      <div class="shot-group" style="grid-column:1 / -1">
+        <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+        <div class="shot-sub-row">${btns}</div>
+      </div>`;
+    return;
+  }
+
+  if (!SIDED_SHOTS.includes(s)) { confirmShot(s); return; }
+  
+  const variants = SIDED_VARIANTS[s];
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_LBL[s]}</div>
+      <div class="shot-sub-row">
+        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="confirmShot('${s}_${v}')">${VARIANT_LBL[v]}</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function closeShotModal() {
+  document.getElementById('shotModal').classList.remove('show');
+}
+
+function confirmShot(shotKey) {
+  pendingShot = shotKey;
+  closeShotModal();
+  scorePoint(pendingPlayer, pendingType);
+}
+
+// ── RENDER STATS (MIS À JOUR) ────────────────────────────────────────────────
+function renderStats() {
+  if (statsMode === 'joueur') { renderStatsParJoueur(); return; }
+
+  const el = document.getElementById('statsContent');
+  const ds = getDisplayStats();
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wB_'+sh]||0),0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
+
+  // Même présentation que le mode "Stats de base" : gros chiffres + barre
+  // pleine largeur, pour rester lisible même avec le détail par coup.
+  const statRow = (a, b, label) => {
+    const t = a + b || 1;
+    const pctA = Math.round(a / t * 100);
+    return `
+      <div class="stat-row">
+        <div class="stat-val a">${a}</div>
+        <div class="stat-name">${label}</div>
+        <div class="stat-val b">${b}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-bar-wrap"><div class="stat-bar-a" style="width:${pctA}%"></div><div class="stat-bar-b" style="width:${100-pctA}%"></div></div>
+      </div>`;
+  };
+
+  let html = '';
+  html += statRow(totWA, totWB, 'Points gagnants');
+  html += statRow(totFA, totFB, 'Fautes directes');
+  html += statRow(ds.pA||0, ds.pB||0, 'Points gagnés');
+
+  const winnerRows = ALL_SHOT_KEYS.filter(s => (ds['wA_'+s]||0) > 0 || (ds['wB_'+s]||0) > 0);
+  if (winnerRows.length) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">🎯 Détail — Points gagnants</div>`;
+    winnerRows.forEach(s => { html += statRow(ds['wA_'+s]||0, ds['wB_'+s]||0, SHOT_LBL[s]); });
+  }
+
+  const fauteRows = ALL_SHOT_KEYS.filter(s => (ds['fA_'+s]||0) > 0 || (ds['fB_'+s]||0) > 0);
+  if (fauteRows.length) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">💥 Détail — Fautes directes</div>`;
+    fauteRows.forEach(s => { html += statRow(ds['fA_'+s]||0, ds['fB_'+s]||0, SHOT_LBL[s]); });
+  }
+
+  el.innerHTML = html;
+}
+
+function renderStatsParJoueur() {
+  const el = document.getElementById('statsContent');
+  const ds = getDisplayStats();
+
+  // [nom, clé equipe A ou B, couleur CSS]
+  const playerDefs = [
+    { name: players.j1, team: 'A', cls: 'var(--blue)', num: 1 },
+    { name: players.j2, team: 'A', cls: 'var(--blue)', num: 2 },
+    { name: players.j3, team: 'B', cls: 'var(--orange)', num: 3 },
+    { name: players.j4, team: 'B', cls: 'var(--orange)', num: 4 },
+  ];
+
+  // Détail par type de coup pour un joueur, dans le même style "gros chiffre"
+  // que le reste (plus lisible qu'un mini-tableau compact).
+  const buildPlayerDetail = (p, type) => {
+    const tp = type === 'winner' ? 'w' : 'f';
+    const key = tp + p.num + '_';
+    const rows = ALL_SHOT_KEYS.filter(sh => (ds[key + sh] || 0) > 0);
+    if (!rows.length) return '';
+
+    let html = `<div style="margin-top:.6rem">
+      <div class="stat-name" style="text-align:left;color:${p.cls};margin-bottom:.4rem">${escapeHtml(p.name)}</div>`;
+    rows.forEach(sh => {
+      const v = ds[key + sh] || 0;
+      const maxV = Math.max(1, ...[1,2,3,4].map(n => ds[tp+n+'_'+sh] || 0));
+      const pct = Math.round(v / maxV * 100);
+      html += `
+        <div class="stat-row" style="grid-template-columns:1fr auto;margin-bottom:.35rem">
+          <div class="stat-name" style="text-align:left">${SHOT_LBL[sh]}</div>
+          <div class="stat-val" style="color:${p.cls};font-size:18px">${v}</div>
+        </div>
+        <div class="stat-row" style="margin-bottom:.35rem">
+          <div class="stat-bar-wrap"><div style="width:${pct}%;background:${p.cls};transition:width .4s"></div></div>
+        </div>`;
+    });
+    html += `</div>`;
+    return html;
+  };
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wA_'+sh]||0),0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['wB_'+sh]||0),0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fA_'+sh]||0),0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['fB_'+sh]||0),0);
+
+  const statRow = (a, b, label) => {
+    const t = a + b || 1;
+    const pctA = Math.round(a / t * 100);
+    return `
+      <div class="stat-row">
+        <div class="stat-val a">${a}</div>
+        <div class="stat-name">${label}</div>
+        <div class="stat-val b">${b}</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-bar-wrap"><div class="stat-bar-a" style="width:${pctA}%"></div><div class="stat-bar-b" style="width:${100-pctA}%"></div></div>
+      </div>`;
+  };
+
+  let html = statRow(totWA, totWB, 'Points gagnants') + statRow(totFA, totFB, 'Fautes directes') + statRow(ds.pA||0, ds.pB||0, 'Points gagnés');
+
+  // Récap rapide par joueur — même présentation que le mode "Stats de base".
+  html += `<div class="stat-row" style="grid-template-columns:1fr 60px 60px;margin-top:1.2rem;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px">
+    <div class="stat-name" style="text-align:left">Joueur</div>
+    <div class="stat-name">W</div>
+    <div class="stat-name">F</div>
+  </div>`;
+  playerDefs.forEach(p => {
+    const w = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['w'+p.num+'_'+sh]||0),0);
+    const f = ALL_SHOT_KEYS.reduce((s,sh)=>s+(ds['f'+p.num+'_'+sh]||0),0);
+    html += `<div class="stat-row" style="grid-template-columns:1fr 60px 60px;align-items:center">
+      <div class="stat-name" style="text-align:left;color:var(--text);font-size:13px">${escapeHtml(p.name)}</div>
+      <div class="stat-val" style="text-align:center;color:var(--green);font-size:20px">${w}</div>
+      <div class="stat-val" style="text-align:center;color:var(--red);font-size:20px">${f}</div>
+    </div>`;
+  });
+
+  // Détail par type de coup, par joueur
+  const winnerDetail = playerDefs.map(p => buildPlayerDetail(p, 'winner')).join('');
+  if (winnerDetail) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">🎯 Détail — Points gagnants</div>${winnerDetail}`;
+  }
+  const fauteDetail = playerDefs.map(p => buildPlayerDetail(p, 'faute')).join('');
+  if (fauteDetail) {
+    html += `<div class="stats-title" style="margin-top:1.3rem">💥 Détail — Fautes directes</div>${fauteDetail}`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ── TIMER ────────────────────────────────────────────────────────────────────
+let timerSeconds = 0, timerInterval = null, timerRunning = false;
+let matchStarted = false; // passe à true dès le premier lancement du chrono
+  function ensureTimerRunning() {
+  if (!timerRunning && !matchOver) timerToggle();
+}
+function toggleCorrectionPanel() {
+  document.getElementById('correctionPanel').classList.toggle('open');
+  document.querySelector('.correction-toggle').classList.toggle('open');
+}
+
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').className = 'timer-btn start';
+  } else {
+    timerRunning = true;
+    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').className = 'timer-btn pause';
+    if (!matchStarted) {
+      matchStarted = true;
+      document.getElementById('setPill').textContent = 'Set 1';
+      logEvent('', '▶️ Match démarré');
+      if (!firstServingTeam) askInitialServer();
+    }
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
+      const s = String(timerSeconds % 60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+function timerReset() { clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; document.getElementById('timerDisplay').textContent = '00:00'; }
+function formatDuration(secs){
+  const m=Math.floor(secs/60), s=secs%60;
+  return String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────────
+
+// ── POLICE PERSONNALISÉE POUR LE PDF (Barlow Condensed Black, embarquée en base64) ──
+const BARLOW_BLACK_B64 = "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JbACJUcjRyNhILAFJbAEJUcjRyNhsAYlsAUlSbACJWG5CAAIAGNjIyBYYhshWWO4BABiILAAUFiwQGBZZrABY2AjLiMgIDyKOCMhWS2wPyywABawFyNCILAKQyAuRyNHI2EgYLAgYGawAmIgsABQWLBAYFlmsAFjIyAgPIo4LbBALCMgLkawAiVGsBdDWFAbUllYIDxZLrEwARQrLbBBLCMgLkawAiVGsBdDWFIbUFlYIDxZLrEwARQrLbBCLCMgLkawAiVGsBdDWFAbUllYIDxZIyAuRrACJUawF0NYUhtQWVggPFkusTABFCstsEMssDorIyAuRrACJUawF0NYUBtSWVggPFkusTABFCstsEQssDsriiAgPLAGI0KKOCMgLkawAiVGsBdDWFAbUllYIDxZLrEwARQrsAZDLrAwKy2wRSywABawBCWwBCYgICBGI0dhsAwjQi5HI0cjYbALQysjIDwgLiM4sTABFCstsEYssQoEJUKwABawBCWwBCUgLkcjRyNhILAGI0KxDABCsAtDKyCwYFBYILBAUVizBCAFIBuzBCYFGllCQiMgR7AGQ7ACYiCwAFBYsEBgWWawAWNgILABKyCKimEgsARDYGQjsAVDYWRQWLAEQ2EbsAVDYFmwAyWwAmIgsABQWLBAYFlmsAFjYbACJUZhOCMgPCM4GyEgIEYjR7ABKyNhOCFZsTABFCstsEcssQA6Ky6xMAEUKy2wSCyxADsrISMgIDywBiNCIzixMAEUK7AGQy6wMCstsEkssAAVIEewACNCsgABARUUEy6wNiotsEossAAVIEewACNCsgABARUUEy6wNiotsEsssQABFBOwNyotsEwssDkqLbBNLLAAFkUjIC4gRoojYTixMAEUKy2wTiywCiNCsE0rLbBPLLIAAEYrLbBQLLIAAUYrLbBRLLIBAEYrLbBSLLIBAUYrLbBTLLIAAEcrLbBULLIAAUcrLbBVLLIBAEcrLbBWLLIBAUcrLbBXLLMAAABDKy2wWCyzAAEAQystsFksswEAAEMrLbBaLLMBAQBDKy2wWyyzAAABQystsFwsswABAUMrLbBdLLMBAAFDKy2wXiyzAQEBQystsF8ssgAARSstsGAssgABRSstsGEssgEARSstsGIssgEBRSstsGMssgAASCstsGQssgABSCstsGUssgEASCstsGYssgEB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AwQC5gReAuAC2gLUBGoCzgLIAsICvAK2ArwCsAK8AqoCvAK2ArwCpAReAp4CmAKSApgCjAReAoYCgAJ6AoACdAKAAm4CgAJ6AoACaAKAAnoCgAJiAlwCVgJcBF4CUAJKAlACRAJQAj4CUAJKAlACOAReAjIEXgReAiwCJgReAiAEXgIaBF4CFAReAiAEXgIgBF4CDgReAggEXgIIAwQEXgReAgIEXgICAfwB9gH8AfAB6gRAAeoB5AHqAd4B6gRAAeoB2AHqBEAB6gHSAcwBxgHAAboBtAGuAagCVgGoAaIBqANwAagCVgGoAZwEXgGWAZACVgGQAaIBkAJWBF4BigABAL0CCAABAZwAAAABAUYCCAABALUCvAABAQICvAABAJsAAAABAJQCiAABALcAAwABANcCCAABAN//+AABALkCCAABAIQAAAABAPsCzgABALcCvAABAOUCvAABAQQCvAABAOcAAAABAP0CzgABAOkCCAABAOkAAAABAHQCvAABAHQCCAABADYCvAABAGQCvAABAIMCvAABAGYCCAABAHICCAABAHEAAAABAOgCCAABALQCvAABAOICvAABAQECvAABAOQCCAABAOQAAAABAOUCCAABAOX/+AABAP4CzgABALoCvAABAOgCvAABAQcCvAABAOoCCAABAOoAAAABANICvAABARsDcAABAP4CvAABAP4AAAABAWMCvAABAMEDcAABAO8DcAABAQ4DcAABAPECvAABAPEAAAABAPwCvAABAPMAAAABAOcCvAABAOkCvAABAPUAAAABAWoCvAABAQYDggABAMIDcAABAPADcAABAQ8DcAABAPICvAABAPIAAAABARoDggABAQYCvAABARIAAAABAHwCvAABAM8AAAABARQAAAABAVoCvQABAEgDcAABAHYDcAABAJUDcAABAHgCvAABAHgAAAABAPMCvQABAOz/+AABALMDcAABAOEDcAABAQADcAABAOMCvAABANoAAAABAQACvAABAOoCvAABAO8CvAABAO//+AABAR4DggABANoDcAABAQgDcAABAScDcAABAQoCvAABAQoAAAACAA8ABAAKAAAADQAVAAcAFwAgABAAIgArABoALwA2ACQAOAA4ACwAOgBDAC0ARgBHADcASgBOADkAUABdAD4AXwBnAEwAbABtAFUAbwB0AFcAdgB2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";
+let _titleFontReady = false;
+function embedTitleFont(doc) {
+  try {
+    doc.addFileToVFS('BarlowCondensed-Black.ttf', BARLOW_BLACK_B64);
+    doc.addFont('BarlowCondensed-Black.ttf', 'BarlowCondensed', 'bold');
+    _titleFontReady = true;
+  } catch (e) {
+    _titleFontReady = false;
+  }
+}
+function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helvetica'; }
+
+// ── PALETTE DU PDF ────────────────────────────────────────────────────────
+// Palette fixe et soignée, plus chaleureuse/raffinée que le simple thème
+// sombre de l'appli — la même que sur les autres pages, pour rester cohérent.
+const PDF_THEME = {
+  bg:      [9, 15, 26],
+  surface: [14, 22, 38],
+  card:    [18, 28, 48],
+  border:  [40, 62, 100],
+  gold:    [246, 201, 69],
+  blue:    [77, 141, 255],
+  orange:  [255, 138, 61],
+  green:   [39, 199, 111],
+  red:     [239, 68, 68],
+  text:    [238, 243, 251],
+  muted:   [124, 147, 184],
+};
+
+function exportPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  embedTitleFont(doc);
+  const TF = titleFontName();
+  const theme = PDF_THEME;
+  const W=210, M=20;
+  let y=M;
+
+  const newPage = () => {
+    doc.addPage();
+    doc.setFillColor(...theme.bg);
+    doc.rect(0,0,W,297,'F');
+    y = M;
+  };
+
+  const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  const stripEmoji = (str) => String(str)
+    .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const sectionTitle = (title, color) => {
+    ensureSpace(18);
+    doc.setFillColor(Math.round(color[0]*0.16), Math.round(color[1]*0.16), Math.round(color[2]*0.20));
+    doc.rect(M-4, y-6, W-2*M+8, 12, 'F');
+    doc.setFillColor(...color);
+    doc.rect(M-4, y-6, 1.6, 12, 'F');
+    doc.setFont(TF,'bold'); doc.setFontSize(13); doc.setTextColor(...color);
+    doc.text(title, M+2, y+1.8);
+    y += 12;
+  };
+
+  const stripe = (rowY, h) => {
+    doc.setFillColor(...theme.surface);
+    doc.rect(M-2, rowY-4.2, W-2*M+4, h, 'F');
+  };
+
+  doc.setFillColor(...theme.bg);
+  doc.rect(0,0,W,297,'F');
+
+  doc.setFont(TF,'bold');
+  doc.setFontSize(30); doc.setTextColor(...theme.gold);
+  doc.text('BEACH TENNIS', W/2, y+9, {align:'center'});
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11); doc.setTextColor(...theme.muted);
+  doc.text('STATS AVANCÉES', W/2, y+17, {align:'center'});
+  y+=27;
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10); doc.setTextColor(...theme.muted);
+  doc.text(new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W/2, y, {align:'center'});
+  y+=10;
+  doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=10;
+
+  const totWA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wA_'+sh],0);
+  const totWB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['wB_'+sh],0);
+  const totFA = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fA_'+sh],0);
+  const totFB = ALL_SHOT_KEYS.reduce((s,sh)=>s+stats['fB_'+sh],0);
+
+  ensureSpace(40);
+
+  const winnerIsA = s1 > s2;
+  const winnerName = winnerIsA ? nameA : nameB;
+  const scoreStr = setHistory.map(sh => {
+    const wG = winnerIsA ? sh.a : sh.b;
+    const lG = winnerIsA ? sh.b : sh.a;
+    return wG + '/' + lG;
+  }).join('   -   ');
+
+  doc.setFont(TF,'bold'); doc.setFontSize(22); doc.setTextColor(...theme.gold);
+  doc.text(winnerName, W/2, y, {align:'center'}); y+=9;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...theme.text);
+  doc.text(scoreStr || '—', W/2, y, {align:'center'}); y+=8;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...theme.muted);
+  doc.text('Durée du match : '+formatDuration(timerSeconds), W/2, y, {align:'center'});
+  y+=12;
+
+  [{label: (typeof teamLabelA !== 'undefined' && teamLabelA.trim()) || 'ÉQUIPE A', color:theme.blue, name:nameA, sets:s1, idx:0},
+   {label: (typeof teamLabelB !== 'undefined' && teamLabelB.trim()) || 'ÉQUIPE B', color:theme.orange, name:nameB, sets:s2, idx:1}].forEach(t => {
+    const cardTop = y - 4;
+    doc.setFillColor(...theme.card); doc.roundedRect(M-3, cardTop, W-2*M+6, (setHistory.length? 24:20), 1.5, 1.5, 'F');
+    doc.setDrawColor(...t.color); doc.setLineWidth(0.5);
+    doc.roundedRect(M-3, cardTop, W-2*M+6, (setHistory.length? 24:20), 1.5, 1.5, 'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.color);
+    doc.text(t.label.toUpperCase(), M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(13); doc.setTextColor(...theme.text);
+    doc.text(t.name, M, y+7);
+    let setStr = setHistory.map((sh,i) => {
+      const sc  = t.idx===0 ? sh.a : sh.b;
+      const opp = t.idx===0 ? sh.b : sh.a;
+      return 'S'+(i+1)+': '+sc+(sc>opp?'*':'');
+    }).join('  ');
+    if (setStr) { doc.setFontSize(9); doc.setTextColor(...theme.muted); doc.text(setStr, M, y+13); }
+    doc.setFont(TF,'bold'); doc.setFontSize(22); doc.setTextColor(...theme.gold);
+    doc.text(t.sets+' set'+(t.sets>1?'s':''), W-M, y+6, {align:'right'});
+    y += setStr ? 26 : 22;
+  });
+  y+=6;
+
+  sectionTitle('POINTS GAGNANTS & FAUTES DIRECTES — PAR ÉQUIPE', theme.gold);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...theme.muted);
+  doc.text('Statistique', M, y);
+  doc.text('Éq.A', W/2, y, {align:'center'});
+  doc.text('Éq.B', W-M, y, {align:'right'});
+  y+=4; doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=5;
+  [['Points gagnants', totWA, totWB], ['Fautes directes', totFA, totFB], ['Points gagnés', stats.pA, stats.pB]].forEach(r => {
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...theme.text); doc.text(r[0], M, y);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(...theme.blue);  doc.text(String(r[1]), W/2, y, {align:'center'});
+    doc.setTextColor(...theme.orange); doc.text(String(r[2]), W-M, y, {align:'right'});
+    y+=7;
+  });
+  doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=10;
+
+  if (setSnapshots.length > 0 || !matchOver) {
+    sectionTitle('DÉTAIL PAR SET', theme.gold);
+
+    // Regroupe les stats d'un diff brut (par coup + zone) en simples totaux
+    // par TYPE de coup (service, smash, bras roulé...), sans entrer dans le
+    // détail des zones/variantes — exactement ce qu'on veut afficher en petit.
+    const shotTypeTotals = (rawDiff, wp, fp) => {
+      return BASE_SHOTS.map(shotKey => {
+        let w = 0, f = 0;
+        ALL_SHOT_KEYS.forEach(k => {
+          if (k.indexOf(shotKey + '_') === 0) {
+            w += rawDiff[wp+k] || 0;
+            f += rawDiff[fp+k] || 0;
+          }
+        });
+        return { shotKey, w, f };
+      }).filter(x => x.w > 0 || x.f > 0);
+    };
+
+    const playerNamesShort = [players.j1, players.j2, players.j3, players.j4];
+
+    // Entités affichées pour chaque set : 4 joueurs, ou les 2 équipes.
+    const setEntities = statsMode === 'joueur'
+      ? [1,2,3,4].map(n => ({ name: playerNamesShort[n-1], color: n<=2?theme.blue:theme.orange, wp:'w'+n+'_', fp:'f'+n+'_' }))
+      : [ {name:'ÉQUIPE A', color:theme.blue, wp:'wA_', fp:'fA_'}, {name:'ÉQUIPE B', color:theme.orange, wp:'wB_', fp:'fB_'} ];
+
+    const setRow = (label, sh, idx, rawDiff) => {
+      ensureSpace(14);
+      if (idx > 0) { doc.setDrawColor(...theme.border); doc.setLineWidth(0.2); doc.line(M, y-3, W-M, y-3); }
+      doc.setFont(TF,'bold'); doc.setFontSize(11); doc.setTextColor(...theme.gold);
+      doc.text(label + (sh ? ' (' + sh.a + '-' + sh.b + ')' : ''), M, y);
+      y += 8;
+
+      setEntities.forEach(ent => {
+        const totals = shotTypeTotals(rawDiff, ent.wp, ent.fp);
+        const totW = totals.reduce((s,t)=>s+t.w,0);
+        const totF = totals.reduce((s,t)=>s+t.f,0);
+
+        ensureSpace(10);
+        doc.setFont(TF,'bold'); doc.setFontSize(11); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.name) + '  —  Winners : ' + totW + '   Fautes : ' + totF, M+2, y);
+        y += 5.5;
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...theme.muted);
+        const line = totals.length
+          ? totals.map(t => SHOT_BASE_LBL[t.shotKey] + ' : ' + t.w + 'W/' + t.f + 'F').join('   •   ')
+          : 'Aucun coup enregistré sur ce set';
+        const wrapped = doc.splitTextToSize(line, W-2*M-4);
+        wrapped.forEach(l => {
+          ensureSpace(4);
+          doc.text(l, M+2, y);
+          y += 4;
+        });
+        y += 3;
+      });
+
+      y += 2;
+    };
+
+    setSnapshots.forEach((snap, i) => {
+      const prevSnap = setSnapshots[i-1] || {};
+      const rawDiff = diffStats(snap, prevSnap);
+      setRow('Set ' + (i+1), setHistory[i], i, rawDiff);
+    });
+    if (!matchOver) {
+      const prevSnap = setSnapshots[setSnapshots.length-1] || {};
+      const rawDiff = diffStats(stats, prevSnap);
+      setRow('Set ' + (setSnapshots.length+1) + ' (en cours)', null, setSnapshots.length, rawDiff);
+    }
+    doc.setDrawColor(...theme.border); doc.line(M,y,W-M,y); y+=10;
+  }
+
+  // Regroupement par TYPE de coup uniquement (service, smash, bras roulé...),
+  // sans le détail des zones — celles-ci ne sont pas affichées dans ce mode
+  // (pas de cartographie ici, contrairement au mode Pro).
+  const shotTypeTotalsFull = (src, wp, fp) => {
+    return BASE_SHOTS.map(shotKey => {
+      let w = 0, f = 0;
+      ALL_SHOT_KEYS.forEach(k => {
+        if (k.indexOf(shotKey + '_') === 0) {
+          w += src[wp+k] || 0;
+          f += src[fp+k] || 0;
+        }
+      });
+      return { shotKey, w, f };
+    }).filter(x => x.w > 0 || x.f > 0);
+  };
+
+  const detailEntities = statsMode === 'joueur'
+    ? [
+        {name:players.j1, color:theme.blue,  wp:'w1_', fp:'f1_'},
+        {name:players.j2, color:theme.blue,  wp:'w2_', fp:'f2_'},
+        {name:players.j3, color:theme.orange, wp:'w3_', fp:'f3_'},
+        {name:players.j4, color:theme.orange, wp:'w4_', fp:'f4_'},
+      ]
+    : [
+        {name:'ÉQUIPE A', color:theme.blue,   wp:'wA_', fp:'fA_'},
+        {name:'ÉQUIPE B', color:theme.orange, wp:'wB_', fp:'fB_'},
+      ];
+
+  sectionTitle(statsMode === 'joueur' ? 'DÉTAIL PAR JOUEUR' : 'DÉTAIL PAR ÉQUIPE', theme.gold);
+  detailEntities.forEach(ent => {
+    const totals = shotTypeTotalsFull(stats, ent.wp, ent.fp);
+    const totW = totals.reduce((s,t)=>s+t.w,0);
+    const totF = totals.reduce((s,t)=>s+t.f,0);
+    if (totW+totF === 0) return;
+    ensureSpace(14);
+    doc.setFont(TF,'bold'); doc.setFontSize(11); doc.setTextColor(...ent.color);
+    doc.text(stripEmoji(ent.name)+'  —  Winners : '+totW+'   Fautes : '+totF, M, y); y+=7;
+    totals.forEach(t => {
+      ensureSpace(6);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...theme.text);
+      doc.text(SHOT_BASE_LBL[t.shotKey], M+4, y);
+      doc.setTextColor(...theme.green);  doc.text('W:'+t.w, W/2-10, y, {align:'center'});
+      doc.setTextColor(...theme.red); doc.text('F:'+t.f, W-M, y, {align:'right'});
+      y+=5;
+    });
+    y+=4;
+  });
+
+  sectionTitle('JOURNAL DU MATCH COMPLET', theme.gold);
+  let logIdx = 0;
+  [...matchLog].reverse().forEach(entry => {
+    ensureSpace(7);
+    if (logIdx % 2 === 0) stripe(y, 6.5);
+    logIdx++;
+    let cleanMsg = stripEmoji(entry.msg);
+    if (entry.type === 'winner') cleanMsg = 'Point gagnant — ' + cleanMsg;
+    else if (entry.type === 'faute') cleanMsg = 'Faute — ' + cleanMsg;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.setTextColor(...theme.muted); doc.text(entry.time, M, y);
+    doc.setTextColor(...theme.text);
+    doc.text((entry.team ? stripEmoji(entry.team)+' — ':'')+cleanMsg, M+16, y);
+    y+=6.5;
+  });
+
+  doc.save('BeachStats_Avancees_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+
+initNames();
+const _savedProgress = loadProgress();
+if (_savedProgress) {
+  checkResumeOnLoad();
+} else {
+  updateDisplay();
+  logEvent('', '🎾 Match créé');
+}
+// ── THÈMES ────────────────────────────────────────────────────────────────
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
+let userTier = null;
+
+function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+function setTheme(theme) {
+  if (PRO_THEMES.includes(theme) && userTier !== 'pro') {
+    window.open('https://beachstats.gumroad.com/l/jlcqx', '_blank');
+    return;
+  }
+  localStorage.setItem('beachstats_theme', theme);
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('themeMenu')?.classList.remove('open');
+}
+
+function toggleThemeMenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeMenu')?.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.theme-switch-wrap')) document.getElementById('themeMenu')?.classList.remove('open');
+});
+
+function updateThemeLockUI() {
+  document.querySelectorAll('.theme-swatch').forEach(b => {
+    const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
+    b.classList.toggle('locked', isProTheme && userTier !== 'pro');
+  });
+}
+
+async function checkTier() {
+  try {
+    const res = await fetch('/api/tier');
+    const data = await res.json();
+    userTier = data.tier;
+  } catch (e) {
+    userTier = null;
+  }
+  updateThemeLockUI();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const current = localStorage.getItem('beachstats_theme') || 'dark';
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+  checkTier();
+});
+
+</script>
+</body>
+</html>
