@@ -168,10 +168,7 @@ body{
 }
 .team-name-input::placeholder{color:inherit;opacity:1}
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
-.team-players{display:flex;flex-direction:column;gap:1px;font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px;line-height:1.05}
-.team-players .player-name{display:block}
-.player-stack-label{display:flex;flex-direction:column;gap:1px;line-height:1.05}
-.player-stack-label .player-stack-name{display:block}
+.team-players{font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px}
 .team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
 .team-row.team-b .team-players{color:var(--orange)}
@@ -1078,8 +1075,10 @@ function initNames() {
   document.getElementById('playerNameJ4').textContent = players.j4;
   document.getElementById('teamLabelA').value = teamLabelA;
   document.getElementById('teamLabelB').value = teamLabelB;
-  document.getElementById('lblA').innerHTML = '<span class="player-stack-label"><span class="player-stack-name">Équipe A</span><span class="player-stack-name">' + escapeHtml(players.j1) + '</span><span class="player-stack-name">' + escapeHtml(players.j2) + '</span></span>';
-  document.getElementById('lblB').innerHTML = '<span class="player-stack-label"><span class="player-stack-name">Équipe B</span><span class="player-stack-name">' + escapeHtml(players.j3) + '</span><span class="player-stack-name">' + escapeHtml(players.j4) + '</span></span>';
+  const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
+  const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
+  document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
+  document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
   if (statsMode === 'joueur') {
     document.getElementById('lblA').closest('.team-controls').style.display = 'none';
     document.getElementById('lblB').closest('.team-controls').style.display = 'none';
@@ -2103,36 +2102,29 @@ function openShotModal(player, type, playerNum) {
 }
 
 // ── ÉTAPE 1 : grandes catégories ─────────────────────────────────────────────
-// Pour les fautes, les possibilités dépendent précisément du joueur :
-// - serveur : Service ou Service +1 ;
-// - partenaire du serveur : Service +1 uniquement ;
-// - adversaires : Retour uniquement.
-// Les points gagnants restent libres : tous les coups sont proposés.
+// Détermine quels coups proposer selon qui sert actuellement : le serveur
+// n'a pas de "Retour" (il ne peut pas se retourner son propre service), son
+// partenaire n'a que le "Service +1" (ni Service, ni Retour), et l'équipe qui
+// reçoit n'a ni "Service" ni "Service +1". En mode équipe (pas de joueur
+// précis), le filtrage se fait au niveau de l'équipe entière.
 function getAllowedBaseShots() {
-  if (pendingType !== 'faute') return BASE_SHOTS;
-
   const server = computeCurrentServer();
-  if (!server || !server.key) return BASE_SHOTS;
+  if (!server || !server.key) return BASE_SHOTS; // service pas encore configuré : rien à filtrer
 
   const pendingTeam = pendingPlayer === 1 ? 'A' : 'B';
   const isServingTeam = pendingTeam === server.team;
 
   if (pendingPlayerNum) {
-    const playerKey = 'j' + pendingPlayerNum;
-    if (playerKey === server.key) {
-      return BASE_SHOTS.filter(s => s === 'service' || s === 'splus1');
-    }
-    if (isServingTeam) {
-      return BASE_SHOTS.filter(s => s === 'splus1');
-    }
-    return BASE_SHOTS.filter(s => s === 'retour');
+    const isServer = ('j' + pendingPlayerNum) === server.key;
+    if (isServer) return BASE_SHOTS.filter(s => s !== 'retour');
+    if (isServingTeam) return BASE_SHOTS.filter(s => s !== 'service' && s !== 'retour');
+    return BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
   }
 
-  // Mode équipe : on ne connaît pas le joueur précis. On limite donc
-  // l'équipe qui sert à Service / Service +1, et les adversaires au Retour.
+  // Mode équipe : pas de distinction serveur / partenaire au sein de l'équipe.
   return isServingTeam
-    ? BASE_SHOTS.filter(s => s === 'service' || s === 'splus1')
-    : BASE_SHOTS.filter(s => s === 'retour');
+    ? BASE_SHOTS.filter(s => s !== 'retour')
+    : BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
 }
 
 function renderShotCategories() {
