@@ -336,14 +336,37 @@ document.addEventListener('click', function(e) {
 });
 
 function getParams() {
-  const j1 = encodeURIComponent(document.getElementById('j1').value.trim() || 'Joueur 1');
-  const j2 = encodeURIComponent(document.getElementById('j2').value.trim() || 'Joueur 2');
-  const j3 = encodeURIComponent(document.getElementById('j3').value.trim() || 'Joueur 3');
-  const j4 = encodeURIComponent(document.getElementById('j4').value.trim() || 'Joueur 4');
-  const teamA = encodeURIComponent(document.getElementById('teamA').value.trim());
-  const teamB = encodeURIComponent(document.getElementById('teamB').value.trim());
+  const j1 = document.getElementById('j1').value.trim() || 'Joueur 1';
+  const j2 = document.getElementById('j2').value.trim() || 'Joueur 2';
+  const j3 = document.getElementById('j3').value.trim() || 'Joueur 3';
+  const j4 = document.getElementById('j4').value.trim() || 'Joueur 4';
+  const teamA = document.getElementById('teamA').value.trim();
+  const teamB = document.getElementById('teamB').value.trim();
   const mode = document.getElementById('modeToggle').checked ? 'joueur' : 'equipe';
-  return `j1=${j1}&j2=${j2}&j3=${j3}&j4=${j4}&mode=${mode}&teamA=${teamA}&teamB=${teamB}`;
+
+  // Mémorise les noms saisis pour les pré-remplir automatiquement au
+  // prochain match — plus besoin de les retaper à chaque fois.
+  try {
+    localStorage.setItem('beachstats_last_names', JSON.stringify({ j1, j2, j3, j4, teamA, teamB, mode }));
+  } catch(e) {}
+
+  return `j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&j3=${encodeURIComponent(j3)}&j4=${encodeURIComponent(j4)}&mode=${mode}&teamA=${encodeURIComponent(teamA)}&teamB=${encodeURIComponent(teamB)}`;
+}
+
+// Pré-remplit les champs avec les derniers noms utilisés, s'ils existent.
+function restoreLastNames() {
+  try {
+    const raw = localStorage.getItem('beachstats_last_names');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    const defaults = { j1:'Joueur 1', j2:'Joueur 2', j3:'Joueur 3', j4:'Joueur 4' };
+    ['j1','j2','j3','j4'].forEach(k => {
+      if (saved[k] && saved[k] !== defaults[k]) document.getElementById(k).value = saved[k];
+    });
+    if (saved.teamA) document.getElementById('teamA').value = saved.teamA;
+    if (saved.teamB) document.getElementById('teamB').value = saved.teamB;
+    if (saved.mode) document.getElementById('modeToggle').checked = saved.mode === 'joueur';
+  } catch(e) {}
 }
 
 function goToSavancee() { window.location.href = `/avancees?${getParams()}`; }
@@ -390,6 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
   const sel = document.getElementById('themeSelect');
   if (sel) sel.value = current;
+  restoreLastNames();
   checkTier();
 });
 

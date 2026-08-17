@@ -855,14 +855,24 @@ const ALL_SHOT_KEYS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', '
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
-const statsMode = _p.get('mode') || 'equipe'; // 'equipe' | 'joueur'
+// Si l'URL ne contient pas les noms (ex: retour sur cette page via le
+// bouton "Reprendre le match" de l'historique, sans paramètres), on relit
+// mode + noms depuis la dernière progression sauvegardée pour ce mode.
+let _savedIdentity = null;
+if (!_p.get('j1')) {
+  try {
+    const raw = localStorage.getItem('beachstats_inprogress_intermediaire');
+    if (raw) _savedIdentity = JSON.parse(raw);
+  } catch(e) {}
+}
+const statsMode = _p.get('mode') || (_savedIdentity && _savedIdentity.statsMode) || 'equipe'; // 'equipe' | 'joueur'
 
 // ── PLAYER NAMES ─────────────────────────────────────────────────────────────
 const players = {
-  j1: _p.get('j1') || 'Joueur 1',
-  j2: _p.get('j2') || 'Joueur 2',
-  j3: _p.get('j3') || 'Joueur 3',
-  j4: _p.get('j4') || 'Joueur 4'
+  j1: _p.get('j1') || (_savedIdentity && _savedIdentity.players && _savedIdentity.players.j1) || 'Joueur 1',
+  j2: _p.get('j2') || (_savedIdentity && _savedIdentity.players && _savedIdentity.players.j2) || 'Joueur 2',
+  j3: _p.get('j3') || (_savedIdentity && _savedIdentity.players && _savedIdentity.players.j3) || 'Joueur 3',
+  j4: _p.get('j4') || (_savedIdentity && _savedIdentity.players && _savedIdentity.players.j4) || 'Joueur 4'
 };
 const nameA = players.j1 + ' / ' + players.j2;
 const nameB = players.j3 + ' / ' + players.j4;
@@ -1639,6 +1649,7 @@ function saveProgress() {
     stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
     teamLabelA, teamLabelB,
     firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
+    players, statsMode,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -2128,7 +2139,7 @@ function exportPDF() {
       return BASE_SHOTS.map(shotKey => {
         let w = 0, f = 0;
         ALL_SHOT_KEYS.forEach(k => {
-          if (k.indexOf(shotKey + '_') === 0) {
+          if (k === shotKey || k.indexOf(shotKey + '_') === 0) {
             w += rawDiff[wp+k] || 0;
             f += rawDiff[fp+k] || 0;
           }
@@ -2197,7 +2208,7 @@ function exportPDF() {
     return BASE_SHOTS.map(shotKey => {
       let w = 0, f = 0;
       ALL_SHOT_KEYS.forEach(k => {
-        if (k.indexOf(shotKey + '_') === 0) {
+        if (k === shotKey || k.indexOf(shotKey + '_') === 0) {
           w += src[wp+k] || 0;
           f += src[fp+k] || 0;
         }
