@@ -168,7 +168,8 @@ body{
 }
 .team-name-input::placeholder{color:inherit;opacity:1}
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
-.team-players{font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px}
+.team-players{font-size:15px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;
+  letter-spacing:.3px;display:flex;flex-direction:column;line-height:1.25}
 .team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
 .team-row.team-b .team-players{color:var(--orange)}
@@ -600,7 +601,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
-      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span><span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -610,7 +611,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
-      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span><span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
@@ -787,7 +788,7 @@ function initNames() {
 
 function createControlBlock(teamClass, label, teamId, entityKey) {
   const opponentId = teamId === 1 ? 2 : 1;
-  const subLabel = teamId === 1 ? 'Point à A' : 'Point à B';
+  const subLabel = teamId === 1 ? 'Point à B' : 'Point à A';
   // entityKey vaut toujours 'j1'..'j4' ou null : jamais une valeur saisie
   // par l'utilisateur, donc sûr à insérer tel quel dans le onclick.
   const entityArg = entityKey ? `'${entityKey}'` : 'null';

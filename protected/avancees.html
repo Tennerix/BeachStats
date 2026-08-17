@@ -168,7 +168,8 @@ body{
 }
 .team-name-input::placeholder{color:inherit;opacity:1}
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
-.team-players{font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px}
+.team-players{font-size:15px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;
+  letter-spacing:.3px;display:flex;flex-direction:column;line-height:1.25}
 .team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
 .team-row.team-b .team-players{color:var(--orange)}
@@ -664,7 +665,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
-      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span><span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -674,7 +675,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
-      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span><span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
@@ -694,7 +695,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute a" onclick="openShotModal(2,'faute')">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à A</span>
+      <span class="btn-sub">Point à B</span>
     </button>
   </div>
 </div>
@@ -710,7 +711,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute b" onclick="openShotModal(1,'faute')">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à B</span>
+      <span class="btn-sub">Point à A</span>
     </button>
   </div>
 </div>
@@ -726,7 +727,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute a" onclick="openShotModal(2,'faute',1)">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à A</span>
+      <span class="btn-sub">Point à B</span>
     </button>
   </div>
 </div>
@@ -742,7 +743,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute a" onclick="openShotModal(2,'faute',2)">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à A</span>
+      <span class="btn-sub">Point à B</span>
     </button>
   </div>
 </div>
@@ -758,7 +759,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute b" onclick="openShotModal(1,'faute',3)">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à B</span>
+      <span class="btn-sub">Point à A</span>
     </button>
   </div>
 </div>
@@ -774,7 +775,7 @@ if ('serviceWorker' in navigator) {
     <button class="btn-faute b" onclick="openShotModal(1,'faute',4)">
       <span class="btn-icon">💥</span>
       <span class="btn-main">Faute directe</span>
-      <span class="btn-sub">Point à B</span>
+      <span class="btn-sub">Point à A</span>
     </button>
   </div>
 </div>

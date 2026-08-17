@@ -180,6 +180,7 @@ if ('serviceWorker' in navigator) {
         <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
       </div>
     </div>
+    <button class="header-back" id="resumeMatchBtn" style="display:none" onclick="goToInProgressMatch()">▶ Reprendre le match</button>
     <button class="header-back" onclick="window.location.href='/'">← Accueil</button>
   </div>
 </div>
@@ -232,25 +233,45 @@ const PDF_THEME = {
 
 // ── CONSTANTES DES COUPS / ZONES (nécessaires pour régénérer la cartographie
 // par zone des matchs Pro depuis l'historique — identiques à celles de pro.html) ──
-const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
-const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const ZONES = ['1', '2', '3', '4', '5'];
 const SHOT_VARIANTS = {
   service: [],
-  smash: [],
+  splus1: ['amorti', 'rush', 'lob', 'smash'],
+  smash: ['gratte', 'fort', 'lob'],
   retour: ['cd', 'rev'],
   roule: ['amorti', 'lobe', 'tendu'],
   amorti: ['cd', 'rev'],
   lob: ['cd', 'rev', 'rainbow'],
   rush: ['cd', 'rev', 'rainbow'],
-  defense: ['cd', 'rev']
+  defense: ['amorti', 'tendu', 'lob']
 };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow' };
-const ROULE_DEPTH_VARIANTS = [
-  { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
-  { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
-  { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
-];
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow', gratte: 'Gratté', fort: 'Fort', lob: 'Lob', rush: 'Rush', smash: 'Smash' };
+const DEPTH_BAND_SHOTS = {
+  roule: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+    { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
+  ],
+  smash: [
+    { variant: 'gratte', label: 'Gratté', short: 'GRATTÉ' },
+    { variant: 'fort',   label: 'Fort',   short: 'FORT' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' }
+  ],
+  defense: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' }
+  ],
+  splus1: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'rush',   label: 'Rush',   short: 'RUSH' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' },
+    { variant: 'smash',  label: 'Smash',  short: 'SMASH' }
+  ],
+};
+const ROULE_DEPTH_VARIANTS = DEPTH_BAND_SHOTS.roule;
 const SHOT_LBL = {};
 const ALL_SHOT_KEYS = [];
 const SHOT_ZONE_KEYS = {};
@@ -888,6 +909,7 @@ function generateProPDF(record) {
   const zcGap = 8;
   const zcNetGap = 5;
   const NON_ROULE_RATIO = 1.8; // hauteur = largeur × ce ratio (agrandi pour bien remplir la page)
+  const PER_BAND_RATIO = 2/3;  // hauteur de chaque bande de profondeur, en proportion de la largeur
 
   const zoneColor = (w, f) => {
     if (w === 0 && f === 0) return ZONE_EMPTY;
@@ -896,18 +918,19 @@ function generateProPDF(record) {
   };
 
   BASE_SHOTS.forEach((shotKey, shotIdx) => {
-    const isRoule = shotKey === 'roule';
+    const depthBands = DEPTH_BAND_SHOTS[shotKey];
+    const nBands = depthBands ? depthBands.length : 0;
 
     // Taille calculée dynamiquement pour chaque coup, comme si la page était
     // vierge (244mm de haut utilisables) : les terrains remplissent le plus
     // possible la largeur ET la hauteur disponibles, sans jamais déborder.
     const maxCourtLFromHeight = (244 / gridRows) - 22;
-    const maxWFromHeight = isRoule ? maxCourtLFromHeight / 2 : maxCourtLFromHeight / NON_ROULE_RATIO;
+    const maxWFromHeight = depthBands ? maxCourtLFromHeight / (PER_BAND_RATIO * nBands) : maxCourtLFromHeight / NON_ROULE_RATIO;
     const maxWFromWidth = (W - 2*M - (gridCols-1)*zcGap) / gridCols;
     const zcCourtW = Math.min(maxWFromWidth, maxWFromHeight);
-    const courtL = isRoule ? zcCourtW * 2 : zcCourtW * NON_ROULE_RATIO;
-    const bandH = isRoule ? courtL / 3 : null;
-    const visualOrder = isRoule ? [...ROULE_DEPTH_VARIANTS].reverse() : null;
+    const courtL = depthBands ? zcCourtW * PER_BAND_RATIO * nBands : zcCourtW * NON_ROULE_RATIO;
+    const bandH = depthBands ? courtL / nBands : null;
+    const visualOrder = depthBands ? [...depthBands].reverse() : null;
 
     const blockHeight = 10 + gridRows * (courtL + 22) + 8;
     ensureSpace(blockHeight);
@@ -928,12 +951,12 @@ function generateProPDF(record) {
       doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...ent.color);
       doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
 
-      if (isRoule) {
+      if (depthBands) {
         visualOrder.forEach((dv, bi) => {
           const bandTop = courtTop + bi * bandH;
           ZONES.forEach(z => {
             const zi = parseInt(z, 10);
-            const key = 'roule_' + dv.variant + '_' + z;
+            const key = shotKey + '_' + dv.variant + '_' + z;
             const w = stats[ent.wp+key] || 0, f = stats[ent.fp+key] || 0;
             const zx = x0 + zcCourtW - zi * zw;
             doc.setFillColor(...zoneColor(w, f));
@@ -1239,6 +1262,46 @@ function generateShotPDF(record, subtitle, savePrefix) {
 }
 
 render();
+
+// ── REPRENDRE UN MATCH EN COURS ──────────────────────────────────────────
+// Chaque mode (base/avancées/intermédiaires/pro/points) sauvegarde sa propre
+// progression sous sa propre clé, et l'efface automatiquement une fois le
+// match terminé. Donc si une de ces clés existe encore, c'est qu'un match
+// est en cours quelque part — on propose d'y retourner directement.
+function findInProgressMatch() {
+  const modes = [
+    { key: 'beachstats_inprogress_base', page: '/base' },
+    { key: 'beachstats_inprogress_avancees', page: '/avancees' },
+    { key: 'beachstats_inprogress_intermediaire', page: '/intermediaire' },
+    { key: 'beachstats_inprogress_pro', page: '/pro' },
+    { key: 'beachstats_inprogress_points', page: '/points' },
+  ];
+  let best = null;
+  modes.forEach(m => {
+    try {
+      const raw = localStorage.getItem(m.key);
+      if (!raw) return;
+      const snap = JSON.parse(raw);
+      // Un match tout juste créé (0-0-0-0-0-0) n'est pas vraiment "en cours".
+      if (snap.p1===0 && snap.p2===0 && snap.g1===0 && snap.g2===0 && snap.s1===0 && snap.s2===0) return;
+      if (!best || (snap.savedAt || 0) > (best.savedAt || 0)) {
+        best = { page: m.page, savedAt: snap.savedAt || 0 };
+      }
+    } catch(e) {}
+  });
+  return best;
+}
+
+function goToInProgressMatch() {
+  const match = findInProgressMatch();
+  if (match) window.location.href = match.page;
+}
+
+(function initResumeButton() {
+  const match = findInProgressMatch();
+  const btn = document.getElementById('resumeMatchBtn');
+  if (match && btn) btn.style.display = 'inline-block';
+})();
 
 
 // ── THÈMES ────────────────────────────────────────────────────────────────

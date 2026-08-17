@@ -251,11 +251,14 @@ body{
   text-transform:uppercase;
 }
 .team-players{
-  font-size:17px;
+  font-size:15px;
   color:var(--text);
   font-weight:900;
   font-family:Barlow Condensed,sans-serif;
   letter-spacing:.3px;
+  display:flex;
+  flex-direction:column;
+  line-height:1.25;
 }
 .team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
@@ -717,7 +720,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <div class="team-name" id="nameA">Équipe A</div>
-      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span><span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -728,7 +731,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <div class="team-name" id="nameB">Équipe B</div>
-      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span><span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
