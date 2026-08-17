@@ -162,15 +162,16 @@ body{
 .team-info{display:flex;flex-direction:column;gap:3px}
 .team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
 .team-name-input{
-  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-  background:none;border:none;border-bottom:1px dashed transparent;color:inherit;width:100%;padding:0 0 1px;
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:none;border:none;border-bottom:1px dashed transparent;color:var(--muted);width:100%;padding:0 0 1px;
   outline:none;transition:border-color .15s;
 }
 .team-name-input::placeholder{color:inherit;opacity:1}
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
-.team-players{font-size:11px;color:var(--muted);font-weight:500}
-.team-row.team-a .team-name-input{color:var(--blue)}
-.team-row.team-b .team-name-input{color:var(--orange)}
+.team-players{font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px}
+.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-row.team-a .team-players{color:var(--blue)}
+.team-row.team-b .team-players{color:var(--orange)}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
@@ -720,7 +721,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
-      <div class="team-players" id="playersA">—</div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -730,7 +731,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
-      <div class="team-players" id="playersB">—</div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
@@ -911,33 +912,69 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
-const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_ICO = {service:'🎾', splus1:'🚀', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
+const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const ZONES = ['1', '2', '3', '4', '5'];
+
+// Pour la défense uniquement : sélection à 2 niveaux avant la zone — d'abord
+// le côté (coup droit / revers), puis la profondeur (amorti / tendu / lob).
+// SHOT_VARIANTS.defense liste alors les 6 combinaisons "côté_profondeur".
+const TWO_LEVEL_VARIANTS = {
+  defense: { level1: ['cd', 'rev'], level2: ['amorti', 'tendu', 'lob'] }
+};
 
 // Variantes (côté / type) disponibles pour chaque coup avant le choix de la zone.
 // Un tableau vide = pas de variante, on passe direct au choix de la zone.
 const SHOT_VARIANTS = {
   service: [],
-  smash: [],
+  splus1: ['amorti', 'rush', 'lob', 'smash'],
+  smash: ['gratte', 'fort', 'lob'],
   retour: ['cd', 'rev'],
   roule: ['amorti', 'lobe', 'tendu'],
   amorti: ['cd', 'rev'],
   lob: ['cd', 'rev', 'rainbow'],
   rush: ['cd', 'rev', 'rainbow'],
-  defense: ['cd', 'rev']
+  defense: TWO_LEVEL_VARIANTS.defense.level1.flatMap(side =>
+    TWO_LEVEL_VARIANTS.defense.level2.map(depth => side + '_' + depth)
+  ) // -> ['cd_amorti','cd_tendu','cd_lob','rev_amorti','rev_tendu','rev_lob']
 };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow' };
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow', gratte: 'Gratté', fort: 'Fort', lob: 'Lob', rush: 'Rush', smash: 'Smash' };
+// Libellé d'une variante, simple ('cd' -> 'CD') ou composée ('cd_amorti' -> 'CD Amorti').
+function variantLabel(v) { return v.split('_').map(p => VARIANT_LBL[p] || p).join(' '); }
 
-// Cartographie par zone du bras roulé : 3 bandes de profondeur, chacune liée
-// à une variante précise (proche filet → amorti, milieu → tendu, fond → lob),
-// chaque bande étant elle-même divisée en 5 zones de largeur (comme les autres coups).
-const ROULE_DEPTH_VARIANTS = [
-  { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
-  { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
-  { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
-];
+// Cartographie par zone "à bandes de profondeur" : pour ces coups, la
+// cartographie affiche plusieurs bandes empilées (une par variante) plutôt
+// qu'un seul terrain plat — chaque bande étant elle-même divisée en 5 zones
+// de largeur (comme les autres coups). L'ordre va du filet (proche) vers le
+// fond de terrain (loin). Le bras roulé, le smash, la défense (3 bandes,
+// coup droit + revers confondus) et le service +1 (4 bandes) utilisent ce
+// même mécanisme générique.
+const DEPTH_BAND_SHOTS = {
+  roule: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+    { variant: 'lobe',   label: 'Lob',    short: 'LOB' }
+  ],
+  smash: [
+    { variant: 'gratte', label: 'Gratté', short: 'GRATTÉ' },
+    { variant: 'fort',   label: 'Fort',   short: 'FORT' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' }
+  ],
+  defense: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'tendu',  label: 'Tendu',  short: 'TENDU' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' }
+  ],
+  splus1: [
+    { variant: 'amorti', label: 'Amorti', short: 'AMORTI' },
+    { variant: 'rush',   label: 'Rush',   short: 'RUSH' },
+    { variant: 'lob',    label: 'Lob',    short: 'LOB' },
+    { variant: 'smash',  label: 'Smash',  short: 'SMASH' }
+  ],
+};
+// Conservé pour compatibilité : équivalent à DEPTH_BAND_SHOTS.roule.
+const ROULE_DEPTH_VARIANTS = DEPTH_BAND_SHOTS.roule;
 
 // Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
@@ -947,7 +984,7 @@ const SHOT_ZONE_KEYS = {}; // { service: {1:['service_1'], ...}, amorti: {1:['am
 BASE_SHOTS.forEach(s => {
   const variants = SHOT_VARIANTS[s];
   const prefixes = variants.length ? variants.map(v => s + '_' + v) : [s];
-  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v]) : [SHOT_BASE_LBL[s]];
+  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + variantLabel(v)) : [SHOT_BASE_LBL[s]];
   SHOT_ZONE_KEYS[s] = {};
   ZONES.forEach(z => SHOT_ZONE_KEYS[s][z] = []);
   prefixes.forEach((prefix, i) => {
@@ -996,8 +1033,10 @@ function escapeHtml(str) {
 }
 
 function initNames() {
-  document.getElementById('playersA').textContent = nameA;
-  document.getElementById('playersB').textContent = nameB;
+  document.getElementById('playerNameJ1').textContent = players.j1;
+  document.getElementById('playerNameJ2').textContent = players.j2;
+  document.getElementById('playerNameJ3').textContent = players.j3;
+  document.getElementById('playerNameJ4').textContent = players.j4;
   document.getElementById('teamLabelA').value = teamLabelA;
   document.getElementById('teamLabelB').value = teamLabelB;
   const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
@@ -1028,6 +1067,7 @@ let serverTeamAFirst = null;
 let serverTeamBFirst = null;
 let matchGameCount = 0;
 let serverManualAdjustment = 0;
+let pendingCycleAdjustment = null; // cran en attente si "Changer" a dû poser une question avant de l'appliquer
 
 function emptyStats(){
   const base = {pA:0, pB:0};
@@ -1407,8 +1447,17 @@ function computeCurrentServer() {
 
 function updateServerBadge() {
   const el = document.getElementById('serverIndicator');
-  if (!el) return;
   const server = computeCurrentServer();
+
+  // Balle 🎾 à côté du prénom du joueur qui sert actuellement, dans le
+  // tableau de score (en plus du badge dédié ci-dessous).
+  ['j1','j2','j3','j4'].forEach(key => {
+    const span = document.getElementById('playerName' + key.toUpperCase());
+    if (!span) return;
+    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+  });
+
+  if (!el) return;
   if (!server || !server.key) { el.style.display = 'none'; return; }
   el.style.display = 'flex';
   el.querySelector('.server-name').textContent = players[server.key] || (server.team === 'A' ? nameA : nameB);
@@ -1431,6 +1480,10 @@ function askInitialServer() {
   if (!modal) return;
   title.textContent = 'Qui sert en premier ?';
   btnsWrap.innerHTML = '';
+  // On ne demande QUE le 1er serveur de l'équipe qui commence : on ne sait
+  // pas toujours à l'avance qui servira côté adverse (souvent décidé plus
+  // tard, à leur tour). La question "en face" n'arrive donc que juste avant
+  // le 2e jeu (voir winGame) — ou plus tôt si "Changer" en a besoin avant ça.
   buildServerTeamGroup(btnsWrap, 'A', ['j1','j2'], (team, key) => {
     firstServingTeam = team; serverTeamAFirst = key;
     modal.classList.remove('show');
@@ -1455,6 +1508,14 @@ function askSecondTeamServer() {
   buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
     if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
     modal.classList.remove('show');
+    // Si cette question a été déclenchée par "Changer" (le cran suivant
+    // tombait sur cette équipe inconnue), on applique maintenant ce cran —
+    // sinon la personne se retrouverait sans changement visible après avoir
+    // répondu, alors qu'elle avait cliqué "Changer".
+    if (pendingCycleAdjustment !== null) {
+      serverManualAdjustment = pendingCycleAdjustment;
+      pendingCycleAdjustment = null;
+    }
     updateServerBadge(); saveProgress();
   });
   modal.classList.add('show');
@@ -1480,11 +1541,28 @@ function buildServerTeamGroup(container, team, keys, onPick) {
   container.appendChild(group);
 }
 
+// Change le serveur affiché au joueur suivant dans l'ordre de rotation. Si ce
+// prochain cran tombe sur une équipe dont on ne connaît pas encore le 1er
+// serveur (ex: on utilise "Changer" avant la fin du 1er jeu), on pose la
+// question à ce moment précis au lieu de faire disparaître le badge en silence.
 function cycleServerManually() {
-  const pending = serverQuestionNeeded();
-  if (pending === 'initial') { askInitialServer(); return; }
-  if (pending === 'second') { askSecondTeamServer(); return; }
-  serverManualAdjustment++;
+  if (!firstServingTeam) { askInitialServer(); return; }
+
+  const nextAdjustment = serverManualAdjustment + 1;
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+  const turnIndex = matchGameCount + tiebreakOffset + nextAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const nextTeam = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const nextTeamKnown = nextTeam === 'A' ? serverTeamAFirst : serverTeamBFirst;
+
+  if (!nextTeamKnown) { pendingCycleAdjustment = nextAdjustment; askSecondTeamServer(); return; }
+
+  serverManualAdjustment = nextAdjustment;
   updateServerBadge();
   saveProgress();
 }
@@ -1850,11 +1928,36 @@ function openShotModal(player, type, playerNum) {
 }
 
 // ── ÉTAPE 1 : grandes catégories ─────────────────────────────────────────────
+// Détermine quels coups proposer selon qui sert actuellement : le serveur
+// n'a pas de "Retour" (il ne peut pas se retourner son propre service), son
+// partenaire n'a que le "Service +1" (ni Service, ni Retour), et l'équipe qui
+// reçoit n'a ni "Service" ni "Service +1". En mode équipe (pas de joueur
+// précis), le filtrage se fait au niveau de l'équipe entière.
+function getAllowedBaseShots() {
+  const server = computeCurrentServer();
+  if (!server || !server.key) return BASE_SHOTS; // service pas encore configuré : rien à filtrer
+
+  const pendingTeam = pendingPlayer === 1 ? 'A' : 'B';
+  const isServingTeam = pendingTeam === server.team;
+
+  if (pendingPlayerNum) {
+    const isServer = ('j' + pendingPlayerNum) === server.key;
+    if (isServer) return BASE_SHOTS.filter(s => s !== 'retour');
+    if (isServingTeam) return BASE_SHOTS.filter(s => s !== 'service' && s !== 'retour');
+    return BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+  }
+
+  // Mode équipe : pas de distinction serveur / partenaire au sein de l'équipe.
+  return isServingTeam
+    ? BASE_SHOTS.filter(s => s !== 'retour')
+    : BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+}
+
 function renderShotCategories() {
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
-  
-  BASE_SHOTS.forEach(s => {
+
+  getAllowedBaseShots().forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
     group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">
@@ -1866,6 +1969,9 @@ function renderShotCategories() {
 
 // ── ÉTAPE 2 : variante (côté / type) du coup, si le coup en a une ───────────
 function selectShotCategory(s) {
+  const twoLevel = TWO_LEVEL_VARIANTS[s];
+  if (twoLevel) { renderShotSideStep(s, twoLevel); return; }
+
   const variants = SHOT_VARIANTS[s];
 
   if (!variants.length) { renderZoneStep(s, SHOT_BASE_LBL[s], SHOT_ICO[s], 'renderShotCategories()'); return; }
@@ -1876,15 +1982,44 @@ function selectShotCategory(s) {
     <div class="shot-group" style="grid-column:1 / -1">
       <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</div>
       <div class="shot-sub-row">
-        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="selectShotVariant('${s}','${v}')">${VARIANT_LBL[v]}</button>`).join('')}
+        ${variants.map(v => `<button class="shot-btn type-${pendingType}" onclick="selectShotVariant('${s}','${v}')">${variantLabel(v)}</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── ÉTAPE 2a (coups à 2 niveaux, ex: Défense) : d'abord le côté ─────────────
+function renderShotSideStep(s, twoLevel) {
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="renderShotCategories()">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]}</div>
+      <div class="shot-sub-row">
+        ${twoLevel.level1.map(side => `<button class="shot-btn type-${pendingType}" onclick="selectShotSide('${s}','${side}')">${variantLabel(side)}</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── ÉTAPE 2b (coups à 2 niveaux) : ensuite la profondeur ────────────────────
+function selectShotSide(s, side) {
+  const twoLevel = TWO_LEVEL_VARIANTS[s];
+  const grid = document.getElementById('shotGrid');
+  grid.innerHTML = `
+    <button class="shot-back" onclick="selectShotCategory('${s}')">← Retour</button>
+    <div class="shot-group" style="grid-column:1 / -1">
+      <div class="shot-group-title">${SHOT_ICO[s]} ${SHOT_BASE_LBL[s]} ${variantLabel(side)}</div>
+      <div class="shot-sub-row">
+        ${twoLevel.level2.map(depth => `<button class="shot-btn type-${pendingType}" onclick="selectShotVariant('${s}','${side}_${depth}')">${variantLabel(depth)}</button>`).join('')}
       </div>
     </div>`;
 }
 
 function selectShotVariant(s, v) {
   const prefix = s + '_' + v;
-  const label = SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v];
-  renderZoneStep(prefix, label, SHOT_ICO[s], `selectShotCategory('${s}')`);
+  const label = SHOT_BASE_LBL[s] + ' ' + variantLabel(v);
+  const twoLevel = TWO_LEVEL_VARIANTS[s];
+  const backOnClick = twoLevel ? `selectShotSide('${s}','${v.split('_')[0]}')` : `selectShotCategory('${s}')`;
+  renderZoneStep(prefix, label, SHOT_ICO[s], backOnClick);
 }
 
 // ── ÉTAPE 3 : zone du terrain où le coup a été réalisé (toujours en dernier) ─
@@ -2078,13 +2213,24 @@ function computeZoneData(wPrefix, fPrefix) {
   });
 }
 
-// Données de zone pour une variante de profondeur précise du bras roulé
-// (amorti / tendu / lobe), zone par zone de largeur (1 à 5).
-function computeRouleZoneData(wPrefix, fPrefix, variant) {
+// Données de zone pour une variante de profondeur précise d'un coup à bandes
+// (ex: bras roulé amorti/tendu/lobe, smash gratté/fort/lob...), zone par
+// zone de largeur (1 à 5).
+function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant) {
   const ds = getDisplayStats();
+  // Agrège toutes les clés qui se terminent par "_<profondeur>_<zone>", même
+  // quand il y a un niveau intermédiaire (ex: défense CD+REV confondus dans
+  // la bande "Amorti" : defense_cd_amorti_1 ET defense_rev_amorti_1).
   return ZONES.map(z => {
-    const key = 'roule_' + variant + '_' + z;
-    return { z: parseInt(z,10), w: ds[wPrefix+key] || 0, f: ds[fPrefix+key] || 0 };
+    const suffix = '_' + variant + '_' + z;
+    let w = 0, f = 0;
+    ALL_SHOT_KEYS.forEach(k => {
+      if (k.indexOf(shotKey + '_') === 0 && k.endsWith(suffix)) {
+        w += ds[wPrefix+k] || 0;
+        f += ds[fPrefix+k] || 0;
+      }
+    });
+    return { z: parseInt(z,10), w, f };
   });
 }
 
@@ -2127,17 +2273,19 @@ function buildCourtSVG(data) {
     </svg>`;
 }
 
-// Cartographie du bras roulé, vue demi-terrain : 3 bandes de profondeur
-// empilées, filet en bas. De bas en haut : proche filet → amorti, milieu →
-// tendu, fond → lob. Chaque bande est divisée en 5 zones de largeur.
-function buildRouleCourtSVG(wPrefix, fPrefix) {
+// Cartographie "à bandes de profondeur" (bras roulé, smash, défense, service
+// +1), vue demi-terrain : N bandes empilées (une par variante), filet en bas.
+// Chaque bande est divisée en 5 zones de largeur, comme les autres coups.
+function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix) {
+  const bandsConfig = DEPTH_BAND_SHOTS[shotKey];
+  const n = bandsConfig.length;
   const W = 260, ZW = W / 5, bandH = 148, gap = 8, TOPPAD = 4, LBLPAD = 26;
-  const L = TOPPAD + bandH * 3 + gap * 2 + LBLPAD;
+  const L = TOPPAD + bandH * n + gap * (n - 1) + LBLPAD;
 
-  // Filet en bas -> ordre visuel de haut en bas : fond, milieu, proche filet.
-  const visualOrder = [...ROULE_DEPTH_VARIANTS].reverse();
+  // Filet en bas -> ordre visuel de haut en bas : du fond vers le filet.
+  const visualOrder = [...bandsConfig].reverse();
   const dataByVariant = {};
-  ROULE_DEPTH_VARIANTS.forEach(dv => { dataByVariant[dv.variant] = computeRouleZoneData(wPrefix, fPrefix, dv.variant); });
+  bandsConfig.forEach(dv => { dataByVariant[dv.variant] = computeDepthZoneData(shotKey, wPrefix, fPrefix, dv.variant); });
   const maxTotal = Math.max(1, ...Object.values(dataByVariant).flat().map(d => d.w + d.f));
 
   let bands = '';
@@ -2170,7 +2318,7 @@ function buildRouleCourtSVG(wPrefix, fPrefix) {
     bands += `<text x="${W/2}" y="${yStart+bandH-8}" text-anchor="middle" class="zc-band-lbl">${escapeHtml(dv.label)}</text>`;
   });
 
-  const netY = TOPPAD + bandH * 3 + gap * 2;
+  const netY = TOPPAD + bandH * n + gap * (n - 1);
   return `
     <svg viewBox="0 0 ${W} ${L}" class="zone-court-svg" xmlns="http://www.w3.org/2000/svg">
       ${bands}
@@ -2184,7 +2332,7 @@ function renderZoneMap() {
   if (!grid) return;
 
   const depthNote = document.getElementById('zoneDepthNote');
-  if (depthNote) depthNote.style.display = zoneMapShot === 'roule' ? 'block' : 'none';
+  if (depthNote) depthNote.style.display = DEPTH_BAND_SHOTS[zoneMapShot] ? 'block' : 'none';
 
   const badge = document.getElementById('zoneViewBadge');
   if (badge) {
@@ -2209,8 +2357,8 @@ function renderZoneMap() {
       ];
 
   grid.innerHTML = entries.map(e => {
-    const svg = zoneMapShot === 'roule'
-      ? buildRouleCourtSVG(e.wp, e.fp)
+    const svg = DEPTH_BAND_SHOTS[zoneMapShot]
+      ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp)
       : buildCourtSVG(computeZoneData(e.wp, e.fp));
     return `<div class="zone-court-item">
       <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
@@ -2604,6 +2752,7 @@ function exportPDF() {
   const zcGap = 8;
   const zcNetGap = 5;
   const NON_ROULE_RATIO = 1.8; // hauteur = largeur × ce ratio (agrandi pour bien remplir la page)
+  const PER_BAND_RATIO = 2/3;  // hauteur de chaque bande de profondeur, en proportion de la largeur
 
   const zoneColor = (w, f) => {
     if (w === 0 && f === 0) return ZONE_EMPTY;
@@ -2612,7 +2761,8 @@ function exportPDF() {
   };
 
   BASE_SHOTS.forEach((shotKey, shotIdx) => {
-    const isRoule = shotKey === 'roule';
+    const depthBands = DEPTH_BAND_SHOTS[shotKey]; // undefined = terrain plat classique
+    const nBands = depthBands ? depthBands.length : 0;
 
     // Taille calculée dynamiquement pour chaque coup, comme si la page était
     // vierge (244mm de haut utilisables) : les terrains remplissent le plus
@@ -2620,12 +2770,12 @@ function exportPDF() {
     // Le flux naturel (ensureSpace) peut toujours enchaîner ce coup juste après
     // le précédent s'il reste de la place, ou passer à une page neuve sinon.
     const maxCourtLFromHeight = (244 / gridRows) - 22;
-    const maxWFromHeight = isRoule ? maxCourtLFromHeight / 2 : maxCourtLFromHeight / NON_ROULE_RATIO;
+    const maxWFromHeight = depthBands ? maxCourtLFromHeight / (PER_BAND_RATIO * nBands) : maxCourtLFromHeight / NON_ROULE_RATIO;
     const maxWFromWidth = (W - 2*M - (gridCols-1)*zcGap) / gridCols;
     const zcCourtW = Math.min(maxWFromWidth, maxWFromHeight);
-    const courtL = isRoule ? zcCourtW * 2 : zcCourtW * NON_ROULE_RATIO;
-    const bandH = isRoule ? courtL / 3 : null;
-    const visualOrder = isRoule ? [...ROULE_DEPTH_VARIANTS].reverse() : null;
+    const courtL = depthBands ? zcCourtW * PER_BAND_RATIO * nBands : zcCourtW * NON_ROULE_RATIO;
+    const bandH = depthBands ? courtL / nBands : null;
+    const visualOrder = depthBands ? [...depthBands].reverse() : null;
 
     // Espace nécessaire pour ce coup complet (titre + tous les terrains de la
     // grille) : on ne saute une page que si ça ne rentre vraiment pas.
@@ -2648,13 +2798,19 @@ function exportPDF() {
       doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...ent.color);
       doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
 
-      if (isRoule) {
+      if (depthBands) {
         visualOrder.forEach((dv, bi) => {
           const bandTop = courtTop + bi * bandH;
           ZONES.forEach(z => {
             const zi = parseInt(z, 10);
-            const key = 'roule_' + dv.variant + '_' + z;
-            const w = stats[ent.wp+key] || 0, f = stats[ent.fp+key] || 0;
+            const suffix = '_' + dv.variant + '_' + z;
+            let w = 0, f = 0;
+            ALL_SHOT_KEYS.forEach(k => {
+              if (k.indexOf(shotKey + '_') === 0 && k.endsWith(suffix)) {
+                w += stats[ent.wp+k] || 0;
+                f += stats[ent.fp+k] || 0;
+              }
+            });
             const zx = x0 + zcCourtW - zi * zw;
             doc.setFillColor(...zoneColor(w, f));
             doc.rect(zx, bandTop, zw, bandH, 'F');

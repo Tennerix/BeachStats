@@ -162,15 +162,16 @@ body{
 .team-info{display:flex;flex-direction:column;gap:3px}
 .team-name{font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase}
 .team-name-input{
-  font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-  background:none;border:none;border-bottom:1px dashed transparent;color:inherit;width:100%;padding:0 0 1px;
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:none;border:none;border-bottom:1px dashed transparent;color:var(--muted);width:100%;padding:0 0 1px;
   outline:none;transition:border-color .15s;
 }
 .team-name-input::placeholder{color:inherit;opacity:1}
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
-.team-players{font-size:11px;color:var(--muted);font-weight:500}
-.team-row.team-a .team-name-input{color:var(--blue)}
-.team-row.team-b .team-name-input{color:var(--orange)}
+.team-players{font-size:17px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;letter-spacing:.3px}
+.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-row.team-a .team-players{color:var(--blue)}
+.team-row.team-b .team-players{color:var(--orange)}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
 .cell.sets-cell span{display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;font-size:14px;font-weight:900}
 .cell.sets-cell span.won{background:var(--gold);color:var(--bg)}
@@ -663,7 +664,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelA" placeholder="Équipe A" maxlength="24" oninput="onTeamLabelInput('A')">
-      <div class="team-players" id="playersA">—</div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -673,7 +674,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <input type="text" class="team-name-input" id="teamLabelB" placeholder="Équipe B" maxlength="24" oninput="onTeamLabelInput('B')">
-      <div class="team-players" id="playersB">—</div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
@@ -904,8 +905,10 @@ function escapeHtml(str) {
 }
 
 function initNames() {
-  document.getElementById('playersA').textContent = nameA;
-  document.getElementById('playersB').textContent = nameB;
+  document.getElementById('playerNameJ1').textContent = players.j1;
+  document.getElementById('playerNameJ2').textContent = players.j2;
+  document.getElementById('playerNameJ3').textContent = players.j3;
+  document.getElementById('playerNameJ4').textContent = players.j4;
   document.getElementById('teamLabelA').value = teamLabelA;
   document.getElementById('teamLabelB').value = teamLabelB;
   const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
@@ -936,6 +939,7 @@ let serverTeamAFirst = null;
 let serverTeamBFirst = null;
 let matchGameCount = 0;
 let serverManualAdjustment = 0;
+let pendingCycleAdjustment = null; // cran en attente si "Changer" a dû poser une question avant de l'appliquer
 
 function emptyStats(){
   const base = {pA:0, pB:0};
@@ -1313,8 +1317,17 @@ function computeCurrentServer() {
 
 function updateServerBadge() {
   const el = document.getElementById('serverIndicator');
-  if (!el) return;
   const server = computeCurrentServer();
+
+  // Balle 🎾 à côté du prénom du joueur qui sert actuellement, dans le
+  // tableau de score (en plus du badge dédié ci-dessous).
+  ['j1','j2','j3','j4'].forEach(key => {
+    const span = document.getElementById('playerName' + key.toUpperCase());
+    if (!span) return;
+    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+  });
+
+  if (!el) return;
   if (!server || !server.key) { el.style.display = 'none'; return; }
   el.style.display = 'flex';
   el.querySelector('.server-name').textContent = players[server.key] || (server.team === 'A' ? nameA : nameB);
@@ -1337,6 +1350,10 @@ function askInitialServer() {
   if (!modal) return;
   title.textContent = 'Qui sert en premier ?';
   btnsWrap.innerHTML = '';
+  // On ne demande QUE le 1er serveur de l'équipe qui commence : on ne sait
+  // pas toujours à l'avance qui servira côté adverse. La question "en face"
+  // n'arrive donc que juste avant le 2e jeu (voir winGame) — ou plus tôt si
+  // "Changer" en a besoin avant ça.
   buildServerTeamGroup(btnsWrap, 'A', ['j1','j2'], (team, key) => {
     firstServingTeam = team; serverTeamAFirst = key;
     modal.classList.remove('show');
@@ -1361,6 +1378,10 @@ function askSecondTeamServer() {
   buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
     if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
     modal.classList.remove('show');
+    if (pendingCycleAdjustment !== null) {
+      serverManualAdjustment = pendingCycleAdjustment;
+      pendingCycleAdjustment = null;
+    }
     updateServerBadge(); saveProgress();
   });
   modal.classList.add('show');
@@ -1387,10 +1408,23 @@ function buildServerTeamGroup(container, team, keys, onPick) {
 }
 
 function cycleServerManually() {
-  const pending = serverQuestionNeeded();
-  if (pending === 'initial') { askInitialServer(); return; }
-  if (pending === 'second') { askSecondTeamServer(); return; }
-  serverManualAdjustment++;
+  if (!firstServingTeam) { askInitialServer(); return; }
+
+  const nextAdjustment = serverManualAdjustment + 1;
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+  const turnIndex = matchGameCount + tiebreakOffset + nextAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const nextTeam = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const nextTeamKnown = nextTeam === 'A' ? serverTeamAFirst : serverTeamBFirst;
+
+  if (!nextTeamKnown) { pendingCycleAdjustment = nextAdjustment; askSecondTeamServer(); return; }
+
+  serverManualAdjustment = nextAdjustment;
   updateServerBadge();
   saveProgress();
 }

@@ -251,10 +251,15 @@ body{
   text-transform:uppercase;
 }
 .team-players{
-  font-size:11px;
-  color:var(--muted);
-  font-weight:500;
+  font-size:17px;
+  color:var(--text);
+  font-weight:900;
+  font-family:Barlow Condensed,sans-serif;
+  letter-spacing:.3px;
 }
+.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-row.team-a .team-players{color:var(--blue)}
+.team-row.team-b .team-players{color:var(--orange)}
 
 .cell{
   text-align:center;
@@ -712,7 +717,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
       <div class="team-name" id="nameA">Équipe A</div>
-      <div class="team-players" id="playersA">—</div>
+      <div class="team-players" id="playersA"><span class="player-name" id="playerNameJ1">—</span> / <span class="player-name" id="playerNameJ2">—</span></div>
     </div>
     <div class="cell set-score" id="setA1">—</div>
     <div class="cell set-score" id="setA2">—</div>
@@ -723,7 +728,7 @@ if ('serviceWorker' in navigator) {
   <div class="team-row team-b" id="rowB">
     <div class="team-info">
       <div class="team-name" id="nameB">Équipe B</div>
-      <div class="team-players" id="playersB">—</div>
+      <div class="team-players" id="playersB"><span class="player-name" id="playerNameJ3">—</span> / <span class="player-name" id="playerNameJ4">—</span></div>
     </div>
     <div class="cell set-score" id="setB1">—</div>
     <div class="cell set-score" id="setB2">—</div>
@@ -798,6 +803,7 @@ let serverTeamAFirst = null;
 let serverTeamBFirst = null;
 let matchGameCount = 0;
 let serverManualAdjustment = 0;
+let pendingCycleAdjustment = null; // cran en attente si "Changer" a dû poser une question avant de l'appliquer
 
 const TP=["0","15","30","40"];
 
@@ -823,9 +829,11 @@ function escapeHtml(str) {
 
 function initNames(){
   document.getElementById('nameA').textContent = "Équipe A";
-  document.getElementById('playersA').textContent = nameA;
+  document.getElementById('playerNameJ1').textContent = players.j1;
+  document.getElementById('playerNameJ2').textContent = players.j2;
   document.getElementById('nameB').textContent = "Équipe B";
-  document.getElementById('playersB').textContent = nameB;
+  document.getElementById('playerNameJ3').textContent = players.j3;
+  document.getElementById('playerNameJ4').textContent = players.j4;
   document.getElementById('btnA').textContent = players.j1.split(' ')[0] + " & " + players.j2.split(' ')[0];
   document.getElementById('btnB').textContent = players.j3.split(' ')[0] + " & " + players.j4.split(' ')[0];
 }
@@ -1008,8 +1016,17 @@ function computeCurrentServer() {
 
 function updateServerBadge() {
   const el = document.getElementById('serverIndicator');
-  if (!el) return;
   const server = computeCurrentServer();
+
+  // Balle 🎾 à côté du prénom du joueur qui sert actuellement, dans le
+  // tableau de score (en plus du badge dédié ci-dessous).
+  ['j1','j2','j3','j4'].forEach(key => {
+    const span = document.getElementById('playerName' + key.toUpperCase());
+    if (!span) return;
+    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+  });
+
+  if (!el) return;
   if (!server || !server.key) { el.style.display = 'none'; return; }
   el.style.display = 'flex';
   el.querySelector('.server-name').textContent = players[server.key] || (server.team === 'A' ? nameA : nameB);
@@ -1032,6 +1049,10 @@ function askInitialServer() {
   if (!modal) return;
   title.textContent = 'Qui sert en premier ?';
   btnsWrap.innerHTML = '';
+  // On ne demande QUE le 1er serveur de l'équipe qui commence : on ne sait
+  // pas toujours à l'avance qui servira côté adverse. La question "en face"
+  // n'arrive donc que juste avant le 2e jeu (voir winGame) — ou plus tôt si
+  // "Changer" en a besoin avant ça.
   buildServerTeamGroup(btnsWrap, 'A', ['j1','j2'], (team, key) => {
     firstServingTeam = team; serverTeamAFirst = key;
     modal.classList.remove('show');
@@ -1056,6 +1077,10 @@ function askSecondTeamServer() {
   buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
     if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
     modal.classList.remove('show');
+    if (pendingCycleAdjustment !== null) {
+      serverManualAdjustment = pendingCycleAdjustment;
+      pendingCycleAdjustment = null;
+    }
     updateServerBadge(); saveProgress();
   });
   modal.classList.add('show');
@@ -1082,10 +1107,23 @@ function buildServerTeamGroup(container, team, keys, onPick) {
 }
 
 function cycleServerManually() {
-  const pending = serverQuestionNeeded();
-  if (pending === 'initial') { askInitialServer(); return; }
-  if (pending === 'second') { askSecondTeamServer(); return; }
-  serverManualAdjustment++;
+  if (!firstServingTeam) { askInitialServer(); return; }
+
+  const nextAdjustment = serverManualAdjustment + 1;
+  let tiebreakOffset = 0;
+  if (inTiebreak || inSuperTiebreak) {
+    const played = p1 + p2;
+    tiebreakOffset = played === 0 ? 0 : 1 + Math.floor((played - 1) / 2);
+  }
+  const turnIndex = matchGameCount + tiebreakOffset + nextAdjustment;
+  const residue = ((turnIndex % 4) + 4) % 4;
+  const secondTeam = firstServingTeam === 'A' ? 'B' : 'A';
+  const nextTeam = (residue % 2 === 0) ? firstServingTeam : secondTeam;
+  const nextTeamKnown = nextTeam === 'A' ? serverTeamAFirst : serverTeamBFirst;
+
+  if (!nextTeamKnown) { pendingCycleAdjustment = nextAdjustment; askSecondTeamServer(); return; }
+
+  serverManualAdjustment = nextAdjustment;
   updateServerBadge();
   saveProgress();
 }
