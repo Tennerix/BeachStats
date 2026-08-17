@@ -228,12 +228,21 @@ body{
 
 /* ── ACTIONS ── */
 .team-controls{width:100%;max-width:580px;margin-bottom:.8rem}
+.team-ctrl-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .team-ctrl-label{
   font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;margin-bottom:6px;padding-left:4px;
+  text-transform:uppercase;padding-left:4px;
 }
 .team-ctrl-label.a{color:var(--blue)}
 .team-ctrl-label.b{color:var(--orange)}
+.side-toggle-btn{
+  font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:3px 9px;border-radius:12px;cursor:pointer;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);transition:all .15s;
+}
+.side-toggle-btn:hover{border-color:var(--gold);color:var(--gold)}
+.side-toggle-btn.side-r{border-color:var(--blue);color:var(--blue)}
+.side-toggle-btn.side-l{border-color:var(--orange);color:var(--orange)}
 .ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn-winner,.btn-faute{
   padding:.9rem .8rem;border-radius:14px;border:2px solid;cursor:pointer;
@@ -269,6 +278,18 @@ body{
 
 /* ── ZONE MAP ── */
 .zone-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:1rem;scrollbar-width:none}
+.zone-side-tabs{display:flex;gap:6px;margin-bottom:1rem}
+.zone-side-tab{
+  flex:1;background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:.5rem;border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.zone-side-tab:hover{color:var(--text);border-color:var(--muted)}
+.zone-side-tab.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}
+[data-theme="glacier"] .zone-side-tab.active{color:#0a2e52}
+[data-theme="sunset"] .zone-side-tab.active{color:#3a140a}
+[data-theme="lagoon"] .zone-side-tab.active{color:#04302c}
+[data-theme="magma"] .zone-side-tab.active{color:#3a0a02}
 .zone-tabs::-webkit-scrollbar{display:none}
 .zone-tab{
   flex:0 0 auto;background:var(--surface);border:1px solid var(--border);color:var(--muted);
@@ -453,6 +474,8 @@ body{
   color:var(--text);margin-bottom:.3rem;
 }
 .server-modal-box::before{content:'🎾';display:block;font-size:30px;margin-bottom:.5rem}
+#zoneOrientationModal .server-modal-box::before{content:'📍'}
+.zone-orientation-hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:.4rem}
 .server-modal-btns{display:flex;flex-direction:column;gap:14px;margin-top:1.1rem}
 .server-modal-group{display:flex;flex-direction:column;gap:6px}
 .server-modal-group-label{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;
@@ -692,6 +715,14 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 
+<div class="server-modal-backdrop" id="zoneOrientationModal">
+  <div class="server-modal-box">
+    <div class="server-modal-title" id="zoneOrientationTitle">Comment orienter les zones ?</div>
+    <p class="zone-orientation-hint">Détermine le sens de lecture de la cartographie par zone (mode Pro).</p>
+    <div class="server-modal-btns" id="zoneOrientationBtns"></div>
+  </div>
+</div>
+
 <div class="live-modal-backdrop" id="liveModalBackdrop" onclick="closeLiveModal(event)">
   <div class="live-modal" onclick="event.stopPropagation()">
     <div class="live-modal-title">📡 Partage en direct</div>
@@ -773,7 +804,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="team-controls" id="joueurCtrlJ1" style="display:none">
-  <div class="team-ctrl-label a" id="lblJ1"></div>
+  <div class="team-ctrl-label-row"><div class="team-ctrl-label a" id="lblJ1"></div><button type="button" class="side-toggle-btn" id="sideToggleJ1" style="display:none" onclick="togglePlayerSide('j1')"></button></div>
   <div class="ctrl-row">
     <button class="btn-winner a" onclick="openShotModal(1,'winner',1)">
       <span class="btn-icon">🎯</span>
@@ -789,7 +820,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="team-controls" id="joueurCtrlJ2" style="display:none">
-  <div class="team-ctrl-label a" id="lblJ2"></div>
+  <div class="team-ctrl-label-row"><div class="team-ctrl-label a" id="lblJ2"></div><button type="button" class="side-toggle-btn" id="sideToggleJ2" style="display:none" onclick="togglePlayerSide('j2')"></button></div>
   <div class="ctrl-row">
     <button class="btn-winner a" onclick="openShotModal(1,'winner',2)">
       <span class="btn-icon">🎯</span>
@@ -805,7 +836,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="team-controls" id="joueurCtrlJ3" style="display:none">
-  <div class="team-ctrl-label b" id="lblJ3"></div>
+  <div class="team-ctrl-label-row"><div class="team-ctrl-label b" id="lblJ3"></div><button type="button" class="side-toggle-btn" id="sideToggleJ3" style="display:none" onclick="togglePlayerSide('j3')"></button></div>
   <div class="ctrl-row">
     <button class="btn-winner b" onclick="openShotModal(2,'winner',3)">
       <span class="btn-icon">🎯</span>
@@ -821,7 +852,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="team-controls" id="joueurCtrlJ4" style="display:none">
-  <div class="team-ctrl-label b" id="lblJ4"></div>
+  <div class="team-ctrl-label-row"><div class="team-ctrl-label b" id="lblJ4"></div><button type="button" class="side-toggle-btn" id="sideToggleJ4" style="display:none" onclick="togglePlayerSide('j4')"></button></div>
   <div class="ctrl-row">
     <button class="btn-winner b" onclick="openShotModal(2,'winner',4)">
       <span class="btn-icon">🎯</span>
@@ -851,6 +882,11 @@ if ('serviceWorker' in navigator) {
 <div class="stats-card" id="zoneMapCard">
   <div class="stats-title">Cartographie par zone <span class="zone-view-badge" id="zoneViewBadge"></span></div>
   <div class="zone-tabs" id="zoneTabs"></div>
+  <div class="zone-side-tabs" id="zoneSideTabs" style="display:none">
+    <button class="zone-side-tab active" id="zoneSideTab_combined" onclick="selectZoneSideFilter('combined')">Combinée</button>
+    <button class="zone-side-tab" id="zoneSideTab_R" onclick="selectZoneSideFilter('R')">➡️ Côté Droite</button>
+    <button class="zone-side-tab" id="zoneSideTab_L" onclick="selectZoneSideFilter('L')">⬅️ Côté Gauche</button>
+  </div>
   <div class="zone-depth-note" id="zoneDepthNote" style="display:none">Bras roulé : le terrain est découpé en 3 bandes de profondeur — <b>Amorti</b> (proche filet), <b>Tendu</b> (milieu), <b>Lob</b> (fond) — chacune divisée en 5 zones de largeur.</div>
   <div class="zone-court-wrap" id="zoneMapGrid"></div>
   <div class="zone-legend">
@@ -1069,6 +1105,18 @@ let matchGameCount = 0;
 let serverManualAdjustment = 0;
 let pendingCycleAdjustment = null; // cran en attente si "Changer" a dû poser une question avant de l'appliquer
 
+// ── ORIENTATION DES ZONES (cartographie) ─────────────────────────────────
+// 'right' | 'left' : convention fixe pour tout le match (zone 1 toujours du
+// même côté physique). 'adaptive' : chaque joueur a son propre côté
+// (droite/gauche), modifiable à tout moment — la zone saisie est alors
+// normalisée à l'enregistrement (zone 1 = toujours "le long de la ligne" du
+// joueur, peu importe son côté physique), et un marquage par côté est
+// conservé en plus pour permettre les vues séparées de la cartographie.
+let zoneOrientation = null;
+let playerSide = { j1: null, j2: null, j3: null, j4: null }; // 'R' | 'L', mode adaptatif uniquement
+let pendingSide = null; // côté utilisé pour le coup en cours de saisie
+let zoneMapSideFilter = 'combined'; // 'combined' | 'R' | 'L'
+
 function emptyStats(){
   const base = {pA:0, pB:0};
   for(const t of ['A','B']) {
@@ -1269,7 +1317,9 @@ function scorePoint(player, type) {
   saveState();
 
   const shot = pendingShot || 'service_1';
+  const side = pendingSide;
   pendingShot = null;
+  pendingSide = null;
 
   if (player === 1) {
     stats.pA++;
@@ -1282,6 +1332,15 @@ function scorePoint(player, type) {
   if (pendingPlayerNum) {
     if (type === 'winner') stats['w'+pendingPlayerNum+'_'+shot]++;
     else stats['f'+pendingPlayerNum+'_'+shot]++;
+
+    // Marquage par côté (mode adaptatif uniquement) : en plus du décompte
+    // normalisé ci-dessus (utilisé partout ailleurs : PDF, détail par set,
+    // détail par joueur...), on garde une trace séparée par côté pour
+    // permettre les vues "Côté Droite" / "Côté Gauche" de la cartographie.
+    if (side) {
+      const sideKey = (type === 'winner' ? 'w' : 'f') + pendingPlayerNum + '_' + shot + '_' + side;
+      stats[sideKey] = (stats[sideKey] || 0) + 1;
+    }
     pendingPlayerNum = null;
   }
 
@@ -1471,6 +1530,113 @@ function serverQuestionNeeded() {
     if (!otherKnown) return 'second';
   }
   return null;
+}
+
+// ── ORIENTATION DES ZONES (question de tout début de match) ─────────────
+function zoneOrientationNeeded() {
+  return !zoneOrientation;
+}
+
+function askZoneOrientation() {
+  const modal = document.getElementById('zoneOrientationModal');
+  const title = document.getElementById('zoneOrientationTitle');
+  const btnsWrap = document.getElementById('zoneOrientationBtns');
+  if (!modal) return;
+  title.textContent = 'Comment orienter les zones ?';
+  btnsWrap.innerHTML = '';
+
+  const mkBtn = (label, onClick) => {
+    const btn = document.createElement('button');
+    btn.className = 'server-modal-btn';
+    btn.textContent = label;
+    btn.onclick = onClick;
+    btnsWrap.appendChild(btn);
+  };
+
+  mkBtn('➡️ Fixe — Zone 1 à droite', () => finishZoneOrientation('right'));
+  mkBtn('⬅️ Fixe — Zone 1 à gauche', () => finishZoneOrientation('left'));
+  if (statsMode === 'joueur') {
+    mkBtn('🔀 Adaptatif — selon la position de chaque joueur', startAdaptiveZoneSetup);
+  }
+
+  modal.classList.add('show');
+}
+
+function finishZoneOrientation(mode) {
+  zoneOrientation = mode;
+  document.getElementById('zoneOrientationModal').classList.remove('show');
+  saveProgress();
+  if (!firstServingTeam) askInitialServer();
+}
+
+// Mode adaptatif : on demande, pour chaque équipe, qui commence à droite
+// (l'autre joueur de la paire est alors automatiquement à gauche).
+function askTeamSideSetup(team) {
+  const modal = document.getElementById('zoneOrientationModal');
+  const title = document.getElementById('zoneOrientationTitle');
+  const btnsWrap = document.getElementById('zoneOrientationBtns');
+  const keys = team === 'A' ? ['j1','j2'] : ['j3','j4'];
+  title.textContent = 'Équipe ' + team + ' — qui commence à droite ?';
+  btnsWrap.innerHTML = '';
+  keys.forEach(key => {
+    const other = keys.find(k => k !== key);
+    const btn = document.createElement('button');
+    btn.className = 'server-modal-btn team-' + team.toLowerCase();
+    btn.textContent = players[key];
+    btn.onclick = () => {
+      playerSide[key] = 'R';
+      playerSide[other] = 'L';
+      if (team === 'A') {
+        askTeamSideSetup('B');
+      } else {
+        modal.classList.remove('show');
+        renderPlayerSideToggles();
+        saveProgress();
+        if (!firstServingTeam) askInitialServer();
+      }
+    };
+    btnsWrap.appendChild(btn);
+  });
+  modal.classList.add('show');
+}
+
+function startAdaptiveZoneSetup() {
+  zoneOrientation = 'adaptive';
+  askTeamSideSetup('A');
+}
+
+// Bascule le côté d'un joueur à tout moment pendant le match (son partenaire
+// passe automatiquement du côté opposé).
+function togglePlayerSide(key) {
+  const teamKeys = (key === 'j1' || key === 'j2') ? ['j1','j2'] : ['j3','j4'];
+  const other = teamKeys.find(k => k !== key);
+  const newSide = playerSide[key] === 'R' ? 'L' : 'R';
+  playerSide[key] = newSide;
+  playerSide[other] = newSide === 'R' ? 'L' : 'R';
+  renderPlayerSideToggles();
+  saveProgress();
+}
+
+function renderPlayerSideToggles() {
+  ['j1','j2','j3','j4'].forEach(key => {
+    const el = document.getElementById('sideToggle' + key.toUpperCase());
+    if (!el) return;
+    if (zoneOrientation !== 'adaptive') { el.style.display = 'none'; return; }
+    el.style.display = 'inline-block';
+    const side = playerSide[key];
+    el.textContent = side === 'R' ? '➡️ Droite' : '⬅️ Gauche';
+    el.className = 'side-toggle-btn ' + (side === 'R' ? 'side-r' : 'side-l');
+  });
+  const sideTabs = document.getElementById('zoneSideTabs');
+  if (sideTabs) sideTabs.style.display = zoneOrientation === 'adaptive' ? 'flex' : 'none';
+}
+
+// Inverse la zone (dernier segment de la clé) : 1↔5, 2↔4, 3 reste au centre.
+function mirrorShotZone(shotKey) {
+  const parts = shotKey.split('_');
+  const z = parseInt(parts[parts.length - 1], 10);
+  parts[parts.length - 1] = String(6 - z);
+  return parts.join('_');
 }
 
 function askInitialServer() {
@@ -1796,6 +1962,7 @@ function saveProgress() {
     stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
     teamLabelA, teamLabelB,
     firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
+    zoneOrientation, playerSide, zoneMapSideFilter,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -1843,6 +2010,9 @@ function applyProgress(snap) {
   serverTeamBFirst = snap.serverTeamBFirst || null;
   matchGameCount = snap.matchGameCount || 0;
   serverManualAdjustment = snap.serverManualAdjustment || 0;
+  zoneOrientation = snap.zoneOrientation || null;
+  playerSide = snap.playerSide || { j1: null, j2: null, j3: null, j4: null };
+  zoneMapSideFilter = snap.zoneMapSideFilter || 'combined';
   document.getElementById('teamLabelA').value = teamLabelA;
   document.getElementById('teamLabelB').value = teamLabelB;
   document.getElementById('setPill').textContent = !matchStarted ? 'Échauffement' : (inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1));
@@ -1851,6 +2021,7 @@ function applyProgress(snap) {
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
   const s = String(timerSeconds % 60).padStart(2,'0');
   document.getElementById('timerDisplay').textContent = m + ':' + s;
+  renderPlayerSideToggles();
   updateDisplay();
 }
 
@@ -1886,12 +2057,14 @@ function resetMatch() {
   history=[]; matchLog=[];
   matchStarted=false;
   firstServingTeam=null; serverTeamAFirst=null; serverTeamBFirst=null; matchGameCount=0; serverManualAdjustment=0;
+  zoneOrientation=null; playerSide={j1:null,j2:null,j3:null,j4:null}; zoneMapSideFilter='combined';
   teamLabelA=''; teamLabelB='';
   document.getElementById('teamLabelA').value='';
   document.getElementById('teamLabelB').value='';
   document.getElementById('setPill').textContent='Échauffement';
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
+  renderPlayerSideToggles();
   updateDisplay();
   logEvent('', '🎾 Match créé');
 }
@@ -1905,8 +2078,9 @@ function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   ensureTimerRunning();
 
-  // Tant qu'on ne sait pas qui sert, on affiche la question et on bloque —
-  // pas d'ouverture du choix du type de coup tant qu'elle n'est pas répondue.
+  // Tant qu'on ne sait pas comment orienter les zones, ni qui sert, on
+  // affiche la question correspondante et on bloque.
+  if (zoneOrientationNeeded()) { askZoneOrientation(); return; }
   const pending = serverQuestionNeeded();
   if (pending === 'initial') { askInitialServer(); return; }
   if (pending === 'second') { askSecondTeamServer(); return; }
@@ -2041,7 +2215,22 @@ function closeShotModal() {
 }
 
 function confirmShot(shotKey) {
-  pendingShot = shotKey;
+  // Normalisation par côté : la zone saisie est toujours "la zone physique
+  // observée sur le terrain", mais on la stocke normalisée pour que la zone 1
+  // représente systématiquement "le long de la ligne" du joueur, peu importe
+  // qu'il soit à droite ou à gauche (mode fixe "gauche", ou mode adaptatif).
+  let finalShot = shotKey;
+  pendingSide = null;
+
+  if (zoneOrientation === 'left') {
+    finalShot = mirrorShotZone(shotKey);
+  } else if (zoneOrientation === 'adaptive' && pendingPlayerNum) {
+    const side = playerSide['j' + pendingPlayerNum];
+    pendingSide = side;
+    if (side === 'L') finalShot = mirrorShotZone(shotKey);
+  }
+
+  pendingShot = finalShot;
   closeShotModal();
   scorePoint(pendingPlayer, pendingType);
 }
@@ -2200,14 +2389,15 @@ function selectZoneMapShot(s) {
   renderZoneMap();
 }
 
-function computeZoneData(wPrefix, fPrefix) {
+function computeZoneData(wPrefix, fPrefix, sideSuffix) {
+  sideSuffix = sideSuffix || '';
   const ds = getDisplayStats();
   return ZONES.map(z => {
     const keys = SHOT_ZONE_KEYS[zoneMapShot][z];
     let w = 0, f = 0;
     keys.forEach(k => {
-      w += ds[wPrefix+k] || 0;
-      f += ds[fPrefix+k] || 0;
+      w += ds[wPrefix+k+sideSuffix] || 0;
+      f += ds[fPrefix+k+sideSuffix] || 0;
     });
     return { z: parseInt(z,10), w, f };
   });
@@ -2216,7 +2406,8 @@ function computeZoneData(wPrefix, fPrefix) {
 // Données de zone pour une variante de profondeur précise d'un coup à bandes
 // (ex: bras roulé amorti/tendu/lobe, smash gratté/fort/lob...), zone par
 // zone de largeur (1 à 5).
-function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant) {
+function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant, sideSuffix) {
+  sideSuffix = sideSuffix || '';
   const ds = getDisplayStats();
   // Agrège toutes les clés qui se terminent par "_<profondeur>_<zone>", même
   // quand il y a un niveau intermédiaire (ex: défense CD+REV confondus dans
@@ -2226,8 +2417,8 @@ function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant) {
     let w = 0, f = 0;
     ALL_SHOT_KEYS.forEach(k => {
       if (k.indexOf(shotKey + '_') === 0 && k.endsWith(suffix)) {
-        w += ds[wPrefix+k] || 0;
-        f += ds[fPrefix+k] || 0;
+        w += ds[wPrefix+k+sideSuffix] || 0;
+        f += ds[fPrefix+k+sideSuffix] || 0;
       }
     });
     return { z: parseInt(z,10), w, f };
@@ -2276,7 +2467,7 @@ function buildCourtSVG(data) {
 // Cartographie "à bandes de profondeur" (bras roulé, smash, défense, service
 // +1), vue demi-terrain : N bandes empilées (une par variante), filet en bas.
 // Chaque bande est divisée en 5 zones de largeur, comme les autres coups.
-function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix) {
+function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix, sideSuffix) {
   const bandsConfig = DEPTH_BAND_SHOTS[shotKey];
   const n = bandsConfig.length;
   const W = 260, ZW = W / 5, bandH = 148, gap = 8, TOPPAD = 4, LBLPAD = 26;
@@ -2285,7 +2476,7 @@ function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix) {
   // Filet en bas -> ordre visuel de haut en bas : du fond vers le filet.
   const visualOrder = [...bandsConfig].reverse();
   const dataByVariant = {};
-  bandsConfig.forEach(dv => { dataByVariant[dv.variant] = computeDepthZoneData(shotKey, wPrefix, fPrefix, dv.variant); });
+  bandsConfig.forEach(dv => { dataByVariant[dv.variant] = computeDepthZoneData(shotKey, wPrefix, fPrefix, dv.variant, sideSuffix); });
   const maxTotal = Math.max(1, ...Object.values(dataByVariant).flat().map(d => d.w + d.f));
 
   let bands = '';
@@ -2334,6 +2525,15 @@ function renderZoneMap() {
   const depthNote = document.getElementById('zoneDepthNote');
   if (depthNote) depthNote.style.display = DEPTH_BAND_SHOTS[zoneMapShot] ? 'block' : 'none';
 
+  // Les vues séparées par côté n'ont de sens qu'en mode adaptatif (seul mode
+  // où chaque joueur a un côté individuel, modifiable en cours de match).
+  const sideTabs = document.getElementById('zoneSideTabs');
+  if (sideTabs) {
+    sideTabs.style.display = zoneOrientation === 'adaptive' ? 'flex' : 'none';
+    if (zoneOrientation !== 'adaptive') zoneMapSideFilter = 'combined';
+  }
+  const sideSuffix = zoneMapSideFilter === 'combined' ? '' : '_' + zoneMapSideFilter;
+
   const badge = document.getElementById('zoneViewBadge');
   if (badge) {
     if (statsViewMode === 'total') {
@@ -2358,13 +2558,24 @@ function renderZoneMap() {
 
   grid.innerHTML = entries.map(e => {
     const svg = DEPTH_BAND_SHOTS[zoneMapShot]
-      ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp)
-      : buildCourtSVG(computeZoneData(e.wp, e.fp));
+      ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp, sideSuffix)
+      : buildCourtSVG(computeZoneData(e.wp, e.fp, sideSuffix));
     return `<div class="zone-court-item">
       <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
       ${svg}
     </div>`;
   }).join('');
+}
+
+// Change la vue de la cartographie : combinée (normalisée, toutes données),
+// ou filtrée sur les points marqués quand le joueur était à droite / gauche.
+function selectZoneSideFilter(filter) {
+  zoneMapSideFilter = filter;
+  ['combined','R','L'].forEach(f => {
+    const tab = document.getElementById('zoneSideTab_' + f);
+    if (tab) tab.classList.toggle('active', f === filter);
+  });
+  renderZoneMap();
 }
 
 // ── TIMER ────────────────────────────────────────────────────────────────────
@@ -2391,7 +2602,8 @@ function timerToggle() {
       matchStarted = true;
       document.getElementById('setPill').textContent = 'Set 1';
       logEvent('', '▶️ Match démarré');
-      if (!firstServingTeam) askInitialServer();
+      if (zoneOrientationNeeded()) { askZoneOrientation(); }
+      else if (!firstServingTeam) { askInitialServer(); }
     }
     timerInterval = setInterval(() => {
       timerSeconds++;
