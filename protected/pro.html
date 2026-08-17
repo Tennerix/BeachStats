@@ -2963,32 +2963,32 @@ function exportPDF() {
     y+=4;
   });
 
-  // ══ 5. TOILES D'ARAIGNÉE — vue globale + par zone ═══════════════════════
-  // Un point par coup précis (27 catégories : Service, S+1 ×4, Retour ×2,
-  // Smash ×3, Bras roulé ×3, Amorti ×2, Lob ×3, Rush ×3, Défense ×6), sans
-  // jamais la grille de zones qui surchargeait le PDF. Gagnants (vert) et
-  // fautes (rouge) sont superposés sur LA MÊME toile par entité — chacun
-  // avec sa propre échelle pour bien ressortir, quelle que soit l'ampleur
-  // relative des deux — et 6 vues au total (globale, puis Zone 1 à 5).
-  sectionTitle('PROFIL PAR COUP (TOILE D\u2019ARAIGNÉE)', theme.gold);
+  // ══ 5. DISTRIBUTION & TAUX DE RÉUSSITE PAR COUP ═════════════════════════
+  // Une barre horizontale par coup précis (27 catégories : Service, S+1 ×4,
+  // Retour ×2, Smash ×3, Bras roulé ×3, Amorti ×2, Lob ×3, Rush ×3,
+  // Défense ×6), triées du meilleur au moins bon taux de réussite. La
+  // longueur de la barre montre la fréquence d'utilisation, sa composition
+  // (vert/rouge) le taux de réussite — c'est ce qui permet de repérer en un
+  // coup d'œil les coups qui fonctionnent et ceux à travailler, y compris
+  // par zone. 6 vues au total (globale, puis Zone 1 à 5).
+  sectionTitle('DISTRIBUTION & TAUX DE RÉUSSITE PAR COUP', theme.gold);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...theme.muted);
-  const introText = "Chaque pointe de la toile représente un type de coup précis. Plus le point s'éloigne du centre, plus le total est élevé — comparé au meilleur total observé sur cette vue.";
-  const introLines = doc.splitTextToSize(introText, W - 2*M);
-  introLines.forEach(l => { ensureSpace(5); doc.text(l, M, y); y += 4.2; });
+  const introText2 = "Chaque ligne représente un type de coup précis, trié du meilleur au moins bon taux de réussite. La longueur de la barre indique le nombre total de fois où ce coup a été joué.";
+  const introLines2 = doc.splitTextToSize(introText2, W - 2*M);
+  introLines2.forEach(l => { ensureSpace(5); doc.text(l, M, y); y += 4.2; });
   y += 2;
 
-  // Légende unique (vert/rouge), affichée une seule fois pour toute la section.
   ensureSpace(8);
-  doc.setFillColor(...theme.green); doc.circle(M+1.5, y-1.3, 1.5, 'F');
+  doc.setFillColor(...theme.green); doc.rect(M, y-3, 4, 3, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...theme.green);
-  doc.text('Points gagnants', M+5, y);
-  const legendGap = M + 5 + doc.getTextWidth('Points gagnants') + 10;
-  doc.setFillColor(...theme.red); doc.circle(legendGap, y-1.3, 1.5, 'F');
+  doc.text('Réussis', M+6, y);
+  const legendGap2 = M + 6 + doc.getTextWidth('Réussis') + 10;
+  doc.setFillColor(...theme.red); doc.rect(legendGap2, y-3, 4, 3, 'F');
   doc.setTextColor(...theme.red);
-  doc.text('Fautes directes', legendGap+4, y);
+  doc.text('Ratés', legendGap2+6, y);
   y += 9;
 
-  const radarEntities = statsMode === 'joueur'
+  const barEntities = statsMode === 'joueur'
     ? [
         {label: players.j1, color:theme.blue, wp:'w1_', fp:'f1_'},
         {label: players.j2, color:theme.blue, wp:'w2_', fp:'f2_'},
@@ -3002,7 +3002,7 @@ function exportPDF() {
 
   // Totaux par catégorie de coup pour une entité, toutes zones confondues ou
   // filtrés sur une zone précise (zoneFilter = null -> vue globale).
-  const computeCategoryTotals = (wp, fp, zoneFilter) => {
+  const computeCategoryTotals2 = (wp, fp, zoneFilter) => {
     const zones = zoneFilter ? [zoneFilter] : ZONES;
     return LEAF_SHOT_CATEGORIES.map(cat => {
       let w = 0, f = 0;
@@ -3015,121 +3015,80 @@ function exportPDF() {
     });
   };
 
-  // Dessine une toile d'araignée à N pointes centrée sur (cx, cy), avec les
-  // gagnants (vert) ET les fautes (rouge) superposés — chacun normalisé sur
-  // sa propre échelle (maxW / maxF) pour bien ressortir indépendamment.
-  const drawCombinedRadarChart = (cx, cy, radius, categories, maxW, maxF) => {
-    const n = categories.length;
-    const angleStep = (2 * Math.PI) / n;
-    const startAngle = -Math.PI / 2;
-    const angleOf = i => startAngle + i * angleStep;
-
-    // Anneaux concentriques (grille de fond)
-    const rings = 4;
-    doc.setDrawColor(...theme.border); doc.setLineWidth(0.15);
-    for (let r = 1; r <= rings; r++) {
-      const rr = radius * (r / rings);
-      for (let i = 0; i < n; i++) {
-        const a1 = angleOf(i), a2 = angleOf(i+1);
-        doc.line(cx+rr*Math.cos(a1), cy+rr*Math.sin(a1), cx+rr*Math.cos(a2), cy+rr*Math.sin(a2));
-      }
-    }
-
-    // Axes + étiquettes
-    doc.setFontSize(4.2); doc.setFont('helvetica','normal'); doc.setTextColor(...theme.muted);
-    for (let i = 0; i < n; i++) {
-      const a = angleOf(i);
-      const cosA = Math.cos(a), sinA = Math.sin(a);
-      doc.setDrawColor(...theme.border); doc.setLineWidth(0.12);
-      doc.line(cx, cy, cx+radius*cosA, cy+radius*sinA);
-      const lx = cx + (radius + 2) * cosA, ly = cy + (radius + 2) * sinA + 1;
-      const align = cosA > 0.2 ? 'left' : (cosA < -0.2 ? 'right' : 'center');
-      doc.text(categories[i].label, lx, ly, {align, maxWidth: 24});
-    }
-
-    const buildPts = (valFn, maxV) => categories.map((cat, i) => {
-      const a = angleOf(i);
-      const val = maxV > 0 ? Math.min(1, valFn(cat) / maxV) : 0;
-      const rr = radius * val;
-      return [cx + rr*Math.cos(a), cy + rr*Math.sin(a)];
-    });
-
-    const drawPolygon = (pts, color, opacity) => {
-      try {
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({opacity}));
-        doc.setFillColor(...color);
-        const linesArg = pts.slice(1).map((p,i) => [p[0]-pts[i][0], p[1]-pts[i][1]]);
-        doc.lines(linesArg, pts[0][0], pts[0][1], [1,1], 'F', true);
-        doc.restoreGraphicsState();
-      } catch(e) {}
-      doc.setDrawColor(...color); doc.setLineWidth(0.8);
-      for (let i = 0; i < pts.length; i++) {
-        const next = (i+1) % pts.length;
-        doc.line(pts[i][0], pts[i][1], pts[next][0], pts[next][1]);
-      }
-      doc.setFillColor(...color);
-      pts.forEach(p => doc.circle(p[0], p[1], 0.6, 'F'));
-    };
-
-    // Les fautes en dessous (plus discrètes), les gagnants au-dessus (plus
-    // opaques) pour que la forme "positive" ressorte davantage au premier coup d'œil.
-    drawPolygon(buildPts(c => c.f, maxF), theme.red, 0.22);
-    drawPolygon(buildPts(c => c.w, maxW), theme.green, 0.30);
-  };
-
-  // Une "vue" = globale (zoneFilter null) ou une zone précise (1 à 5).
-  const radarViews = [
+  const barViews = [
     { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
     ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
   ];
 
-  // Grille 2 colonnes : une seule toile par entité permet de l'agrandir et
-  // d'afficher 2 entités côte à côte (au lieu d'une seule à la fois avant).
-  const radarRadius = 30;
-  const radarGridCols = 2;
-  const radarGridRows = Math.ceil(radarEntities.length / radarGridCols);
-  const radarCellW = (W - 2*M - 10) / radarGridCols;
-  const radarCellH = radarRadius * 2 + 20;
+  const labelColW = 40;
+  const pctColW = 20;
+  const barRowH = 6.4;
+  const barGap = 1.2;
 
-  radarViews.forEach((view, viewIdx) => {
+  barViews.forEach((view, viewIdx) => {
     ensureSpace(16);
     doc.setFont(TF,'bold'); doc.setFontSize(12); doc.setTextColor(...theme.gold);
     doc.text(view.label, M, y);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
-    doc.text('Vue ' + (viewIdx+1) + ' / ' + radarViews.length, W-M, y, {align:'right'});
+    doc.text('Vue ' + (viewIdx+1) + ' / ' + barViews.length, W-M, y, {align:'right'});
     y += 10;
 
-    // Échelle commune (max observé) pour toutes les entités de cette vue,
-    // séparément pour les gagnants et les fautes.
-    const allTotals = radarEntities.map(ent => computeCategoryTotals(ent.wp, ent.fp, view.zoneFilter));
-    const maxW = Math.max(1, ...allTotals.flat().map(c => c.w));
-    const maxF = Math.max(1, ...allTotals.flat().map(c => c.f));
+    barEntities.forEach((ent, entIdx) => {
+      const totals = computeCategoryTotals2(ent.wp, ent.fp, view.zoneFilter)
+        .filter(c => (c.w + c.f) > 0)
+        .sort((a, b) => (b.w / (b.w + b.f)) - (a.w / (a.w + a.f)));
+      const totW = totals.reduce((s,c)=>s+c.w,0);
+      const totF = totals.reduce((s,c)=>s+c.f,0);
 
-    for (let row = 0; row < radarGridRows; row++) {
-      ensureSpace(radarCellH);
-      const rowY = y;
-      for (let col = 0; col < radarGridCols; col++) {
-        const idx = row * radarGridCols + col;
-        if (idx >= radarEntities.length) continue;
-        const ent = radarEntities[idx];
-        const totals = allTotals[idx];
-        const totW = totals.reduce((s,c)=>s+c.w,0);
-        const totF = totals.reduce((s,c)=>s+c.f,0);
+      ensureSpace(14);
+      doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
+      doc.text(stripEmoji(ent.label) + '  —  Réussis : ' + totW + '   Ratés : ' + totF, M, y);
+      y += 7;
 
-        const cellX = M + col * (radarCellW + 10);
-        const cx = cellX + radarCellW / 2;
+      if (!totals.length) {
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
+        doc.text('Aucun coup enregistré sur cette vue', M+2, y);
+        y += 7;
+      } else {
+        const maxTotal = Math.max(...totals.map(c => c.w + c.f));
+        const barAreaX = M + labelColW;
+        const barAreaMaxW = W - M - barAreaX - pctColW;
 
-        doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
-        doc.text(stripEmoji(ent.label) + '  —  W : ' + totW + '   F : ' + totF, cx, rowY, {align:'center'});
+        totals.forEach(cat => {
+          ensureSpace(barRowH + barGap);
+          const total = cat.w + cat.f;
+          const pct = total > 0 ? (cat.w / total * 100) : 0;
+          const barW = maxTotal > 0 ? (total / maxTotal) * barAreaMaxW : 0;
+          const greenW = total > 0 ? barW * (cat.w / total) : 0;
+          const redW = barW - greenW;
 
-        const cy = rowY + 8 + radarRadius;
-        drawCombinedRadarChart(cx, cy, radarRadius, totals, maxW, maxF);
+          doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(...theme.text);
+          doc.text(cat.label, M, y + barRowH/2 + 1.3, {maxWidth: labelColW - 3});
+
+          if (barW > 0.5) {
+            doc.setFillColor(...theme.green);
+            doc.rect(barAreaX, y, greenW, barRowH, 'F');
+            doc.setFillColor(...theme.red);
+            doc.rect(barAreaX + greenW, y, redW, barRowH, 'F');
+
+            doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(255,255,255);
+            if (greenW > 6) doc.text(String(cat.w), barAreaX + greenW/2, y + barRowH/2 + 1.2, {align:'center'});
+            if (redW > 6) doc.text(String(cat.f), barAreaX + greenW + redW/2, y + barRowH/2 + 1.2, {align:'center'});
+          }
+
+          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...(pct >= 50 ? theme.green : theme.red));
+          doc.text(Math.round(pct) + '%', barAreaX + barW + 3, y + barRowH/2 + 1.2);
+
+          y += barRowH + barGap;
+        });
       }
-      y = rowY + radarCellH;
-    }
+      y += 5;
+      if (entIdx < barEntities.length - 1) {
+        doc.setDrawColor(...theme.border); doc.setLineWidth(0.15); doc.line(M, y-3, W-M, y-3);
+      }
+    });
 
-    if (viewIdx < radarViews.length - 1) {
+    if (viewIdx < barViews.length - 1) {
       doc.setDrawColor(...theme.gold); doc.setLineWidth(0.4);
       doc.line(M, y, W-M, y);
       y += 8;
