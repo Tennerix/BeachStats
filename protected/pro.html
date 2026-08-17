@@ -1013,6 +1013,23 @@ const DEPTH_BAND_SHOTS = {
 // Conservé pour compatibilité : équivalent à DEPTH_BAND_SHOTS.roule.
 const ROULE_DEPTH_VARIANTS = DEPTH_BAND_SHOTS.roule;
 
+// Liste à plat de TOUTES les combinaisons coup+variante ("feuilles" de l'arbre
+// de saisie), utilisée pour les toiles d'araignée du PDF — un point par coup
+// précis (ex: "Défense CD Amorti"), sans jamais entrer dans le détail des
+// zones (c'est justement le rôle de ces graphiques : donner une vue globale
+// ou par zone, sans la grille de 5 zones × 9 coups qui surchargeait le PDF).
+const LEAF_SHOT_CATEGORIES = [];
+BASE_SHOTS.forEach(s => {
+  const variants = SHOT_VARIANTS[s];
+  if (!variants.length) {
+    LEAF_SHOT_CATEGORIES.push({ key: s, label: SHOT_BASE_LBL[s] });
+  } else {
+    variants.forEach(v => {
+      LEAF_SHOT_CATEGORIES.push({ key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v) });
+    });
+  }
+});
+
 // Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
 const SHOT_LBL = {};
@@ -2946,38 +2963,20 @@ function exportPDF() {
     y+=4;
   });
 
-  // ══ 5. CARTOGRAPHIE PAR ZONE — flux naturel, saut de page seulement si besoin ══
-  sectionTitle('CARTOGRAPHIE PAR ZONE', theme.gold);
+  // ══ 5. TOILES D'ARAIGNÉE — vue globale + par zone ═══════════════════════
+  // Un point par coup précis (27 catégories : Service, S+1 ×4, Retour ×2,
+  // Smash ×3, Bras roulé ×3, Amorti ×2, Lob ×3, Rush ×3, Défense ×6), sans
+  // jamais la grille de zones qui surchargeait le PDF. 2 toiles par vue :
+  // verte (points gagnants) et rouge (fautes directes), et 6 vues au total
+  // (globale, puis Zone 1 à 5) — bien plus lisible qu'un terrain par coup.
+  sectionTitle('PROFIL PAR COUP (TOILE D\u2019ARAIGNÉE)', theme.gold);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...theme.muted);
+  const introText = "Chaque pointe de la toile représente un type de coup précis. Plus le point s'éloigne du centre, plus le total est élevé — comparé au meilleur total observé sur cette vue.";
+  const introLines = doc.splitTextToSize(introText, W - 2*M);
+  introLines.forEach(l => { ensureSpace(5); doc.text(l, M, y); y += 4.2; });
+  y += 4;
 
-  // Couleurs fixes et bien saturées pour les zones : la lisibilité fonctionnelle
-  // (vert/orange/rouge) prime ici, indépendamment de la palette générale du PDF.
-  const ZONE_WIN   = [22, 199, 104];
-  const ZONE_TIE   = [255, 149, 10];
-  const ZONE_FAULT = [230, 46, 46];
-  const ZONE_EMPTY = theme.card; // discret, se fond dans le fond plutôt que d'attirer l'œil
-
-  const drawZoneLegend = (yPos) => {
-    const items = [
-      {color: ZONE_WIN,   label: 'Gagnante'},
-      {color: ZONE_TIE,   label: 'Égalité'},
-      {color: ZONE_FAULT, label: 'Fautes'},
-      {color: ZONE_EMPTY, label: 'Aucune donnée'},
-    ];
-    doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    let lx = M;
-    items.forEach(it => {
-      doc.setFillColor(...it.color);
-      doc.setDrawColor(...theme.border); doc.setLineWidth(0.2);
-      doc.rect(lx, yPos-3.2, 3.6, 3.6, 'FD');
-      doc.setTextColor(...theme.muted);
-      doc.text(it.label, lx+5, yPos);
-      lx += 5 + doc.getTextWidth(it.label) + 7;
-    });
-  };
-  drawZoneLegend(y);
-  y += 8;
-
-  const zoneEntities = statsMode === 'joueur'
+  const radarEntities = statsMode === 'joueur'
     ? [
         {label: players.j1, color:theme.blue, wp:'w1_', fp:'f1_'},
         {label: players.j2, color:theme.blue, wp:'w2_', fp:'f2_'},
@@ -2989,120 +2988,134 @@ function exportPDF() {
         {label: nameB, color:theme.orange, wp:'wB_', fp:'fB_'},
       ];
 
-  const gridCols = zoneEntities.length > 2 ? 2 : zoneEntities.length;
-  const gridRows = Math.ceil(zoneEntities.length / gridCols);
-  const zcGap = 8;
-  const zcNetGap = 5;
-  const NON_ROULE_RATIO = 1.8; // hauteur = largeur × ce ratio (agrandi pour bien remplir la page)
-  const PER_BAND_RATIO = 2/3;  // hauteur de chaque bande de profondeur, en proportion de la largeur
-
-  const zoneColor = (w, f) => {
-    if (w === 0 && f === 0) return ZONE_EMPTY;
-    if (w === f) return ZONE_TIE;
-    return w > f ? ZONE_WIN : ZONE_FAULT;
+  // Totaux par catégorie de coup pour une entité, toutes zones confondues ou
+  // filtrés sur une zone précise (zoneFilter = null -> vue globale).
+  const computeCategoryTotals = (wp, fp, zoneFilter) => {
+    const zones = zoneFilter ? [zoneFilter] : ZONES;
+    return LEAF_SHOT_CATEGORIES.map(cat => {
+      let w = 0, f = 0;
+      zones.forEach(z => {
+        const k = cat.key + '_' + z;
+        w += stats[wp+k] || 0;
+        f += stats[fp+k] || 0;
+      });
+      return { ...cat, w, f };
+    });
   };
 
-  BASE_SHOTS.forEach((shotKey, shotIdx) => {
-    const depthBands = DEPTH_BAND_SHOTS[shotKey]; // undefined = terrain plat classique
-    const nBands = depthBands ? depthBands.length : 0;
+  // Dessine une toile d'araignée à N pointes centrée sur (cx, cy). "getVal"
+  // extrait la valeur à afficher pour chaque catégorie ; l'échelle (anneau
+  // extérieur) est commune à toute la vue pour rester comparable entre les
+  // différentes entités affichées côte à côte.
+  const drawRadarChart = (cx, cy, radius, categories, getVal, maxVal, color) => {
+    const n = categories.length;
+    const angleStep = (2 * Math.PI) / n;
+    const startAngle = -Math.PI / 2;
+    const angleOf = i => startAngle + i * angleStep;
 
-    // Taille calculée dynamiquement pour chaque coup, comme si la page était
-    // vierge (244mm de haut utilisables) : les terrains remplissent le plus
-    // possible la largeur ET la hauteur disponibles, sans jamais déborder.
-    // Le flux naturel (ensureSpace) peut toujours enchaîner ce coup juste après
-    // le précédent s'il reste de la place, ou passer à une page neuve sinon.
-    const maxCourtLFromHeight = (244 / gridRows) - 22;
-    const maxWFromHeight = depthBands ? maxCourtLFromHeight / (PER_BAND_RATIO * nBands) : maxCourtLFromHeight / NON_ROULE_RATIO;
-    const maxWFromWidth = (W - 2*M - (gridCols-1)*zcGap) / gridCols;
-    const zcCourtW = Math.min(maxWFromWidth, maxWFromHeight);
-    const courtL = depthBands ? zcCourtW * PER_BAND_RATIO * nBands : zcCourtW * NON_ROULE_RATIO;
-    const bandH = depthBands ? courtL / nBands : null;
-    const visualOrder = depthBands ? [...depthBands].reverse() : null;
+    // Anneaux concentriques (grille de fond)
+    const rings = 4;
+    doc.setDrawColor(...theme.border); doc.setLineWidth(0.15);
+    for (let r = 1; r <= rings; r++) {
+      const rr = radius * (r / rings);
+      for (let i = 0; i < n; i++) {
+        const a1 = angleOf(i), a2 = angleOf(i+1);
+        doc.line(cx+rr*Math.cos(a1), cy+rr*Math.sin(a1), cx+rr*Math.cos(a2), cy+rr*Math.sin(a2));
+      }
+    }
 
-    // Espace nécessaire pour ce coup complet (titre + tous les terrains de la
-    // grille) : on ne saute une page que si ça ne rentre vraiment pas.
-    const blockHeight = 10 + gridRows * (courtL + 22) + 8;
-    ensureSpace(blockHeight);
+    // Axes + étiquettes (très petites, 27 pointes obligent)
+    doc.setFontSize(3.6); doc.setFont('helvetica','normal'); doc.setTextColor(...theme.muted);
+    for (let i = 0; i < n; i++) {
+      const a = angleOf(i);
+      const cosA = Math.cos(a), sinA = Math.sin(a);
+      doc.setDrawColor(...theme.border); doc.setLineWidth(0.12);
+      doc.line(cx, cy, cx+radius*cosA, cy+radius*sinA);
+      const lx = cx + (radius + 2) * cosA, ly = cy + (radius + 2) * sinA + 1;
+      const align = cosA > 0.2 ? 'left' : (cosA < -0.2 ? 'right' : 'center');
+      doc.text(categories[i].label, lx, ly, {align, maxWidth: 20});
+    }
 
+    // Polygone de données, rempli en léger et contourné en plein
+    const pts = categories.map((cat, i) => {
+      const a = angleOf(i);
+      const val = maxVal > 0 ? Math.min(1, getVal(cat) / maxVal) : 0;
+      const rr = radius * val;
+      return [cx + rr*Math.cos(a), cy + rr*Math.sin(a)];
+    });
+    try {
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({opacity: 0.22}));
+      doc.setFillColor(...color);
+      const linesArg = pts.slice(1).map((p,i) => [p[0]-pts[i][0], p[1]-pts[i][1]]);
+      doc.lines(linesArg, pts[0][0], pts[0][1], [1,1], 'F', true);
+      doc.restoreGraphicsState();
+    } catch(e) {}
+    doc.setDrawColor(...color); doc.setLineWidth(0.7);
+    for (let i = 0; i < n; i++) {
+      const next = (i+1) % n;
+      doc.line(pts[i][0], pts[i][1], pts[next][0], pts[next][1]);
+    }
+    doc.setFillColor(...color);
+    pts.forEach(p => doc.circle(p[0], p[1], 0.55, 'F'));
+  };
+
+  // Une "vue" = globale (zoneFilter null) ou une zone précise (1 à 5).
+  const radarViews = [
+    { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
+    ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
+  ];
+
+  const radarRadius = 24;
+  const radarBlockH = radarRadius * 2 + 22; // espace pour le titre de l'entité au-dessus
+
+  radarViews.forEach((view, viewIdx) => {
+    ensureSpace(16);
     doc.setFont(TF,'bold'); doc.setFontSize(12); doc.setTextColor(...theme.gold);
-    doc.text(SHOT_BASE_LBL[shotKey].toUpperCase(), M, y);
+    doc.text(view.label, M, y);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
-    doc.text('Coup ' + (shotIdx+1) + ' / ' + BASE_SHOTS.length, W-M, y, {align:'right'});
+    doc.text('Vue ' + (viewIdx+1) + ' / ' + radarViews.length, W-M, y, {align:'right'});
     y += 10;
 
-    zoneEntities.forEach((ent, i) => {
-      const col = i % gridCols, row = Math.floor(i / gridCols);
-      const x0 = M + col * (zcCourtW + zcGap);
-      const rowLabelY = y + row * (courtL + 22);
-      const courtTop = rowLabelY + 5;
-      const zw = zcCourtW / 5;
+    // Échelle commune (max observé) pour toutes les entités de cette vue,
+    // séparément pour les gagnants et les fautes.
+    const allTotals = radarEntities.map(ent => computeCategoryTotals(ent.wp, ent.fp, view.zoneFilter));
+    const maxW = Math.max(1, ...allTotals.flat().map(c => c.w));
+    const maxF = Math.max(1, ...allTotals.flat().map(c => c.f));
 
-      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...ent.color);
-      doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+    radarEntities.forEach((ent, i) => {
+      const totals = allTotals[i];
+      const totW = totals.reduce((s,c)=>s+c.w,0);
+      const totF = totals.reduce((s,c)=>s+c.f,0);
 
-      if (depthBands) {
-        visualOrder.forEach((dv, bi) => {
-          const bandTop = courtTop + bi * bandH;
-          ZONES.forEach(z => {
-            const zi = parseInt(z, 10);
-            const suffix = '_' + dv.variant + '_' + z;
-            let w = 0, f = 0;
-            ALL_SHOT_KEYS.forEach(k => {
-              if (k.indexOf(shotKey + '_') === 0 && k.endsWith(suffix)) {
-                w += stats[ent.wp+k] || 0;
-                f += stats[ent.fp+k] || 0;
-              }
-            });
-            const zx = x0 + zcCourtW - zi * zw;
-            doc.setFillColor(...zoneColor(w, f));
-            doc.rect(zx, bandTop, zw, bandH, 'F');
-            doc.setFont('helvetica','bold'); doc.setFontSize(zw > 14 ? 9 : 6); doc.setTextColor(255,255,255);
-            doc.text(String(zi), zx + zw/2, bandTop + Math.min(bandH - 2, 9), {align:'center'});
-            doc.setFont('helvetica','normal'); doc.setFontSize(zw > 14 ? 6.5 : 5); doc.setTextColor(255,255,255);
-            doc.text(`${w}/${f}`, zx + zw/2, bandTop + Math.min(bandH - 2, 9) + 5, {align:'center'});
-          });
-          doc.setDrawColor(...theme.border); doc.setLineWidth(0.25);
-          for (let k = 1; k < 5; k++) { const lx = x0 + k*zw; doc.line(lx, bandTop, lx, bandTop+bandH); }
-          doc.setDrawColor(...theme.gold); doc.setLineWidth(0.35);
-          doc.rect(x0, bandTop, zcCourtW, bandH);
-          doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...theme.gold);
-          doc.text(dv.short, x0 + zcCourtW/2, bandTop + bandH - 2, {align:'center'});
-        });
-        doc.setDrawColor(...theme.border); doc.setLineWidth(0.35); doc.rect(x0, courtTop, zcCourtW, courtL);
-        doc.setDrawColor(...theme.gold); doc.setLineWidth(0.5);
-        doc.line(x0, courtTop+courtL+zcNetGap, x0+zcCourtW, courtTop+courtL+zcNetGap);
-        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...theme.gold);
-        doc.text('FILET', x0, courtTop+courtL+zcNetGap+5);
-      } else {
-        ZONES.forEach(z => {
-          const keys = SHOT_ZONE_KEYS[shotKey][z];
-          let w = 0, f = 0;
-          keys.forEach(k => { w += stats[ent.wp+k] || 0; f += stats[ent.fp+k] || 0; });
-          const zi = parseInt(z, 10);
-          const zx = x0 + zcCourtW - zi * zw;
-          doc.setFillColor(...zoneColor(w, f));
-          doc.rect(zx, courtTop, zw, courtL, 'F');
-          doc.setFont('helvetica','bold'); doc.setFontSize(zw > 14 ? 10 : 7); doc.setTextColor(255,255,255);
-          doc.text(String(zi), zx + zw/2, courtTop + (zw > 14 ? 10 : 7), {align:'center'});
-          doc.setFont('helvetica','normal'); doc.setFontSize(zw > 14 ? 7 : 5); doc.setTextColor(255,255,255);
-          doc.text(`${w}/${f}`, zx + zw/2, courtTop + (zw > 14 ? 18 : 13), {align:'center'});
-        });
-        doc.setDrawColor(...theme.border); doc.setLineWidth(0.25);
-        for (let k = 1; k < 5; k++) { const lx = x0 + k*zw; doc.line(lx, courtTop, lx, courtTop+courtL); }
-        doc.setDrawColor(...theme.border); doc.setLineWidth(0.35); doc.rect(x0, courtTop, zcCourtW, courtL);
-        doc.setDrawColor(...theme.gold); doc.setLineWidth(0.5);
-        doc.line(x0, courtTop+courtL+zcNetGap, x0+zcCourtW, courtTop+courtL+zcNetGap);
-        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...theme.gold);
-        doc.text('FILET', x0, courtTop+courtL+zcNetGap+5);
+      ensureSpace(radarBlockH);
+      doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
+      doc.text(stripEmoji(ent.label) + '  —  Winners : ' + totW + '   Fautes : ' + totF, M, y);
+      const chartsTop = y + 8;
+      const cxGreen = M + 46, cxRed = W - M - 46;
+      const cy = chartsTop + radarRadius;
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...theme.green);
+      doc.text('POINTS GAGNANTS', cxGreen, chartsTop - 2, {align:'center'});
+      doc.setTextColor(...theme.red);
+      doc.text('FAUTES DIRECTES', cxRed, chartsTop - 2, {align:'center'});
+
+      drawRadarChart(cxGreen, cy, radarRadius, totals, c => c.w, maxW, theme.green);
+      drawRadarChart(cxRed, cy, radarRadius, totals, c => c.f, maxF, theme.red);
+
+      y = cy + radarRadius + 12;
+      if (i < radarEntities.length - 1) {
+        doc.setDrawColor(...theme.border); doc.setLineWidth(0.2); doc.line(M, y-6, W-M, y-6);
       }
     });
 
-    y += gridRows * (courtL + 22) + 4;
-    // Séparateur discret entre deux coups (au lieu d'un pied de page fixe)
-    doc.setDrawColor(...theme.border); doc.setLineWidth(0.2);
-    doc.line(M, y, W-M, y);
-    y += 8;
+    if (viewIdx < radarViews.length - 1) {
+      doc.setDrawColor(...theme.gold); doc.setLineWidth(0.4);
+      doc.line(M, y, W-M, y);
+      y += 8;
+    }
   });
+  y += 4;
 
   // ══ 6. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
   sectionTitle('JOURNAL DU MATCH COMPLET', theme.gold);
