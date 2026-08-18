@@ -1408,6 +1408,8 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 
 const PDF_THEME = {
   bg:      [9, 15, 26],
+  bgTop:   [17, 27, 47],
+  bgBottom:[7, 12, 21],
   surface: [14, 22, 38],
   card:    [18, 28, 48],
   border:  [40, 62, 100],
@@ -1444,11 +1446,25 @@ function exportPDF(){
 
   const newPage = () => {
     doc.addPage();
-    doc.setFillColor(...theme.bg);
-    doc.rect(0,0,W,297,'F');
+    fillPageBackground();
     y = M;
   };
   const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  // Fond en dégradé vertical doux (légèrement plus clair en haut, qui
+  // s'assombrit progressivement vers le bas) plutôt qu'un aplat uni.
+  function fillPageBackground() {
+    const bands = 50;
+    const bandH = 297 / bands;
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const r = Math.round(theme.bgTop[0] + (theme.bgBottom[0]-theme.bgTop[0]) * t);
+      const g = Math.round(theme.bgTop[1] + (theme.bgBottom[1]-theme.bgTop[1]) * t);
+      const b = Math.round(theme.bgTop[2] + (theme.bgBottom[2]-theme.bgTop[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i*bandH, W, bandH+0.3, 'F');
+    }
+  }
 
   // Bandeau en dégradé (plus opaque à gauche, qui s'estompe vers la droite)
   // + barre verticale arrondie : même style que les autres modes.
@@ -1476,8 +1492,7 @@ function exportPDF(){
   };
 
   // ── Fond ──
-  doc.setFillColor(...theme.bg);
-  doc.rect(0,0,W,297,'F');
+  fillPageBackground();
 
   // ── Titre ──
   doc.setFont(TF,'bold');

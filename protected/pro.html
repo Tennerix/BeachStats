@@ -2503,9 +2503,15 @@ function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant, sideSuffix) {
 // (zone 1 affichée à gauche plutôt qu'à droite) : toujours en mode fixe
 // "gauche", jamais en mode fixe "droite", et selon le côté ACTUEL du joueur
 // en mode adaptatif (playerKey = 'j1'..'j4' ; null en mode équipe).
-function shouldMirrorZoneDisplay(playerKey) {
+// Détermine si la cartographie doit être inversée (zone 1 affichée à
+// gauche plutôt qu'à droite) : toujours en mode fixe "gauche", jamais en
+// mode fixe "droite", et en mode adaptatif selon l'ONGLET DE VUE
+// actuellement sélectionné (zoneMapSideFilter) — pas selon le côté propre
+// à chaque joueur. "Combinée" et "Côté Droite" gardent la zone 1 à droite
+// pour tout le monde ; "Côté Gauche" la met à gauche pour tout le monde.
+function shouldMirrorZoneDisplay() {
   if (zoneOrientation === 'left') return true;
-  if (zoneOrientation === 'adaptive' && playerKey) return playerSide[playerKey] === 'L';
+  if (zoneOrientation === 'adaptive') return zoneMapSideFilter === 'L';
   return false;
 }
 
@@ -2629,18 +2635,22 @@ function renderZoneMap() {
 
   const entries = statsMode === 'joueur'
     ? [
-        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_', key: 'j1' },
-        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_', key: 'j2' },
-        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_', key: 'j3' },
-        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_', key: 'j4' },
+        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_' },
+        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_' },
+        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_' },
+        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_' },
       ]
     : [
-        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_', key: null },
-        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_', key: null },
+        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_' },
+        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_' },
       ];
 
+  // Le miroir dépend uniquement de la vue actuellement sélectionnée
+  // (Combinée / Côté Droite / Côté Gauche), pas du joueur affiché — donc
+  // calculé une seule fois pour toute la grille, pas par entité.
+  const mirror = shouldMirrorZoneDisplay();
+
   grid.innerHTML = entries.map(e => {
-    const mirror = shouldMirrorZoneDisplay(e.key);
     const svg = DEPTH_BAND_SHOTS[zoneMapShot]
       ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp, sideSuffix, mirror)
       : buildCourtSVG(computeZoneData(e.wp, e.fp, sideSuffix), mirror);
@@ -2733,6 +2743,8 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 // Un peu plus chaleureuse/raffinée que le simple thème sombre de l'appli.
 const PDF_THEME = {
   bg:      [9, 15, 26],
+  bgTop:   [17, 27, 47],
+  bgBottom:[7, 12, 21],
   surface: [14, 22, 38],
   card:    [18, 28, 48],
   border:  [40, 62, 100],
@@ -2764,12 +2776,28 @@ function exportPDF() {
 
   const newPage = () => {
     doc.addPage();
-    doc.setFillColor(...theme.bg);
-    doc.rect(0,0,W,297,'F');
+    fillPageBackground();
     y = M;
   };
 
   const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
+
+  // Fond en dégradé vertical doux (légèrement plus clair en haut, qui
+  // s'assombrit progressivement vers le bas) plutôt qu'un aplat uni — donne
+  // une profondeur discrète à chaque page, dans le même esprit que les
+  // bandeaux de titre en fondu.
+  function fillPageBackground() {
+    const bands = 50;
+    const bandH = 297 / bands;
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const r = Math.round(theme.bgTop[0] + (theme.bgBottom[0]-theme.bgTop[0]) * t);
+      const g = Math.round(theme.bgTop[1] + (theme.bgBottom[1]-theme.bgTop[1]) * t);
+      const b = Math.round(theme.bgTop[2] + (theme.bgBottom[2]-theme.bgTop[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i*bandH, W, bandH+0.3, 'F');
+    }
+  }
 
   // Les polices standards de jsPDF (Helvetica) ne supportent pas les emojis :
   // on les retire avant toute écriture dans le PDF pour éviter les caractères
@@ -2806,8 +2834,7 @@ function exportPDF() {
   };
 
   // ── Fond ──
-  doc.setFillColor(...theme.bg);
-  doc.rect(0,0,W,297,'F');
+  fillPageBackground();
 
   // ── Titre ──
   doc.setFont(TF,'bold');

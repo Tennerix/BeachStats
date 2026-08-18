@@ -219,6 +219,8 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 // thème actif dans l'appli, plus fiable et plus simple à maintenir).
 const PDF_THEME = {
   bg:      [9, 15, 26],
+  bgTop:   [17, 27, 47],
+  bgBottom:[7, 12, 21],
   surface: [14, 22, 38],
   card:    [18, 28, 48],
   border:  [40, 62, 100],
@@ -508,7 +510,19 @@ function generateSimplePDF(record) {
   const W = 210, M = 20;
   let y = M;
 
-  const newPage = () => { doc.addPage(); doc.setFillColor(...theme.bg); doc.rect(0,0,W,297,'F'); y = M; };
+  function fillPageBackground() {
+    const bands = 50;
+    const bandH = 297 / bands;
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const r = Math.round(theme.bgTop[0] + (theme.bgBottom[0]-theme.bgTop[0]) * t);
+      const g = Math.round(theme.bgTop[1] + (theme.bgBottom[1]-theme.bgTop[1]) * t);
+      const b = Math.round(theme.bgTop[2] + (theme.bgBottom[2]-theme.bgTop[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i*bandH, W, bandH+0.3, 'F');
+    }
+  }
+  const newPage = () => { doc.addPage(); fillPageBackground(); y = M; };
   const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
   const stripEmoji = (str) => String(str)
     .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
@@ -537,7 +551,7 @@ function generateSimplePDF(record) {
     doc.rect(M-2, rowY-4.2, W-2*M+4, h, 'F');
   };
 
-  doc.setFillColor(...theme.bg); doc.rect(0,0,W,297,'F');
+  fillPageBackground();
 
   const PAGE_TITLES = { Sbase:'STATS DE BASE', Savancee:'STATS AVANCÉES', Sintermediaire:'STATS INTERMÉDIAIRES', Spro:'STATS PRO' };
   doc.setFont(TF,'bold'); doc.setFontSize(28); doc.setTextColor(...theme.gold);
@@ -677,10 +691,21 @@ function generateProPDF(record) {
 
   const newPage = () => {
     doc.addPage();
-    doc.setFillColor(...theme.bg);
-    doc.rect(0,0,W,297,'F');
+    fillPageBackground();
     y = M;
   };
+  function fillPageBackground() {
+    const bands = 50;
+    const bandH = 297 / bands;
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const r = Math.round(theme.bgTop[0] + (theme.bgBottom[0]-theme.bgTop[0]) * t);
+      const g = Math.round(theme.bgTop[1] + (theme.bgBottom[1]-theme.bgTop[1]) * t);
+      const b = Math.round(theme.bgTop[2] + (theme.bgBottom[2]-theme.bgTop[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i*bandH, W, bandH+0.3, 'F');
+    }
+  }
   const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
   const stripEmoji = (str) => String(str)
     .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
@@ -708,8 +733,7 @@ function generateProPDF(record) {
     doc.rect(M-2, rowY-4.2, W-2*M+4, h, 'F');
   };
 
-  doc.setFillColor(...theme.bg);
-  doc.rect(0,0,W,297,'F');
+  fillPageBackground();
 
   doc.setFont(TF,'bold');
   doc.setFontSize(30); doc.setTextColor(...theme.gold);
@@ -1085,7 +1109,19 @@ function generateShotPDF(record, subtitle, savePrefix) {
   const nameA = record.nameA, nameB = record.nameB;
   const [s1, s2] = (record.sets || '0-0').split('-').map(Number);
 
-  const newPage = () => { doc.addPage(); doc.setFillColor(...theme.bg); doc.rect(0,0,W,297,'F'); y = M; };
+  function fillPageBackground() {
+    const bands = 50;
+    const bandH = 297 / bands;
+    for (let i = 0; i < bands; i++) {
+      const t = i / (bands - 1);
+      const r = Math.round(theme.bgTop[0] + (theme.bgBottom[0]-theme.bgTop[0]) * t);
+      const g = Math.round(theme.bgTop[1] + (theme.bgBottom[1]-theme.bgTop[1]) * t);
+      const b = Math.round(theme.bgTop[2] + (theme.bgBottom[2]-theme.bgTop[2]) * t);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i*bandH, W, bandH+0.3, 'F');
+    }
+  }
+  const newPage = () => { doc.addPage(); fillPageBackground(); y = M; };
   const ensureSpace = (needed) => { if (y + needed > 282) newPage(); };
   const stripEmoji = (str) => String(str)
     .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
@@ -1109,7 +1145,7 @@ function generateShotPDF(record, subtitle, savePrefix) {
   };
   const stripe = (rowY, h) => { doc.setFillColor(...theme.surface); doc.rect(M-2, rowY-4.2, W-2*M+4, h, 'F'); };
 
-  doc.setFillColor(...theme.bg); doc.rect(0,0,W,297,'F');
+  fillPageBackground();
 
   doc.setFont(TF,'bold'); doc.setFontSize(30); doc.setTextColor(...theme.gold);
   doc.text('BEACH TENNIS', W/2, y+9, {align:'center'});
