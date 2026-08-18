@@ -2071,8 +2071,12 @@ const PDF_THEME = {
   gold:    [246, 201, 69],
   blue:    [77, 141, 255],
   orange:  [255, 138, 61],
-  green:   [39, 199, 111],
-  red:     [239, 68, 68],
+  green:      [58, 191, 126],
+  greenLight: [126, 222, 168],
+  greenDark:  [32, 150, 92],
+  red:        [227, 104, 98],
+  redLight:   [242, 150, 140],
+  redDark:    [186, 70, 68],
   text:    [238, 243, 251],
   muted:   [124, 147, 184],
 };
@@ -2102,10 +2106,17 @@ function exportPDF() {
 
   const sectionTitle = (title, color) => {
     ensureSpace(18);
-    doc.setFillColor(Math.round(color[0]*0.16), Math.round(color[1]*0.16), Math.round(color[2]*0.20));
-    doc.rect(M-4, y-6, W-2*M+8, 12, 'F');
+    const bandW = W - 2*M + 8;
+    const steps = 22;
+    const stepW = bandW / steps;
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      const alpha = 0.17 * (1 - t*0.82);
+      doc.setFillColor(Math.round(color[0]*alpha), Math.round(color[1]*alpha), Math.round(color[2]*alpha));
+      doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
+    }
     doc.setFillColor(...color);
-    doc.rect(M-4, y-6, 1.6, 12, 'F');
+    doc.roundedRect(M-4, y-6, 1.8, 12, 0.7, 0.7, 'F');
     doc.setFont(TF,'bold'); doc.setFontSize(13); doc.setTextColor(...color);
     doc.text(title, M+2, y+1.8);
     y += 12;

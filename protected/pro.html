@@ -2315,16 +2315,30 @@ function renderStats() {
   html += statRow(totFA, totFB, 'Fautes directes');
   html += statRow(ds.pA||0, ds.pB||0, 'Points gagnés');
 
-  const winnerRows = ALL_SHOT_KEYS.filter(s => (ds['wA_'+s]||0) > 0 || (ds['wB_'+s]||0) > 0);
+  // Agrégation par catégorie générale (Service, Rush, Défense...), sans le
+  // détail des zones ni des variantes — même niveau que le PDF "Détail par
+  // joueur", pour rester lisible même avec beaucoup de coups enregistrés.
+  const baseShotTotals = (prefixA, prefixB) => BASE_SHOTS.map(shotKey => {
+    let a = 0, b = 0;
+    ALL_SHOT_KEYS.forEach(sh => {
+      if (sh.indexOf(shotKey + '_') === 0) {
+        a += ds[prefixA + sh] || 0;
+        b += ds[prefixB + sh] || 0;
+      }
+    });
+    return { shotKey, a, b };
+  }).filter(t => t.a > 0 || t.b > 0);
+
+  const winnerRows = baseShotTotals('wA_', 'wB_');
   if (winnerRows.length) {
     html += `<div class="stats-title" style="margin-top:1.3rem">🎯 Détail — Points gagnants</div>`;
-    winnerRows.forEach(s => { html += statRow(ds['wA_'+s]||0, ds['wB_'+s]||0, SHOT_LBL[s]); });
+    winnerRows.forEach(t => { html += statRow(t.a, t.b, SHOT_BASE_LBL[t.shotKey]); });
   }
 
-  const fauteRows = ALL_SHOT_KEYS.filter(s => (ds['fA_'+s]||0) > 0 || (ds['fB_'+s]||0) > 0);
+  const fauteRows = baseShotTotals('fA_', 'fB_');
   if (fauteRows.length) {
     html += `<div class="stats-title" style="margin-top:1.3rem">💥 Détail — Fautes directes</div>`;
-    fauteRows.forEach(s => { html += statRow(ds['fA_'+s]||0, ds['fB_'+s]||0, SHOT_LBL[s]); });
+    fauteRows.forEach(t => { html += statRow(t.a, t.b, SHOT_BASE_LBL[t.shotKey]); });
   }
 
   el.innerHTML = html;
@@ -2347,19 +2361,29 @@ function renderStatsParJoueur() {
   const buildPlayerDetail = (p, type) => {
     const tp = type === 'winner' ? 'w' : 'f';
     const key = tp + p.num + '_';
-    const rows = ALL_SHOT_KEYS.filter(sh => (ds[key + sh] || 0) > 0);
+    // Agrégation par catégorie générale (Service, Rush, Défense...), sans le
+    // détail des zones ni des variantes — même niveau que le PDF "Détail par
+    // joueur", pour rester lisible même avec beaucoup de coups enregistrés.
+    const rows = BASE_SHOTS.map(shotKey => {
+      let v = 0;
+      ALL_SHOT_KEYS.forEach(sh => { if (sh.indexOf(shotKey + '_') === 0) v += ds[key + sh] || 0; });
+      return { shotKey, v };
+    }).filter(r => r.v > 0);
     if (!rows.length) return '';
 
     let html = `<div style="margin-top:.6rem">
       <div class="stat-name" style="text-align:left;color:${p.cls};margin-bottom:.4rem">${escapeHtml(p.name)}</div>`;
-    rows.forEach(sh => {
-      const v = ds[key + sh] || 0;
-      const maxV = Math.max(1, ...[1,2,3,4].map(n => ds[tp+n+'_'+sh] || 0));
-      const pct = Math.round(v / maxV * 100);
+    rows.forEach(r => {
+      const maxV = Math.max(1, ...[1,2,3,4].map(n => {
+        let s = 0;
+        ALL_SHOT_KEYS.forEach(sh => { if (sh.indexOf(r.shotKey + '_') === 0) s += ds[tp+n+'_'+sh] || 0; });
+        return s;
+      }));
+      const pct = Math.round(r.v / maxV * 100);
       html += `
         <div class="stat-row" style="grid-template-columns:1fr auto;margin-bottom:.35rem">
-          <div class="stat-name" style="text-align:left">${SHOT_LBL[sh]}</div>
-          <div class="stat-val" style="color:${p.cls};font-size:18px">${v}</div>
+          <div class="stat-name" style="text-align:left">${SHOT_BASE_LBL[r.shotKey]}</div>
+          <div class="stat-val" style="color:${p.cls};font-size:18px">${r.v}</div>
         </div>
         <div class="stat-row" style="margin-bottom:.35rem">
           <div class="stat-bar-wrap"><div style="width:${pct}%;background:${p.cls};transition:width .4s"></div></div>
@@ -2475,13 +2499,25 @@ function computeDepthZoneData(shotKey, wPrefix, fPrefix, variant, sideSuffix) {
 // Terrain de beach tennis, vue demi-terrain (côté où le coup atterrit) : 8m de
 // large, découpés en 5 zones (zone 1 à droite, zone 5 à gauche). Le filet est
 // en bas du schéma, puisque c'est la limite la plus proche de la frappe.
-function buildCourtSVG(data) {
+// Détermine si la cartographie d'un joueur/équipe doit être inversée
+// (zone 1 affichée à gauche plutôt qu'à droite) : toujours en mode fixe
+// "gauche", jamais en mode fixe "droite", et selon le côté ACTUEL du joueur
+// en mode adaptatif (playerKey = 'j1'..'j4' ; null en mode équipe).
+function shouldMirrorZoneDisplay(playerKey) {
+  if (zoneOrientation === 'left') return true;
+  if (zoneOrientation === 'adaptive' && playerKey) return playerSide[playerKey] === 'L';
+  return false;
+}
+
+function buildCourtSVG(data, mirror) {
   const maxTotal = Math.max(1, ...data.map(d => d.w + d.f));
   const W = 260, courtL = 256, ZW = W / 5, L = courtL + 30;
 
   let cols = '', dividers = '';
   data.forEach(d => {
-    const xStart = W - d.z * ZW; // zone 1 -> collée au bord droit
+    // Zone 1 collée au bord droit par défaut, ou au bord gauche si la
+    // cartographie doit être inversée pour ce joueur (voir shouldMirrorZoneDisplay).
+    const xStart = mirror ? (d.z - 1) * ZW : W - d.z * ZW;
     const total = d.w + d.f;
     let fill;
     if (total === 0) {
@@ -2514,7 +2550,7 @@ function buildCourtSVG(data) {
 // Cartographie "à bandes de profondeur" (bras roulé, smash, défense, service
 // +1), vue demi-terrain : N bandes empilées (une par variante), filet en bas.
 // Chaque bande est divisée en 5 zones de largeur, comme les autres coups.
-function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix, sideSuffix) {
+function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix, sideSuffix, mirror) {
   const bandsConfig = DEPTH_BAND_SHOTS[shotKey];
   const n = bandsConfig.length;
   const W = 260, ZW = W / 5, bandH = 148, gap = 8, TOPPAD = 4, LBLPAD = 26;
@@ -2532,7 +2568,7 @@ function buildDepthBandCourtSVG(shotKey, wPrefix, fPrefix, sideSuffix) {
     const yStart = TOPPAD + bi * (bandH + gap);
     let cols = '', dividers = '';
     data.forEach(d => {
-      const xStart = W - d.z * ZW;
+      const xStart = mirror ? (d.z - 1) * ZW : W - d.z * ZW;
       const total = d.w + d.f;
       let fill;
       if (total === 0) {
@@ -2593,20 +2629,21 @@ function renderZoneMap() {
 
   const entries = statsMode === 'joueur'
     ? [
-        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_' },
-        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_' },
-        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_' },
-        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_' },
+        { label: players.j1, color: 'var(--blue)',   wp: 'w1_', fp: 'f1_', key: 'j1' },
+        { label: players.j2, color: 'var(--blue)',   wp: 'w2_', fp: 'f2_', key: 'j2' },
+        { label: players.j3, color: 'var(--orange)', wp: 'w3_', fp: 'f3_', key: 'j3' },
+        { label: players.j4, color: 'var(--orange)', wp: 'w4_', fp: 'f4_', key: 'j4' },
       ]
     : [
-        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_' },
-        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_' },
+        { label: nameA, color: 'var(--blue)',   wp: 'wA_', fp: 'fA_', key: null },
+        { label: nameB, color: 'var(--orange)', wp: 'wB_', fp: 'fB_', key: null },
       ];
 
   grid.innerHTML = entries.map(e => {
+    const mirror = shouldMirrorZoneDisplay(e.key);
     const svg = DEPTH_BAND_SHOTS[zoneMapShot]
-      ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp, sideSuffix)
-      : buildCourtSVG(computeZoneData(e.wp, e.fp, sideSuffix));
+      ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp, sideSuffix, mirror)
+      : buildCourtSVG(computeZoneData(e.wp, e.fp, sideSuffix), mirror);
     return `<div class="zone-court-item">
       <div class="zone-court-title" style="color:${e.color}">${escapeHtml(e.label)}</div>
       ${svg}
@@ -2995,11 +3032,11 @@ function exportPDF() {
   ensureSpace(8);
   doc.setFillColor(...theme.green); doc.circle(M+1.5, y-1.6, 1.5, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...theme.green);
-  doc.text('Réussis', M+6, y);
-  const legendGap2 = M + 6 + doc.getTextWidth('Réussis') + 10;
+  doc.text('Coups gagnants', M+6, y);
+  const legendGap2 = M + 6 + doc.getTextWidth('Coups gagnants') + 10;
   doc.setFillColor(...theme.red); doc.circle(legendGap2+1.5, y-1.6, 1.5, 'F');
   doc.setTextColor(...theme.red);
-  doc.text('Ratés', legendGap2+6, y);
+  doc.text('Fautes directes', legendGap2+6, y);
   y += 9;
 
   const barEntities = statsMode === 'joueur'
@@ -3056,7 +3093,7 @@ function exportPDF() {
 
       ensureSpace(14);
       doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
-      doc.text(stripEmoji(ent.label) + '  —  Réussis : ' + totW + '   Ratés : ' + totF, M, y);
+      doc.text(stripEmoji(ent.label) + '  —  Coups gagnants : ' + totW + '   Fautes directes : ' + totF, M, y);
       y += 7;
 
       if (!totals.length) {
