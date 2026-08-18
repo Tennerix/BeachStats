@@ -218,23 +218,23 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 // Même palette fixe et soignée que sur les pages de match (indépendante du
 // thème actif dans l'appli, plus fiable et plus simple à maintenir).
 const PDF_THEME = {
-  bg:      [9, 15, 26],
-  bgTop:   [17, 27, 47],
-  bgBottom:[7, 12, 21],
-  surface: [14, 22, 38],
-  card:    [18, 28, 48],
-  border:  [40, 62, 100],
-  gold:    [246, 201, 69],
-  blue:    [77, 141, 255],
-  orange:  [255, 138, 61],
-  green:      [58, 191, 126],
+  bg:      [255, 253, 247],
+  bgTop:   [255, 253, 246],
+  bgBottom:[219, 233, 247],
+  surface: [247, 244, 237],
+  card:    [255, 255, 255],
+  border:  [205, 197, 178],
+  gold:    [180, 128, 22],
+  blue:    [37, 96, 204],
+  orange:  [206, 98, 27],
+  green:      [30, 140, 84],
   greenLight: [126, 222, 168],
   greenDark:  [32, 150, 92],
-  red:        [227, 104, 98],
+  red:        [188, 58, 52],
   redLight:   [242, 150, 140],
   redDark:    [186, 70, 68],
-  text:    [238, 243, 251],
-  muted:   [124, 147, 184],
+  text:    [36, 42, 56],
+  muted:   [108, 118, 138],
 };
 
 // ── CONSTANTES DES COUPS / ZONES (nécessaires pour régénérer la cartographie
@@ -534,8 +534,11 @@ function generateSimplePDF(record) {
     const stepW = bandW / steps;
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
-      const alpha = 0.17 * (1 - t*0.82);
-      doc.setFillColor(Math.round(color[0]*alpha), Math.round(color[1]*alpha), Math.round(color[2]*alpha));
+      const intensity = 0.22 * (1 - t*0.85);
+      const r = Math.round(255 - (255-color[0])*intensity);
+      const g = Math.round(255 - (255-color[1])*intensity);
+      const b = Math.round(255 - (255-color[2])*intensity);
+      doc.setFillColor(r, g, b);
       doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
     }
     doc.setFillColor(...color);
@@ -718,8 +721,11 @@ function generateProPDF(record) {
     const stepW = bandW / steps;
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
-      const alpha = 0.17 * (1 - t*0.82);
-      doc.setFillColor(Math.round(color[0]*alpha), Math.round(color[1]*alpha), Math.round(color[2]*alpha));
+      const intensity = 0.22 * (1 - t*0.85);
+      const r = Math.round(255 - (255-color[0])*intensity);
+      const g = Math.round(255 - (255-color[1])*intensity);
+      const b = Math.round(255 - (255-color[2])*intensity);
+      doc.setFillColor(r, g, b);
       doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
     }
     doc.setFillColor(...color);
@@ -1133,8 +1139,11 @@ function generateShotPDF(record, subtitle, savePrefix) {
     const stepW = bandW / steps;
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
-      const alpha = 0.17 * (1 - t*0.82);
-      doc.setFillColor(Math.round(color[0]*alpha), Math.round(color[1]*alpha), Math.round(color[2]*alpha));
+      const intensity = 0.22 * (1 - t*0.85);
+      const r = Math.round(255 - (255-color[0])*intensity);
+      const g = Math.round(255 - (255-color[1])*intensity);
+      const b = Math.round(255 - (255-color[2])*intensity);
+      doc.setFillColor(r, g, b);
       doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
     }
     doc.setFillColor(...color);
