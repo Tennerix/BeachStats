@@ -93,6 +93,12 @@ body{transition:background-color .25s ease,color .25s ease}
 .theme-swatch.locked .lock-badge{display:flex}
 .prefs-menu-label{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--muted);padding:4px 8px 2px}
+.gear-menu-item{justify-content:space-between}
+.menu-chevron{margin-left:auto;color:var(--muted);font-size:15px;font-weight:700}
+.prefs-back-btn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--muted);
+  font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:6px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%;margin-bottom:4px}
+.prefs-back-btn:hover{background:var(--surface);color:var(--gold)}
 .sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
 .sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
@@ -178,7 +184,7 @@ body{
 .team-name-input:hover,.team-name-input:focus{border-bottom-color:var(--muted)}
 .team-players{font-size:15px;color:var(--text);font-weight:900;font-family:Barlow Condensed,sans-serif;
   letter-spacing:.3px;display:flex;flex-direction:column;line-height:1.25}
-.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-players .serving-ball{display:inline-block;margin-left:3px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
 .team-row.team-b .team-players{color:var(--orange)}
 .cell{text-align:center;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900}
@@ -505,8 +511,12 @@ if ('serviceWorker' in navigator) {
   <div class="header-top-row">
     <div class="header-logo">Beach<span>/</span>Stats</div>
     <div class="theme-switch-wrap">
-      <button class="header-gear-btn" onclick="togglePrefsMenu(event)" aria-label="Préférences">⚙</button>
+      <button class="header-gear-btn" onclick="toggleGearMenu(event)" aria-label="Menu">⚙</button>
+      <div class="theme-menu theme-menu-right" id="gearMenu">
+        <button class="theme-swatch gear-menu-item" onclick="openPrefsMenu(event)">Préférences<span class="menu-chevron">›</span></button>
+      </div>
       <div class="theme-menu theme-menu-right" id="prefsMenu">
+        <button class="prefs-back-btn" onclick="closePrefsMenu(event)">‹ Retour</button>
         <div class="prefs-menu-label">Match</div>
         <button class="theme-swatch" data-stats-mode-choice="equipe" onclick="switchStatsMode('equipe')"><span class="sw sw-dark"></span>Par équipe</button>
         <button class="theme-swatch" data-stats-mode-choice="joueur" onclick="switchStatsMode('joueur')"><span class="sw sw-light"></span>Par joueur</button>
@@ -1276,7 +1286,7 @@ function updateServerBadge() {
   ['j1','j2','j3','j4'].forEach(key => {
     const span = document.getElementById('playerName' + key.toUpperCase());
     if (!span) return;
-    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+    span.innerHTML = escapeHtml(players[key]) + (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '');
   });
 
   if (!el) return;
@@ -2107,16 +2117,30 @@ function refreshPrefsMenuUI() {
   });
 }
 
-function togglePrefsMenu(e) {
+function toggleGearMenu(e) {
   e.stopPropagation();
   document.getElementById('themeMenu')?.classList.remove('open');
-  document.getElementById('prefsMenu')?.classList.toggle('open');
+  document.getElementById('prefsMenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.toggle('open');
+}
+
+function openPrefsMenu(e) {
+  e.stopPropagation();
+  document.getElementById('gearMenu')?.classList.remove('open');
+  document.getElementById('prefsMenu')?.classList.add('open');
   refreshPrefsMenuUI();
+}
+
+function closePrefsMenu(e) {
+  e.stopPropagation();
+  document.getElementById('prefsMenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.add('open');
 }
 
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.theme-switch-wrap')) {
     document.getElementById('themeMenu')?.classList.remove('open');
+    document.getElementById('gearMenu')?.classList.remove('open');
     document.getElementById('prefsMenu')?.classList.remove('open');
   }
 });

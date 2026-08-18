@@ -260,7 +260,7 @@ body{
   flex-direction:column;
   line-height:1.25;
 }
-.team-players .serving-ball{display:inline-block;margin:0 2px;font-size:13px}
+.team-players .serving-ball{display:inline-block;margin-left:3px;font-size:13px}
 .team-row.team-a .team-players{color:var(--blue)}
 .team-row.team-b .team-players{color:var(--orange)}
 
@@ -1036,7 +1036,7 @@ function updateServerBadge() {
   ['j1','j2','j3','j4'].forEach(key => {
     const span = document.getElementById('playerName' + key.toUpperCase());
     if (!span) return;
-    span.innerHTML = (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '') + escapeHtml(players[key]);
+    span.innerHTML = escapeHtml(players[key]) + (server && server.key === key ? '<span class="serving-ball">🎾</span>' : '');
   });
 
   if (!el) return;
@@ -1407,23 +1407,31 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 
 
 const PDF_THEME = {
-  bg:      [9, 15, 26],
-  bgTop:   [17, 27, 47],
-  bgBottom:[7, 12, 21],
-  surface: [14, 22, 38],
-  card:    [18, 28, 48],
-  border:  [40, 62, 100],
-  gold:    [246, 201, 69],
-  blue:    [77, 141, 255],
-  orange:  [255, 138, 61],
-  green:      [58, 191, 126],
+  // Fond clair et chaud (crème/ivoire) qui se fond doucement vers un bleu
+  // pâle façon ciel/océan — plutôt qu'un fond sombre uni.
+  bg:      [255, 253, 247],
+  bgTop:   [255, 253, 246],
+  bgBottom:[219, 233, 247],
+  surface: [247, 244, 237],
+  card:    [255, 255, 255],
+  border:  [205, 197, 178],
+  // Couleurs d'accent assombries par rapport à la version thème sombre,
+  // pour garder un bon contraste sur fond clair.
+  gold:    [180, 128, 22],
+  blue:    [37, 96, 204],
+  orange:  [206, 98, 27],
+  // Palette adoucie (moins saturée que du rouge/vert pur), + variantes
+  // claire/foncée utilisées pour les dégradés doux des barres de distribution
+  // (inchangées : le texte blanc à l'intérieur des barres reste lisible
+  // indépendamment du thème de la page).
+  green:      [30, 140, 84],
   greenLight: [126, 222, 168],
   greenDark:  [32, 150, 92],
-  red:        [227, 104, 98],
+  red:        [188, 58, 52],
   redLight:   [242, 150, 140],
   redDark:    [186, 70, 68],
-  text:    [238, 243, 251],
-  muted:   [124, 147, 184],
+  text:    [36, 42, 56],
+  muted:   [108, 118, 138],
 };
 function getThemeColors() { return PDF_THEME; }
 
@@ -1470,13 +1478,17 @@ function exportPDF(){
   // + barre verticale arrondie : même style que les autres modes.
   const sectionTitle = (title, color) => {
     ensureSpace(18);
+    // Sur fond clair, le fondu se rapproche du blanc plutôt que du noir.
     const bandW = W - 2*M + 8;
     const steps = 22;
     const stepW = bandW / steps;
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
-      const alpha = 0.17 * (1 - t*0.82);
-      doc.setFillColor(Math.round(color[0]*alpha), Math.round(color[1]*alpha), Math.round(color[2]*alpha));
+      const intensity = 0.22 * (1 - t*0.85);
+      const r = Math.round(255 - (255-color[0])*intensity);
+      const g = Math.round(255 - (255-color[1])*intensity);
+      const b = Math.round(255 - (255-color[2])*intensity);
+      doc.setFillColor(r, g, b);
       doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
     }
     doc.setFillColor(...color);
