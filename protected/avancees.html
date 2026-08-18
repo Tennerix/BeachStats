@@ -844,10 +844,11 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
-const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const SHOT_LBL = {
   service:'Service', service_1:'Service Z1', service_2:'Service Z2', service_3:'Service Z3', service_4:'Service Z4', service_5:'Service Z5',
+  splus1:'Service +1', splus1_amorti:'Service +1 Amorti', splus1_rush:'Service +1 Rush', splus1_lob:'Service +1 Lob', splus1_smash:'Service +1 Smash',
   smash:'Smash',
   roule:'Bras roulé', roule_amorti:'Bras roulé Amorti', roule_lob:'Bras roulé Lob',
   retour:'Retour', retour_cd:'Retour CD', retour_rev:'Retour REV',
@@ -856,11 +857,12 @@ const SHOT_LBL = {
   rush:'Rush', rush_cd:'Rush CD', rush_rev:'Rush REV', rush_rainbow:'Rush Rainbow',
   defense:'Défense', defense_cd:'Défense CD', defense_rev:'Défense REV'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
+const SHOT_ICO = {service:'🎾', splus1:'🚀', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
 const ALL_SHOT_KEYS = [
   'service_1', 'service_2', 'service_3', 'service_4', 'service_5',
+  'splus1_amorti', 'splus1_rush', 'splus1_lob', 'splus1_smash',
   'retour_cd', 'retour_rev',
   'smash',
   'roule_amorti', 'roule_lob',
@@ -1774,6 +1776,7 @@ let pendingPlayerNum = null;
 
 // Variantes disponibles à l'étape 2, par coup côté (CD/REV non pertinents pour le bras roulé)
 const SIDED_VARIANTS = {
+  splus1: ['amorti', 'rush', 'lob', 'smash'],
   retour: ['cd', 'rev'],
   amorti: ['cd', 'rev'],
   lob: ['cd', 'rev', 'rainbow'],
@@ -1781,8 +1784,42 @@ const SIDED_VARIANTS = {
   defense: ['cd', 'rev'],
   roule: ['amorti', 'lob']
 };
-const VARIANT_LBL = { cd: 'CD', rev: 'REV', rainbow: 'Rainbow', amorti: 'Amorti', lob: 'Lob' };
+const VARIANT_LBL = { cd: 'CD', rev: 'REV', rainbow: 'Rainbow', amorti: 'Amorti', lob: 'Lob', rush: 'Rush', smash: 'Smash' };
 const SIDED_SHOTS = Object.keys(SIDED_VARIANTS); // coups qui ont une étape de sélection supplémentaire
+
+// Détermine quels coups sont disponibles selon qui agit (serveur, partenaire
+// du serveur, ou receveur) : le serveur peut faire Service et S+1 mais pas
+// Retour ; son partenaire peut faire S+1 mais ni Service ni Retour ; les
+// deux joueurs de l'équipe qui reçoit ne peuvent faire que Retour. Important :
+// "pendingPlayer" désigne qui GAGNE le point (convention du score), pas
+// forcément qui a réellement joué le coup — pour une faute, c'est l'inverse
+// (le bouton "Faute directe" de l'équipe A appelle openShotModal(2,'faute',...),
+// puisque c'est A qui gagne le point suite à la faute de B).
+function getAllowedBaseShots() {
+  const server = computeCurrentServer();
+  if (!server || !server.key) return BASE_SHOTS;
+
+  let actingTeam;
+  if (pendingPlayerNum) {
+    actingTeam = (pendingPlayerNum === 1 || pendingPlayerNum === 2) ? 'A' : 'B';
+  } else {
+    const pendingTeam = pendingPlayer === 1 ? 'A' : 'B';
+    actingTeam = pendingType === 'winner' ? pendingTeam : (pendingTeam === 'A' ? 'B' : 'A');
+  }
+  const isServingTeam = actingTeam === server.team;
+
+  if (pendingPlayerNum) {
+    const isServer = ('j' + pendingPlayerNum) === server.key;
+    if (isServer) return BASE_SHOTS.filter(s => s !== 'retour');
+    if (isServingTeam) return BASE_SHOTS.filter(s => s !== 'service' && s !== 'retour');
+    return BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+  }
+
+  // Mode équipe : pas de distinction serveur / partenaire au sein de l'équipe.
+  return isServingTeam
+    ? BASE_SHOTS.filter(s => s !== 'retour')
+    : BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+}
 
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
@@ -1815,7 +1852,7 @@ function renderShotCategories() {
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
   
-  BASE_SHOTS.forEach(s => {
+  getAllowedBaseShots().forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
     group.innerHTML = `<button class="shot-btn type-${pendingType}" onclick="selectShotCategory('${s}')">

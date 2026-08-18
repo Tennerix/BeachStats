@@ -842,16 +842,16 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // ── CONFIGURATION DES COUPS ──────────────────────────────────────────────────
-const BASE_SHOTS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
-const SHOT_BASE_LBL = {service:'Service', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const SHOT_LBL = {
-  service:'Service', smash:'Smash', roule:'Bras roulé',
+  service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé',
   retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'
 };
-const SHOT_ICO = {service:'🎾', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
+const SHOT_ICO = {service:'🎾', splus1:'🚀', smash:'💥', roule:'🔄', retour:'↩️', amorti:'🪶', lob:'🎣', rush:'⚡', defense:'🛡️'};
 
 // Liste complète des clés pour les statistiques
-const ALL_SHOT_KEYS = ['service', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+const ALL_SHOT_KEYS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 
 // ── STATS MODE (lu depuis l'URL passée par index.html) ──────────────────────
 const _p = new URLSearchParams(window.location.search);
@@ -1755,6 +1755,40 @@ let pendingPlayer = null;
 let pendingType = null;
 let pendingPlayerNum = null;
 
+// Détermine quels coups sont disponibles selon qui agit (serveur, partenaire
+// du serveur, ou receveur) : le serveur peut faire Service et S+1 mais pas
+// Retour ; son partenaire peut faire S+1 mais ni Service ni Retour ; les
+// deux joueurs de l'équipe qui reçoit ne peuvent faire que Retour. Important :
+// "pendingPlayer" désigne qui GAGNE le point (convention du score), pas
+// forcément qui a réellement joué le coup — pour une faute, c'est l'inverse
+// (le bouton "Faute directe" de l'équipe A appelle openShotModal(2,'faute',...),
+// puisque c'est A qui gagne le point suite à la faute de B).
+function getAllowedBaseShots() {
+  const server = computeCurrentServer();
+  if (!server || !server.key) return BASE_SHOTS;
+
+  let actingTeam;
+  if (pendingPlayerNum) {
+    actingTeam = (pendingPlayerNum === 1 || pendingPlayerNum === 2) ? 'A' : 'B';
+  } else {
+    const pendingTeam = pendingPlayer === 1 ? 'A' : 'B';
+    actingTeam = pendingType === 'winner' ? pendingTeam : (pendingTeam === 'A' ? 'B' : 'A');
+  }
+  const isServingTeam = actingTeam === server.team;
+
+  if (pendingPlayerNum) {
+    const isServer = ('j' + pendingPlayerNum) === server.key;
+    if (isServer) return BASE_SHOTS.filter(s => s !== 'retour');
+    if (isServingTeam) return BASE_SHOTS.filter(s => s !== 'service' && s !== 'retour');
+    return BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+  }
+
+  // Mode équipe : pas de distinction serveur / partenaire au sein de l'équipe.
+  return isServingTeam
+    ? BASE_SHOTS.filter(s => s !== 'retour')
+    : BASE_SHOTS.filter(s => s !== 'service' && s !== 'splus1');
+}
+
 function openShotModal(player, type, playerNum) {
   if (matchOver) return;
   ensureTimerRunning();
@@ -1780,7 +1814,7 @@ function openShotModal(player, type, playerNum) {
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = '';
   
-  BASE_SHOTS.forEach(s => {
+  getAllowedBaseShots().forEach(s => {
     const group = document.createElement('div');
     group.className = 'shot-group';
     group.innerHTML = `<button class="shot-btn type-${type}" onclick="confirmShot('${s}')">
