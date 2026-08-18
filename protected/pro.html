@@ -91,6 +91,8 @@ body{transition:background-color .25s ease,color .25s ease}
 .theme-swatch.locked{opacity:.55}
 .theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
 .theme-swatch.locked .lock-badge{display:flex}
+.prefs-menu-label{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);padding:4px 8px 2px}
 .sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
 .sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
@@ -650,6 +652,14 @@ if ('serviceWorker' in navigator) {
         <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="magma" onclick="setTheme('magma')"><span class="sw sw-magma"></span>Magma<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
+      </div>
+    </div>
+    <div class="theme-switch-wrap">
+      <button class="header-back" onclick="togglePrefsMenu(event)" aria-label="Préférences">⚙ Préférences</button>
+      <div class="theme-menu" id="prefsMenu">
+        <div class="prefs-menu-label">Style du PDF exporté</div>
+        <button class="theme-swatch" data-pdf-style-choice="bars" onclick="setPdfStyle('bars')"><span class="sw sw-light"></span>Barres (nouveau)</button>
+        <button class="theme-swatch" data-pdf-style-choice="classic" onclick="setPdfStyle('classic')"><span class="sw sw-dark"></span>Terrains (classique)</button>
       </div>
     </div>
     <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
@@ -3051,7 +3061,166 @@ function exportPDF() {
     y+=4;
   });
 
-  // ══ 5. DISTRIBUTION & TAUX DE RÉUSSITE PAR COUP ═════════════════════════
+  // ══ 5. DÉTAIL DES COUPS — 2 styles au choix (réglage "Préférences") ═════
+  if (pdfStyle === 'classic') {
+    // ── Style classique : terrains par zone, reskinné sur le thème clair ──
+    sectionTitle('CARTOGRAPHIE PAR ZONE', theme.gold);
+
+    // Couleurs fixes et bien saturées pour les zones : la lisibilité
+    // fonctionnelle (vert/orange/rouge) prime ici, indépendamment de la
+    // palette générale du PDF. Le "vide" utilise un gris chaud clair,
+    // visible sur le nouveau fond clair (contrairement à theme.card qui
+    // serait presque blanc sur blanc).
+    const ZONE_WIN   = [34, 160, 92];
+    const ZONE_TIE   = [214, 138, 20];
+    const ZONE_FAULT = [196, 58, 52];
+    const ZONE_EMPTY = [234, 228, 213];
+    const zoneTextColor = (w, f) => (w === 0 && f === 0) ? theme.muted : [255, 255, 255];
+
+    const drawZoneLegend = (yPos) => {
+      const items = [
+        {color: ZONE_WIN,   label: 'Gagnante'},
+        {color: ZONE_TIE,   label: 'Égalité'},
+        {color: ZONE_FAULT, label: 'Fautes'},
+        {color: ZONE_EMPTY, label: 'Aucune donnée'},
+      ];
+      doc.setFont('helvetica','normal'); doc.setFontSize(8);
+      let lx = M;
+      items.forEach(it => {
+        doc.setFillColor(...it.color);
+        doc.setDrawColor(...theme.border); doc.setLineWidth(0.2);
+        doc.rect(lx, yPos-3.2, 3.6, 3.6, 'FD');
+        doc.setTextColor(...theme.muted);
+        doc.text(it.label, lx+5, yPos);
+        lx += 5 + doc.getTextWidth(it.label) + 7;
+      });
+    };
+    drawZoneLegend(y);
+    y += 8;
+
+    const zoneEntities = statsMode === 'joueur'
+      ? [
+          {label: players.j1, color:theme.blue, wp:'w1_', fp:'f1_'},
+          {label: players.j2, color:theme.blue, wp:'w2_', fp:'f2_'},
+          {label: players.j3, color:theme.orange, wp:'w3_', fp:'f3_'},
+          {label: players.j4, color:theme.orange, wp:'w4_', fp:'f4_'},
+        ]
+      : [
+          {label: nameA, color:theme.blue, wp:'wA_', fp:'fA_'},
+          {label: nameB, color:theme.orange, wp:'wB_', fp:'fB_'},
+        ];
+
+    const gridCols = zoneEntities.length > 2 ? 2 : zoneEntities.length;
+    const gridRows = Math.ceil(zoneEntities.length / gridCols);
+    const zcGap = 8;
+    const zcNetGap = 5;
+    const NON_ROULE_RATIO = 1.8;
+    const PER_BAND_RATIO = 2/3;
+
+    const zoneColor = (w, f) => {
+      if (w === 0 && f === 0) return ZONE_EMPTY;
+      if (w === f) return ZONE_TIE;
+      return w > f ? ZONE_WIN : ZONE_FAULT;
+    };
+
+    BASE_SHOTS.forEach((shotKey, shotIdx) => {
+      const depthBands = DEPTH_BAND_SHOTS[shotKey];
+      const nBands = depthBands ? depthBands.length : 0;
+
+      const maxCourtLFromHeight = (244 / gridRows) - 22;
+      const maxWFromHeight = depthBands ? maxCourtLFromHeight / (PER_BAND_RATIO * nBands) : maxCourtLFromHeight / NON_ROULE_RATIO;
+      const maxWFromWidth = (W - 2*M - (gridCols-1)*zcGap) / gridCols;
+      const zcCourtW = Math.min(maxWFromWidth, maxWFromHeight);
+      const courtL = depthBands ? zcCourtW * PER_BAND_RATIO * nBands : zcCourtW * NON_ROULE_RATIO;
+      const bandH = depthBands ? courtL / nBands : null;
+      const visualOrder = depthBands ? [...depthBands].reverse() : null;
+
+      const blockHeight = 10 + gridRows * (courtL + 22) + 8;
+      ensureSpace(blockHeight);
+
+      doc.setFont(TF,'bold'); doc.setFontSize(12); doc.setTextColor(...theme.gold);
+      doc.text(SHOT_BASE_LBL[shotKey].toUpperCase(), M, y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
+      doc.text('Coup ' + (shotIdx+1) + ' / ' + BASE_SHOTS.length, W-M, y, {align:'right'});
+      y += 10;
+
+      zoneEntities.forEach((ent, i) => {
+        const col = i % gridCols, row = Math.floor(i / gridCols);
+        const x0 = M + col * (zcCourtW + zcGap);
+        const rowLabelY = y + row * (courtL + 22);
+        const courtTop = rowLabelY + 5;
+        const zw = zcCourtW / 5;
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...ent.color);
+        doc.text(stripEmoji(ent.label), x0 + zcCourtW/2, rowLabelY, {align:'center'});
+
+        if (depthBands) {
+          visualOrder.forEach((dv, bi) => {
+            const bandTop = courtTop + bi * bandH;
+            ZONES.forEach(z => {
+              const zi = parseInt(z, 10);
+              const suffix = '_' + dv.variant + '_' + z;
+              let w = 0, f = 0;
+              ALL_SHOT_KEYS.forEach(k => {
+                if (k.indexOf(shotKey + '_') === 0 && k.endsWith(suffix)) {
+                  w += stats[ent.wp+k] || 0;
+                  f += stats[ent.fp+k] || 0;
+                }
+              });
+              const zx = x0 + zcCourtW - zi * zw;
+              doc.setFillColor(...zoneColor(w, f));
+              doc.rect(zx, bandTop, zw, bandH, 'F');
+              const tc = zoneTextColor(w, f);
+              doc.setFont('helvetica','bold'); doc.setFontSize(zw > 14 ? 9 : 6); doc.setTextColor(...tc);
+              doc.text(String(zi), zx + zw/2, bandTop + Math.min(bandH - 2, 9), {align:'center'});
+              doc.setFont('helvetica','normal'); doc.setFontSize(zw > 14 ? 6.5 : 5); doc.setTextColor(...tc);
+              doc.text(`${w}/${f}`, zx + zw/2, bandTop + Math.min(bandH - 2, 9) + 5, {align:'center'});
+            });
+            doc.setDrawColor(...theme.border); doc.setLineWidth(0.25);
+            for (let k = 1; k < 5; k++) { const lx = x0 + k*zw; doc.line(lx, bandTop, lx, bandTop+bandH); }
+            doc.setDrawColor(...theme.gold); doc.setLineWidth(0.35);
+            doc.rect(x0, bandTop, zcCourtW, bandH);
+            doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(...theme.gold);
+            doc.text(dv.short, x0 + zcCourtW/2, bandTop + bandH - 2, {align:'center'});
+          });
+          doc.setDrawColor(...theme.border); doc.setLineWidth(0.35); doc.rect(x0, courtTop, zcCourtW, courtL);
+          doc.setDrawColor(...theme.gold); doc.setLineWidth(0.5);
+          doc.line(x0, courtTop+courtL+zcNetGap, x0+zcCourtW, courtTop+courtL+zcNetGap);
+          doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...theme.gold);
+          doc.text('FILET', x0, courtTop+courtL+zcNetGap+5);
+        } else {
+          ZONES.forEach(z => {
+            const keys = SHOT_ZONE_KEYS[shotKey][z];
+            let w = 0, f = 0;
+            keys.forEach(k => { w += stats[ent.wp+k] || 0; f += stats[ent.fp+k] || 0; });
+            const zi = parseInt(z, 10);
+            const zx = x0 + zcCourtW - zi * zw;
+            doc.setFillColor(...zoneColor(w, f));
+            doc.rect(zx, courtTop, zw, courtL, 'F');
+            const tc = zoneTextColor(w, f);
+            doc.setFont('helvetica','bold'); doc.setFontSize(zw > 14 ? 10 : 7); doc.setTextColor(...tc);
+            doc.text(String(zi), zx + zw/2, courtTop + (zw > 14 ? 10 : 7), {align:'center'});
+            doc.setFont('helvetica','normal'); doc.setFontSize(zw > 14 ? 7 : 5); doc.setTextColor(...tc);
+            doc.text(`${w}/${f}`, zx + zw/2, courtTop + (zw > 14 ? 18 : 13), {align:'center'});
+          });
+          doc.setDrawColor(...theme.border); doc.setLineWidth(0.25);
+          for (let k = 1; k < 5; k++) { const lx = x0 + k*zw; doc.line(lx, courtTop, lx, courtTop+courtL); }
+          doc.setDrawColor(...theme.border); doc.setLineWidth(0.35); doc.rect(x0, courtTop, zcCourtW, courtL);
+          doc.setDrawColor(...theme.gold); doc.setLineWidth(0.5);
+          doc.line(x0, courtTop+courtL+zcNetGap, x0+zcCourtW, courtTop+courtL+zcNetGap);
+          doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...theme.gold);
+          doc.text('FILET', x0, courtTop+courtL+zcNetGap+5);
+        }
+      });
+
+      y += gridRows * (courtL + 22) + 4;
+      doc.setDrawColor(...theme.border); doc.setLineWidth(0.2);
+      doc.line(M, y, W-M, y);
+      y += 8;
+    });
+
+  } else {
+  // ── Style nouveau (par défaut) : barres de distribution ──
   // Une barre horizontale par coup précis (27 catégories : Service, S+1 ×4,
   // Retour ×2, Smash ×3, Bras roulé ×3, Amorti ×2, Lob ×3, Rush ×3,
   // Défense ×6), triées du meilleur au moins bon taux de réussite. La
@@ -3206,6 +3375,7 @@ function exportPDF() {
     }
   });
   y += 4;
+  } // fin du else (style "barres")
 
   // ══ 6. JOURNAL DU MATCH COMPLET ══════════════════════════════════════════
   sectionTitle('JOURNAL DU MATCH COMPLET', theme.gold);
@@ -3260,8 +3430,37 @@ function toggleThemeMenu(e) {
 }
 
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.theme-switch-wrap')) document.getElementById('themeMenu')?.classList.remove('open');
+  if (!e.target.closest('.theme-switch-wrap')) {
+    document.getElementById('themeMenu')?.classList.remove('open');
+    document.getElementById('prefsMenu')?.classList.remove('open');
+  }
 });
+
+// ── PRÉFÉRENCES (style du PDF exporté) ───────────────────────────────────
+// 'bars' = nouvelle version (barres de distribution triées par taux de
+// réussite), 'classic' = ancienne version (terrains par zone), reskinée sur
+// le thème clair actuel. Choix mémorisé pour tous les exports futurs.
+let pdfStyle = localStorage.getItem('beachstats_pdf_style') || 'bars';
+
+function refreshPrefsMenuUI() {
+  document.querySelectorAll('[data-pdf-style-choice]').forEach(b => {
+    b.classList.toggle('active', b.dataset.pdfStyleChoice === pdfStyle);
+  });
+}
+
+function togglePrefsMenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeMenu')?.classList.remove('open');
+  document.getElementById('prefsMenu')?.classList.toggle('open');
+  refreshPrefsMenuUI();
+}
+
+function setPdfStyle(style) {
+  pdfStyle = style;
+  try { localStorage.setItem('beachstats_pdf_style', style); } catch(e) {}
+  refreshPrefsMenuUI();
+  document.getElementById('prefsMenu')?.classList.remove('open');
+}
 
 function updateThemeLockUI() {
   document.querySelectorAll('.theme-swatch').forEach(b => {
@@ -3284,6 +3483,7 @@ async function checkTier() {
 document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
   document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+  refreshPrefsMenuUI();
   checkTier();
 });
 
