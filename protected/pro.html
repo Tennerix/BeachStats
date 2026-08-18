@@ -93,6 +93,7 @@ body{transition:background-color .25s ease,color .25s ease}
 .theme-swatch.locked .lock-badge{display:flex}
 .prefs-menu-label{font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--muted);padding:4px 8px 2px}
+.prefs-menu-divider{height:1px;background:var(--border);margin:6px 4px}
 .sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
 .sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
@@ -657,9 +658,13 @@ if ('serviceWorker' in navigator) {
     <div class="theme-switch-wrap">
       <button class="header-back" onclick="togglePrefsMenu(event)" aria-label="Préférences">⚙ Préférences</button>
       <div class="theme-menu" id="prefsMenu">
-        <div class="prefs-menu-label">Style du PDF exporté</div>
+        <div class="prefs-menu-label">PDF</div>
         <button class="theme-swatch" data-pdf-style-choice="bars" onclick="setPdfStyle('bars')"><span class="sw sw-light"></span>Barres (nouveau)</button>
         <button class="theme-swatch" data-pdf-style-choice="classic" onclick="setPdfStyle('classic')"><span class="sw sw-dark"></span>Terrains (classique)</button>
+        <div class="prefs-menu-divider"></div>
+        <div class="prefs-menu-label">Match</div>
+        <button class="theme-swatch" data-stats-mode-choice="equipe" onclick="switchStatsMode('equipe')"><span class="sw sw-dark"></span>Par équipe</button>
+        <button class="theme-swatch" data-stats-mode-choice="joueur" onclick="switchStatsMode('joueur')"><span class="sw sw-light"></span>Par joueur</button>
       </div>
     </div>
     <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
@@ -1074,7 +1079,7 @@ if (!_p.get('j1')) {
     if (raw) _savedIdentity = JSON.parse(raw);
   } catch(e) {}
 }
-const statsMode = _p.get('mode') || (_savedIdentity && _savedIdentity.statsMode) || 'equipe'; // 'equipe' | 'joueur'
+let statsMode = _p.get('mode') || (_savedIdentity && _savedIdentity.statsMode) || 'equipe'; // 'equipe' | 'joueur'
 
 // ── PLAYER NAMES ─────────────────────────────────────────────────────────────
 const players = {
@@ -1118,17 +1123,48 @@ function initNames() {
   const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
   document.getElementById('lblA').textContent = 'Équipe A — ' + shortA;
   document.getElementById('lblB').textContent = 'Équipe B — ' + shortB;
+  document.getElementById('lblJ1').textContent = players.j1;
+  document.getElementById('lblJ2').textContent = players.j2;
+  document.getElementById('lblJ3').textContent = players.j3;
+  document.getElementById('lblJ4').textContent = players.j4;
+  applyStatsModeVisibility();
+}
+
+// Bascule l'affichage entre panneaux "équipe" et panneaux "par joueur" — dans
+// les deux sens, contrairement à l'ancienne logique qui ne gérait que le cas
+// "joueur" (l'état par défaut du HTML étant déjà "équipe"). Réutilisée à la
+// fois au chargement et lors d'un changement de mode en direct depuis les
+// Préférences (sans jamais perdre les données déjà enregistrées : le modèle
+// de stats garde toujours les deux dimensions équipe ET joueur en parallèle).
+function applyStatsModeVisibility() {
+  const teamA = document.getElementById('lblA').closest('.team-controls');
+  const teamB = document.getElementById('lblB').closest('.team-controls');
+  const joueurPanels = ['joueurCtrlJ1','joueurCtrlJ2','joueurCtrlJ3','joueurCtrlJ4'];
   if (statsMode === 'joueur') {
-    document.getElementById('lblA').closest('.team-controls').style.display = 'none';
-    document.getElementById('lblB').closest('.team-controls').style.display = 'none';
-    document.getElementById('lblJ1').textContent = players.j1;
-    document.getElementById('lblJ2').textContent = players.j2;
-    document.getElementById('lblJ3').textContent = players.j3;
-    document.getElementById('lblJ4').textContent = players.j4;
-    ['joueurCtrlJ1','joueurCtrlJ2','joueurCtrlJ3','joueurCtrlJ4'].forEach(id => {
-      document.getElementById(id).style.display = '';
-    });
+    teamA.style.display = 'none';
+    teamB.style.display = 'none';
+    joueurPanels.forEach(id => document.getElementById(id).style.display = '');
+  } else {
+    teamA.style.display = '';
+    teamB.style.display = '';
+    joueurPanels.forEach(id => document.getElementById(id).style.display = 'none');
   }
+}
+
+// Change de mode ("par équipe" / "par joueur") directement depuis les
+// Préférences, sans jamais avoir à retourner à l'accueil. Le mode choisi est
+// mémorisé dans la progression du match (survit à un rechargement) et sera
+// utilisé pour l'entrée d'historique une fois le match terminé.
+function switchStatsMode(newMode) {
+  if (statsMode !== newMode) {
+    statsMode = newMode;
+    applyStatsModeVisibility();
+    renderStats();
+    renderZoneMap();
+    saveProgress();
+  }
+  refreshPrefsMenuUI();
+  document.getElementById('prefsMenu')?.classList.remove('open');
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -1849,7 +1885,7 @@ function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
     setHistory: JSON.parse(JSON.stringify(setHistory)),
     matchLog: JSON.parse(JSON.stringify(matchLog)),
     players: JSON.parse(JSON.stringify(players)),
-    mode: typeof mode !== 'undefined' ? mode : 'equipe',
+    mode: statsMode,
     duration: formatDuration(timerSeconds),
     // Stats agrégées (compatibilité + affichage rapide de la liste des matchs)
     stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB },
@@ -3445,6 +3481,9 @@ let pdfStyle = localStorage.getItem('beachstats_pdf_style') || 'bars';
 function refreshPrefsMenuUI() {
   document.querySelectorAll('[data-pdf-style-choice]').forEach(b => {
     b.classList.toggle('active', b.dataset.pdfStyleChoice === pdfStyle);
+  });
+  document.querySelectorAll('[data-stats-mode-choice]').forEach(b => {
+    b.classList.toggle('active', b.dataset.statsModeChoice === statsMode);
   });
 }
 

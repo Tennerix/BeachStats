@@ -1495,7 +1495,7 @@ function saveMatchToHistory(winner, totWA, totWB, totFA, totFB) {
     setHistory: JSON.parse(JSON.stringify(setHistory)),
     matchLog: JSON.parse(JSON.stringify(matchLog)),
     players: JSON.parse(JSON.stringify(players)),
-    mode: typeof mode !== 'undefined' ? mode : 'equipe',
+    mode: statsMode,
     teamLabelA, teamLabelB,
     duration: formatDuration(timerSeconds),
     stats: { wA: totWA, wB: totWB, fA: totFA, fB: totFB, pA: stats.pA, pB: stats.pB },
