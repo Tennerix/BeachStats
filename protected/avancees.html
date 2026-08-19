@@ -2154,40 +2154,72 @@ function titleFontName() { return _titleFontReady ? 'BarlowCondensed' : 'helveti
 // ── PALETTE DU PDF ────────────────────────────────────────────────────────
 // Palette fixe et soignée, plus chaleureuse/raffinée que le simple thème
 // sombre de l'appli — la même que sur les autres pages, pour rester cohérent.
-const PDF_THEME = {
-  // Fond clair et chaud (crème/ivoire) qui se fond doucement vers un bleu
-  // pâle façon ciel/océan — plutôt qu'un fond sombre uni.
-  bg:      [255, 253, 247],
-  bgTop:   [255, 253, 246],
-  bgBottom:[219, 233, 247],
-  surface: [247, 244, 237],
-  card:    [255, 255, 255],
-  border:  [205, 197, 178],
-  // Couleurs d'accent assombries par rapport à la version thème sombre,
-  // pour garder un bon contraste sur fond clair.
-  gold:    [180, 128, 22],
-  blue:    [37, 96, 204],
-  orange:  [206, 98, 27],
-  // Palette adoucie (moins saturée que du rouge/vert pur), + variantes
-  // claire/foncée utilisées pour les dégradés doux des barres de distribution
-  // (inchangées : le texte blanc à l'intérieur des barres reste lisible
-  // indépendamment du thème de la page).
-  green:      [30, 140, 84],
-  greenLight: [126, 222, 168],
-  greenDark:  [32, 150, 92],
-  red:        [188, 58, 52],
-  redLight:   [242, 150, 140],
-  redDark:    [186, 70, 68],
-  text:    [36, 42, 56],
-  muted:   [108, 118, 138],
-};
+// ── PALETTE PDF DYNAMIQUE ────────────────────────────────────────────────
+// Au lieu d'une palette fixe, le PDF lit les vraies couleurs du thème
+// actuellement actif (variables CSS --bg, --gold, etc.) et les convertit en
+// RGB utilisables par jsPDF — le PDF prend donc automatiquement l'apparence
+// du thème choisi dans l'appli.
+
+function hexToRgb(hex) {
+  hex = hex.trim().replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+
+function extractColorStops(cssValue) {
+  const matches = cssValue.match(/#[0-9a-fA-F]{3,6}/g);
+  return matches && matches.length ? matches.map(hexToRgb) : null;
+}
+
+function lightenRgb(rgb, amt) {
+  return rgb.map(c => Math.min(255, Math.round(c + (255 - c) * amt)));
+}
+function darkenRgb(rgb, amt) {
+  return rgb.map(c => Math.max(0, Math.round(c * (1 - amt))));
+}
+
+function readLiveThemeForPDF() {
+  const cs = getComputedStyle(document.documentElement);
+  const readStops = (varName, fallbackHex) => {
+    const raw = cs.getPropertyValue(varName);
+    return extractColorStops(raw) || [hexToRgb(fallbackHex)];
+  };
+  const readSolid = (varName, fallbackHex) => readStops(varName, fallbackHex)[0];
+
+  const bgStops = readStops('--bg', '#080f1e');
+  const cardStops = readStops('--card', '#111e35');
+  const surfaceStops = readStops('--surface', '#0d1829');
+  const green = readSolid('--green', '#22c55e');
+  const red = readSolid('--red', '#ef4444');
+
+  return {
+    bg: bgStops[0],
+    bgTop: bgStops[0],
+    bgBottom: bgStops[bgStops.length - 1],
+    surface: surfaceStops[0],
+    card: cardStops[0],
+    border: readSolid('--border', '#1e3560'),
+    gold: readSolid('--gold', '#f5c518'),
+    blue: readSolid('--blue', '#3b82f6'),
+    orange: readSolid('--orange', '#f97316'),
+    green: green,
+    greenLight: lightenRgb(green, 0.4),
+    greenDark: darkenRgb(green, 0.32),
+    red: red,
+    redLight: lightenRgb(red, 0.35),
+    redDark: darkenRgb(red, 0.28),
+    text: readSolid('--text', '#e2eaf8'),
+    muted: readSolid('--muted', '#4a6494'),
+  };
+}
 
 function exportPDF() {
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
   embedTitleFont(doc);
   const TF = titleFontName();
-  const theme = PDF_THEME;
+  const theme = readLiveThemeForPDF();
   const W=210, M=20;
   let y=M;
 
@@ -2225,12 +2257,13 @@ function exportPDF() {
     const bandW = W - 2*M + 8;
     const steps = 22;
     const stepW = bandW / steps;
+    const bgRef = theme.bgTop;
     for (let i = 0; i < steps; i++) {
       const t = i / (steps - 1);
-      const intensity = 0.22 * (1 - t*0.85);
-      const r = Math.round(255 - (255-color[0])*intensity);
-      const g = Math.round(255 - (255-color[1])*intensity);
-      const b = Math.round(255 - (255-color[2])*intensity);
+      const intensity = 0.30 * (1 - t*0.85);
+      const r = Math.round(bgRef[0] + (color[0]-bgRef[0])*intensity);
+      const g = Math.round(bgRef[1] + (color[1]-bgRef[1])*intensity);
+      const b = Math.round(bgRef[2] + (color[2]-bgRef[2])*intensity);
       doc.setFillColor(r, g, b);
       doc.rect(M-4 + i*stepW, y-6, stepW+0.3, 12, 'F');
     }
