@@ -1120,7 +1120,7 @@ function toggleLiveShare() {
   liveShareCode = genLiveCode();
   document.getElementById('liveShareBtn').classList.add('active');
   pushLiveState();
-  liveSharePushTimer = setInterval(pushLiveState, 5000);
+  liveSharePushTimer = setInterval(pushLiveState, 45000); // 45s : simple filet de securite, la vraie mise a jour se fait deja a chaque point marque
   openLiveModal();
 }
 
@@ -1701,6 +1701,7 @@ function saveProgress() {
   const snapshot = {
     p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
     stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
+    liveShareCode,
     teamLabelA, teamLabelB,
     firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
     players, statsMode,
@@ -1759,6 +1760,12 @@ function applyProgress(snap) {
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
   const s = String(timerSeconds % 60).padStart(2,'0');
   document.getElementById('timerDisplay').textContent = m + ':' + s;
+  if (snap.liveShareCode) {
+    liveShareCode = snap.liveShareCode;
+    document.getElementById('liveShareBtn')?.classList.add('active');
+    pushLiveState();
+    liveSharePushTimer = setInterval(pushLiveState, 45000);
+  }
   updateDisplay();
 }
 
