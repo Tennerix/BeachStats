@@ -1416,6 +1416,23 @@ function generateShotPDF(record, subtitle, savePrefix) {
   const nameA = record.nameA, nameB = record.nameB;
   const [s1, s2] = (record.sets || '0-0').split('-').map(Number);
 
+  // Avancées et Intermédiaires n'ont ni les mêmes zones ni les mêmes
+  // variantes que le Pro (dont dépendent les constantes globales
+  // BASE_SHOTS/ALL_SHOT_KEYS, définies au format du Pro) — on reconstruit
+  // ici, en local, le VRAI format de chacun pour ne jamais rater de données
+  // lors de la régénération. "const" en local masque volontairement les
+  // constantes globales du même nom pour le reste de cette fonction.
+  const isAvancee = record.page === 'Savancee';
+  const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
+  const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
+  const ALL_SHOT_KEYS = isAvancee
+    ? ['service_1','service_2','service_3','service_4','service_5',
+       'splus1_amorti','splus1_rush','splus1_lob','splus1_smash',
+       'retour_cd','retour_rev', 'smash', 'roule_amorti','roule_lob',
+       'amorti_cd','amorti_rev', 'lob_cd','lob_rev','lob_rainbow',
+       'rush_cd','rush_rev','rush_rainbow', 'defense_cd','defense_rev']
+    : BASE_SHOTS.slice(); // Intermédiaires : chaque coup EST sa propre clé, aucun suffixe.
+
   function fillPageBackground() {
     const bands = 50;
     const bandH = 297 / bands;
@@ -1535,7 +1552,7 @@ function generateShotPDF(record, subtitle, savePrefix) {
       return BASE_SHOTS.map(shotKey => {
         let w = 0, f = 0;
         ALL_SHOT_KEYS.forEach(k => {
-          if (k.indexOf(shotKey + '_') === 0) {
+          if (k === shotKey || k.indexOf(shotKey + '_') === 0) {
             w += rawDiff[wp+k] || 0;
             f += rawDiff[fp+k] || 0;
           }
@@ -1595,7 +1612,7 @@ function generateShotPDF(record, subtitle, savePrefix) {
     return BASE_SHOTS.map(shotKey => {
       let w = 0, f = 0;
       ALL_SHOT_KEYS.forEach(k => {
-        if (k.indexOf(shotKey + '_') === 0) {
+        if (k === shotKey || k.indexOf(shotKey + '_') === 0) {
           w += src[wp+k] || 0;
           f += src[fp+k] || 0;
         }
@@ -1635,6 +1652,110 @@ function generateShotPDF(record, subtitle, savePrefix) {
     });
     y+=4;
   });
+
+  // ══ DISTRIBUTION & TAUX DE RÉUSSITE PAR COUP ═════════════════════════════
+  // Même style visuel que le PDF Pro (barres triées par taux de réussite),
+  // adapté à ces modes qui n'ont ni zones ni variantes détaillées : une
+  // seule vue globale, catégories au niveau du type de coup.
+  sectionTitle('DISTRIBUTION & TAUX DE RÉUSSITE PAR COUP', theme.gold);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...theme.muted);
+  const introTextBars = "Chaque ligne représente un type de coup, trié du meilleur au moins bon taux de réussite. La longueur de la barre indique le nombre total de fois où ce coup a été joué.";
+  const introLinesBars = doc.splitTextToSize(introTextBars, W - 2*M);
+  introLinesBars.forEach(l => { ensureSpace(5); doc.text(l, M, y); y += 4.2; });
+  y += 2;
+
+  ensureSpace(8);
+  doc.setFillColor(...theme.green); doc.circle(M+1.5, y-1.6, 1.5, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...theme.green);
+  doc.text('Coups gagnants', M+6, y);
+  const legendGapBars = M + 6 + doc.getTextWidth('Coups gagnants') + 10;
+  doc.setFillColor(...theme.red); doc.circle(legendGapBars+1.5, y-1.6, 1.5, 'F');
+  doc.setTextColor(...theme.red);
+  doc.text('Fautes directes', legendGapBars+6, y);
+  y += 9;
+
+  const labelColWBars = 40;
+  const pctColWBars = 20;
+  const barRowHBars = 6.4;
+  const barGapBars = 1.2;
+
+  ensureSpace(14);
+  detailEntities.forEach((ent, entIdx) => {
+    const totalsBars = shotTypeTotalsFull(stats, ent.wp, ent.fp)
+      .map(t => ({ label: SHOT_BASE_LBL[t.shotKey], w: t.w, f: t.f }))
+      .sort((a, b) => (b.w / (b.w + b.f)) - (a.w / (a.w + a.f)));
+    const totWBars = totalsBars.reduce((s,c)=>s+c.w,0);
+    const totFBars = totalsBars.reduce((s,c)=>s+c.f,0);
+
+    ensureSpace(14);
+    doc.setFont(TF,'bold'); doc.setFontSize(10.5); doc.setTextColor(...ent.color);
+    doc.text(stripEmoji(ent.name) + '  —  Coups gagnants : ' + totWBars + '   Fautes directes : ' + totFBars, M, y);
+    y += 7;
+
+    if (!totalsBars.length) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
+      doc.text('Aucun coup enregistré', M+2, y);
+      y += 7;
+    } else {
+      const maxTotalBars = Math.max(...totalsBars.map(c => c.w + c.f));
+      const barAreaXBars = M + labelColWBars;
+      const barAreaMaxWBars = W - M - barAreaXBars - pctColWBars;
+
+      const drawGradientSegmentBars = (sx, sw, colorLight, colorDark) => {
+        if (sw <= 0) return;
+        const bands = 6;
+        const bandH = barRowHBars / bands;
+        for (let bi = 0; bi < bands; bi++) {
+          const t = bi / (bands - 1);
+          const r = Math.round(colorLight[0] + (colorDark[0]-colorLight[0])*t);
+          const g = Math.round(colorLight[1] + (colorDark[1]-colorLight[1])*t);
+          const b = Math.round(colorLight[2] + (colorDark[2]-colorLight[2])*t);
+          doc.setFillColor(r, g, b);
+          doc.rect(sx, y + bi*bandH, sw, bandH + 0.2, 'F');
+        }
+      };
+      const drawPillBarBars = (x0, greenW2, redW2) => {
+        const totalW = greenW2 + redW2;
+        if (totalW <= 0.5) return;
+        drawGradientSegmentBars(x0, greenW2, theme.greenLight, theme.greenDark);
+        drawGradientSegmentBars(x0 + greenW2, redW2, theme.redLight, theme.redDark);
+        const capR = barRowHBars / 2;
+        doc.setFillColor(...(greenW2 > 0 ? theme.greenDark : theme.redDark));
+        doc.circle(x0, y + barRowHBars/2, capR, 'F');
+        doc.setFillColor(...(redW2 > 0 ? theme.redDark : theme.greenDark));
+        doc.circle(x0 + totalW, y + barRowHBars/2, capR, 'F');
+      };
+
+      totalsBars.forEach(cat => {
+        ensureSpace(barRowHBars + barGapBars);
+        const total = cat.w + cat.f;
+        const pct = total > 0 ? (cat.w / total * 100) : 0;
+        const barW = maxTotalBars > 0 ? (total / maxTotalBars) * barAreaMaxWBars : 0;
+        const greenW = total > 0 ? barW * (cat.w / total) : 0;
+        const redW = barW - greenW;
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(...theme.text);
+        doc.text(cat.label, M, y + barRowHBars/2 + 1.3, {maxWidth: labelColWBars - 3});
+
+        if (barW > 0.5) {
+          drawPillBarBars(barAreaXBars, greenW, redW);
+          doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(255,255,255);
+          if (greenW > 6) doc.text(String(cat.w), barAreaXBars + greenW/2, y + barRowHBars/2 + 1.2, {align:'center'});
+          if (redW > 6) doc.text(String(cat.f), barAreaXBars + greenW + redW/2, y + barRowHBars/2 + 1.2, {align:'center'});
+        }
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...(pct >= 50 ? theme.green : theme.red));
+        doc.text(Math.round(pct) + '%', barAreaXBars + barW + barRowHBars/2 + 1.8, y + barRowHBars/2 + 1.2);
+
+        y += barRowHBars + barGapBars;
+      });
+    }
+    y += 5;
+    if (entIdx < detailEntities.length - 1) {
+      doc.setDrawColor(...theme.border); doc.setLineWidth(0.15); doc.line(M, y-3, W-M, y-3);
+    }
+  });
+  y += 4;
 
   sectionTitle('JOURNAL DU MATCH COMPLET', theme.gold);
   let logIdx = 0;
