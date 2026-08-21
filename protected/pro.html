@@ -100,6 +100,14 @@ body{transition:background-color .25s ease,color .25s ease}
   font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
   padding:6px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%;margin-bottom:4px}
 .prefs-back-btn:hover{background:var(--surface);color:var(--gold)}
+.shot-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:none;
+  color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:600;letter-spacing:.2px;
+  padding:8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.shot-toggle-row:hover{background:var(--surface)}
+.toggle-switch{position:relative;width:34px;height:18px;border-radius:20px;background:var(--border);flex-shrink:0;transition:background .2s}
+.toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text);transition:transform .2s}
+.toggle-switch.on{background:var(--gold)}
+.toggle-switch.on::after{transform:translateX(16px);background:var(--bg)}
 .sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
 .sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
 .sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
@@ -662,13 +670,37 @@ if ('serviceWorker' in navigator) {
       </div>
       <div class="theme-menu theme-menu-right" id="prefsMenu">
         <button class="prefs-back-btn" onclick="closePrefsMenu(event)">‹ Retour</button>
+        <button class="theme-swatch gear-menu-item" onclick="openPdfMenu(event)">PDF<span class="menu-chevron">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openMatchMenu(event)">Match<span class="menu-chevron">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openShotsMenu(event)">Coups<span class="menu-chevron">›</span></button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="pdfMenu">
+        <button class="prefs-back-btn" onclick="backToPrefsMenu(event)">‹ Retour</button>
         <div class="prefs-menu-label">PDF</div>
         <button class="theme-swatch" data-pdf-style-choice="bars" onclick="setPdfStyle('bars')"><span class="sw sw-light"></span>Barres (nouveau)</button>
         <button class="theme-swatch" data-pdf-style-choice="classic" onclick="setPdfStyle('classic')"><span class="sw sw-dark"></span>Terrains (classique)</button>
-        <div class="prefs-menu-divider"></div>
+      </div>
+      <div class="theme-menu theme-menu-right" id="matchMenu">
+        <button class="prefs-back-btn" onclick="backToPrefsMenu(event)">‹ Retour</button>
         <div class="prefs-menu-label">Match</div>
         <button class="theme-swatch" data-stats-mode-choice="equipe" onclick="switchStatsMode('equipe')"><span class="sw sw-dark"></span>Par équipe</button>
         <button class="theme-swatch" data-stats-mode-choice="joueur" onclick="switchStatsMode('joueur')"><span class="sw sw-light"></span>Par joueur</button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="shotsMenu">
+        <button class="prefs-back-btn" onclick="backToPrefsMenu(event)">‹ Retour</button>
+        <div class="prefs-menu-label">Détail des coups</div>
+        <button class="shot-toggle-row" onclick="toggleShotSetting('depth')">
+          <span>Profondeur (Tendu / Amorti / Lob...)</span>
+          <span class="toggle-switch" id="toggleShotDepth"></span>
+        </button>
+        <button class="shot-toggle-row" onclick="toggleShotSetting('zone')">
+          <span>Zones du terrain (1 à 5)</span>
+          <span class="toggle-switch" id="toggleShotZone"></span>
+        </button>
+        <button class="shot-toggle-row" onclick="toggleShotSetting('side')">
+          <span>Côté (CD / REV)</span>
+          <span class="toggle-switch" id="toggleShotSide"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -1046,22 +1078,79 @@ const DEPTH_BAND_SHOTS = {
 // Conservé pour compatibilité : équivalent à DEPTH_BAND_SHOTS.roule.
 const ROULE_DEPTH_VARIANTS = DEPTH_BAND_SHOTS.roule;
 
+// ── RÉGLAGES DE SAISIE DES COUPS (menu Préférences > Coups) ──────────────
+// Permet de personnaliser le niveau de détail demandé à la saisie : par
+// défaut tout est activé (comportement complet), mais chaque dimension peut
+// être désactivée indépendamment pour accélérer la saisie. Une dimension
+// désactivée disparaît aussi des statistiques et du PDF (agrégée avec les
+// autres valeurs de cette dimension), pas seulement de la saisie.
+const DEFAULT_SHOT_SETTINGS = { depth: true, zone: true, side: true };
+let shotSettings = Object.assign({}, DEFAULT_SHOT_SETTINGS, (() => {
+  try { return JSON.parse(localStorage.getItem('beachstats_shot_settings') || '{}'); }
+  catch(e) { return {}; }
+})());
+const DEFAULT_ZONE = '3'; // zone médiane, utilisée par défaut si les zones sont désactivées
+
+
 // Liste à plat de TOUTES les combinaisons coup+variante ("feuilles" de l'arbre
 // de saisie), utilisée pour les toiles d'araignée du PDF — un point par coup
 // précis (ex: "Défense CD Amorti"), sans jamais entrer dans le détail des
 // zones (c'est justement le rôle de ces graphiques : donner une vue globale
 // ou par zone, sans la grille de 5 zones × 9 coups qui surchargeait le PDF).
-const LEAF_SHOT_CATEGORIES = [];
-BASE_SHOTS.forEach(s => {
-  const variants = SHOT_VARIANTS[s];
-  if (!variants.length) {
-    LEAF_SHOT_CATEGORIES.push({ key: s, label: SHOT_BASE_LBL[s] });
-  } else {
-    variants.forEach(v => {
-      LEAF_SHOT_CATEGORIES.push({ key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v) });
-    });
-  }
-});
+// Liste dynamique des catégories affichées dans le PDF (barres de
+// distribution) : une entrée par combinaison coup+variante ENCORE visible
+// selon les réglages actuels (Préférences > Coups). Quand une dimension est
+// désactivée, les variantes correspondantes fusionnent en une seule
+// catégorie (ex: "Retour" au lieu de "Retour CD"/"Retour REV"), avec une
+// fonction "match" qui sait retrouver toutes les clés de stats concernées
+// pour l'agrégation, même quand le préfixe littéral ne suffit plus (le cas
+// de la Défense, où le côté et la profondeur ne sont pas adjacents dans la
+// clé une fois l'un des deux retiré : "defense_cd_amorti" vs "defense_amorti").
+function computeLeafShotCategories() {
+  const categories = [];
+  BASE_SHOTS.forEach(s => {
+    if (s === 'defense') {
+      const sideOn = shotSettings.side, depthOn = shotSettings.depth;
+      if (sideOn && depthOn) {
+        SHOT_VARIANTS.defense.forEach(v => categories.push({
+          key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v),
+          match: k => k.indexOf(s + '_' + v + '_') === 0,
+        }));
+      } else if (sideOn && !depthOn) {
+        TWO_LEVEL_VARIANTS.defense.level1.forEach(side => categories.push({
+          key: s + '_' + side, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(side),
+          match: k => k.indexOf(s + '_' + side + '_') === 0,
+        }));
+      } else if (!sideOn && depthOn) {
+        TWO_LEVEL_VARIANTS.defense.level2.forEach(depth => categories.push({
+          key: s + '_' + depth, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(depth),
+          match: k => k.indexOf(s + '_') === 0 && k.indexOf('_' + depth + '_') > 0,
+        }));
+      } else {
+        categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 });
+      }
+      return;
+    }
+
+    const variants = SHOT_VARIANTS[s];
+    if (!variants.length) {
+      categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 || k === s });
+      return;
+    }
+
+    const isDepthShot = !!DEPTH_BAND_SHOTS[s];
+    const dimensionOn = isDepthShot ? shotSettings.depth : shotSettings.side;
+    if (dimensionOn) {
+      variants.forEach(v => categories.push({
+        key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v),
+        match: k => k.indexOf(s + '_' + v + '_') === 0,
+      }));
+    } else {
+      categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 });
+    }
+  });
+  return categories;
+}
 
 // Chaque coup se termine toujours par la zone où il a été réalisé (1 à 5).
 // Génération automatique de toutes les clés + libellés à partir de la config ci-dessus.
@@ -2252,14 +2341,49 @@ function renderShotCategories() {
   });
 }
 
+// Point d'entrée unique une fois la variante déterminée (choisie par
+// l'utilisateur, ou remplie automatiquement car désactivée dans Réglages >
+// Coups) : affiche l'étape zone si activée, sinon confirme directement avec
+// une zone par défaut (jamais montrée à l'utilisateur, purement technique).
+function proceedToZoneOrConfirm(s, variant, backOnClick) {
+  const prefix = variant ? (s + '_' + variant) : s;
+  const label = variant ? (SHOT_BASE_LBL[s] + ' ' + variantLabel(variant)) : SHOT_BASE_LBL[s];
+  if (!shotSettings.zone) {
+    confirmShot(prefix + '_' + DEFAULT_ZONE);
+    return;
+  }
+  renderZoneStep(prefix, label, SHOT_ICO[s], backOnClick);
+}
+
 // ── ÉTAPE 2 : variante (côté / type) du coup, si le coup en a une ───────────
 function selectShotCategory(s) {
   const twoLevel = TWO_LEVEL_VARIANTS[s];
-  if (twoLevel) { renderShotSideStep(s, twoLevel); return; }
+  if (twoLevel) {
+    if (!shotSettings.side && !shotSettings.depth) {
+      // Ni côté ni profondeur : variante fixe par défaut, direct à la zone.
+      proceedToZoneOrConfirm(s, twoLevel.level1[0] + '_' + twoLevel.level2[0], 'renderShotCategories()');
+      return;
+    }
+    if (!shotSettings.side) {
+      // Côté désactivé : on saute directement à l'étape profondeur, avec
+      // le premier côté comme valeur par défaut silencieuse.
+      selectShotSide(s, twoLevel.level1[0]);
+      return;
+    }
+    renderShotSideStep(s, twoLevel);
+    return;
+  }
 
   const variants = SHOT_VARIANTS[s];
+  if (!variants.length) { proceedToZoneOrConfirm(s, null, 'renderShotCategories()'); return; }
 
-  if (!variants.length) { renderZoneStep(s, SHOT_BASE_LBL[s], SHOT_ICO[s], 'renderShotCategories()'); return; }
+  const isDepthShot = !!DEPTH_BAND_SHOTS[s];
+  const dimensionEnabled = isDepthShot ? shotSettings.depth : shotSettings.side;
+  if (!dimensionEnabled) {
+    // Dimension désactivée : première variante par défaut, direct à la zone.
+    proceedToZoneOrConfirm(s, variants[0], 'renderShotCategories()');
+    return;
+  }
 
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = `
@@ -2288,6 +2412,11 @@ function renderShotSideStep(s, twoLevel) {
 // ── ÉTAPE 2b (coups à 2 niveaux) : ensuite la profondeur ────────────────────
 function selectShotSide(s, side) {
   const twoLevel = TWO_LEVEL_VARIANTS[s];
+  if (!shotSettings.depth) {
+    // Profondeur désactivée : première profondeur par défaut, direct à la zone.
+    proceedToZoneOrConfirm(s, side + '_' + twoLevel.level2[0], 'renderShotCategories()');
+    return;
+  }
   const grid = document.getElementById('shotGrid');
   grid.innerHTML = `
     <button class="shot-back" onclick="selectShotCategory('${s}')">← Retour</button>
@@ -2300,11 +2429,9 @@ function selectShotSide(s, side) {
 }
 
 function selectShotVariant(s, v) {
-  const prefix = s + '_' + v;
-  const label = SHOT_BASE_LBL[s] + ' ' + variantLabel(v);
   const twoLevel = TWO_LEVEL_VARIANTS[s];
   const backOnClick = twoLevel ? `selectShotSide('${s}','${v.split('_')[0]}')` : `selectShotCategory('${s}')`;
-  renderZoneStep(prefix, label, SHOT_ICO[s], backOnClick);
+  proceedToZoneOrConfirm(s, v, backOnClick);
 }
 
 // ── ÉTAPE 3 : zone du terrain où le coup a été réalisé (toujours en dernier) ─
@@ -2675,8 +2802,14 @@ function renderZoneMap() {
   const grid = document.getElementById('zoneMapGrid');
   if (!grid) return;
 
+  // Une bande de profondeur ne s'affiche que si le coup en a une ET que le
+  // réglage "Profondeur" est activé (Préférences > Coups) — sinon on retombe
+  // sur le terrain plat classique, qui agrège déjà correctement toutes les
+  // variantes de profondeur (voir computeZoneData/SHOT_ZONE_KEYS).
+  const hasDepthBands = shotSettings.depth && !!DEPTH_BAND_SHOTS[zoneMapShot];
+
   const depthNote = document.getElementById('zoneDepthNote');
-  if (depthNote) depthNote.style.display = DEPTH_BAND_SHOTS[zoneMapShot] ? 'block' : 'none';
+  if (depthNote) depthNote.style.display = hasDepthBands ? 'block' : 'none';
 
   // Les vues séparées par côté n'ont de sens qu'en mode adaptatif (seul mode
   // où chaque joueur a un côté individuel, modifiable en cours de match).
@@ -2715,7 +2848,7 @@ function renderZoneMap() {
   const mirror = shouldMirrorZoneDisplay();
 
   grid.innerHTML = entries.map(e => {
-    const svg = DEPTH_BAND_SHOTS[zoneMapShot]
+    const svg = hasDepthBands
       ? buildDepthBandCourtSVG(zoneMapShot, e.wp, e.fp, sideSuffix, mirror)
       : buildCourtSVG(computeZoneData(e.wp, e.fp, sideSuffix), mirror);
     return `<div class="zone-court-item">
@@ -2723,6 +2856,13 @@ function renderZoneMap() {
       ${svg}
     </div>`;
   }).join('');
+}
+
+// Affiche ou masque la section "Cartographie par zone" en direct : elle n'a
+// de sens que si le réglage "Zones" est activé (Préférences > Coups).
+function updateZoneMapVisibility() {
+  const card = document.getElementById('zoneMapCard');
+  if (card) card.style.display = shotSettings.zone ? '' : 'none';
 }
 
 // Change la vue de la cartographie : combinée (normalisée, toutes données),
@@ -3155,7 +3295,10 @@ function exportPDF() {
   });
 
   // ══ 5. DÉTAIL DES COUPS — 2 styles au choix (réglage "Préférences") ═════
-  if (pdfStyle === 'classic') {
+  // Les terrains n'ont pas de sens sans zones : garde-fou en plus du
+  // basculement automatique déjà appliqué quand on désactive le réglage.
+  const effectivePdfStyle = (pdfStyle === 'classic' && !shotSettings.zone) ? 'bars' : pdfStyle;
+  if (effectivePdfStyle === 'classic') {
     // ── Style classique : terrains par zone, reskinné sur le thème clair ──
     sectionTitle('CARTOGRAPHIE PAR ZONE', theme.gold);
 
@@ -3219,7 +3362,7 @@ function exportPDF() {
     };
 
     BASE_SHOTS.forEach((shotKey, shotIdx) => {
-      const depthBands = DEPTH_BAND_SHOTS[shotKey];
+      const depthBands = shotSettings.depth ? DEPTH_BAND_SHOTS[shotKey] : undefined;
       const nBands = depthBands ? depthBands.length : 0;
 
       const maxCourtLFromHeight = (244 / gridRows) - 22;
@@ -3353,24 +3496,37 @@ function exportPDF() {
       ];
 
   // Totaux par catégorie de coup pour une entité, toutes zones confondues ou
-  // filtrés sur une zone précise (zoneFilter = null -> vue globale).
+  // filtrés sur une zone précise (zoneFilter = null -> vue globale). Les
+  // catégories dynamiques (voir computeLeafShotCategories) savent déjà
+  // reconnaître toutes les clés qui leur correspondent, même quand une
+  // dimension a été fusionnée par les réglages.
+  const dynamicShotCategories = computeLeafShotCategories();
   const computeCategoryTotals2 = (wp, fp, zoneFilter) => {
     const zones = zoneFilter ? [zoneFilter] : ZONES;
-    return LEAF_SHOT_CATEGORIES.map(cat => {
+    return dynamicShotCategories.map(cat => {
       let w = 0, f = 0;
-      zones.forEach(z => {
-        const k = cat.key + '_' + z;
-        w += stats[wp+k] || 0;
-        f += stats[fp+k] || 0;
+      ALL_SHOT_KEYS.forEach(k => {
+        if (!cat.match(k)) return;
+        const zone = k.slice(k.lastIndexOf('_') + 1);
+        if (zones.includes(zone)) {
+          w += stats[wp+k] || 0;
+          f += stats[fp+k] || 0;
+        }
       });
       return { ...cat, w, f };
     });
   };
 
-  const barViews = [
-    { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
-    ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
-  ];
+  // Les vues "par zone" n'ont de sens que si les zones sont activées
+  // (Préférences > Coups) — sinon on ne garde que la vue globale.
+  const barViews = shotSettings.zone
+    ? [
+        { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
+        ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
+      ]
+    : [
+        { label: 'VUE GLOBALE', zoneFilter: null },
+      ];
 
   const labelColW = 40;
   const pctColW = 20;
@@ -3527,8 +3683,7 @@ function toggleThemeMenu(e) {
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.theme-switch-wrap')) {
     document.getElementById('themeMenu')?.classList.remove('open');
-    document.getElementById('gearMenu')?.classList.remove('open');
-    document.getElementById('prefsMenu')?.classList.remove('open');
+    ALL_MENU_IDS.forEach(id => document.getElementById(id)?.classList.remove('open'));
   }
 });
 
@@ -3547,10 +3702,37 @@ function refreshPrefsMenuUI() {
   });
 }
 
+// ── RÉGLAGES > COUPS ──────────────────────────────────────────────────────
+function refreshShotSettingsUI() {
+  document.getElementById('toggleShotDepth')?.classList.toggle('on', shotSettings.depth);
+  document.getElementById('toggleShotZone')?.classList.toggle('on', shotSettings.zone);
+  document.getElementById('toggleShotSide')?.classList.toggle('on', shotSettings.side);
+}
+
+function toggleShotSetting(key) {
+  shotSettings[key] = !shotSettings[key];
+  try { localStorage.setItem('beachstats_shot_settings', JSON.stringify(shotSettings)); } catch(e) {}
+  refreshShotSettingsUI();
+
+  // Les terrains (style PDF "classique") n'ont plus de sens sans zones :
+  // on bascule automatiquement sur le style "barres" si besoin.
+  if (key === 'zone' && !shotSettings.zone && pdfStyle === 'classic') {
+    pdfStyle = 'bars';
+    try { localStorage.setItem('beachstats_pdf_style', 'bars'); } catch(e) {}
+  }
+
+  // La cartographie par zone en direct n'a de sens que si les zones sont
+  // activées — on l'affiche/masque en conséquence, sans jamais casser le
+  // reste de l'interface.
+  if (key === 'zone') updateZoneMapVisibility();
+}
+
+const ALL_MENU_IDS = ['gearMenu','prefsMenu','pdfMenu','matchMenu','shotsMenu'];
+
 function toggleGearMenu(e) {
   e.stopPropagation();
   document.getElementById('themeMenu')?.classList.remove('open');
-  document.getElementById('prefsMenu')?.classList.remove('open');
+  ALL_MENU_IDS.filter(id => id !== 'gearMenu').forEach(id => document.getElementById(id)?.classList.remove('open'));
   document.getElementById('gearMenu')?.classList.toggle('open');
 }
 
@@ -3558,13 +3740,39 @@ function openPrefsMenu(e) {
   e.stopPropagation();
   document.getElementById('gearMenu')?.classList.remove('open');
   document.getElementById('prefsMenu')?.classList.add('open');
-  refreshPrefsMenuUI();
 }
 
 function closePrefsMenu(e) {
   e.stopPropagation();
   document.getElementById('prefsMenu')?.classList.remove('open');
   document.getElementById('gearMenu')?.classList.add('open');
+}
+
+function openPdfMenu(e) {
+  e.stopPropagation();
+  document.getElementById('prefsMenu')?.classList.remove('open');
+  document.getElementById('pdfMenu')?.classList.add('open');
+  refreshPrefsMenuUI();
+}
+
+function openMatchMenu(e) {
+  e.stopPropagation();
+  document.getElementById('prefsMenu')?.classList.remove('open');
+  document.getElementById('matchMenu')?.classList.add('open');
+  refreshPrefsMenuUI();
+}
+
+function openShotsMenu(e) {
+  e.stopPropagation();
+  document.getElementById('prefsMenu')?.classList.remove('open');
+  document.getElementById('shotsMenu')?.classList.add('open');
+  refreshShotSettingsUI();
+}
+
+function backToPrefsMenu(e) {
+  e.stopPropagation();
+  ['pdfMenu','matchMenu','shotsMenu'].forEach(id => document.getElementById(id)?.classList.remove('open'));
+  document.getElementById('prefsMenu')?.classList.add('open');
 }
 
 function setPdfStyle(style) {
@@ -3596,6 +3804,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
   document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
   refreshPrefsMenuUI();
+  refreshShotSettingsUI();
+  updateZoneMapVisibility();
   checkTier();
 });
 

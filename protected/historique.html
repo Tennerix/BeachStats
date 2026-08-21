@@ -307,6 +307,14 @@ function readLiveThemeForPDF() {
 
 // ── CONSTANTES DES COUPS / ZONES (nécessaires pour régénérer la cartographie
 // par zone des matchs Pro depuis l'historique — identiques à celles de pro.html) ──
+// Réglages de saisie des coups (Préférences > Coups) : partagés avec pro.html
+// via le même localStorage, pour que la régénération PDF depuis l'historique
+// respecte le même niveau de détail que celui actuellement configuré.
+const DEFAULT_SHOT_SETTINGS = { depth: true, zone: true, side: true };
+let shotSettings = Object.assign({}, DEFAULT_SHOT_SETTINGS, (() => {
+  try { return JSON.parse(localStorage.getItem('beachstats_shot_settings') || '{}'); }
+  catch(e) { return {}; }
+})());
 const BASE_SHOTS = ['service', 'splus1', 'retour', 'smash', 'roule', 'amorti', 'lob', 'rush', 'defense'];
 const SHOT_BASE_LBL = {service:'Service', splus1:'Service +1', smash:'Smash', roule:'Bras roulé', retour:'Retour', amorti:'Amorti', lob:'Lob', rush:'Rush', defense:'Défense'};
 const ZONES = ['1', '2', '3', '4', '5'];
@@ -319,7 +327,15 @@ const SHOT_VARIANTS = {
   amorti: ['cd', 'rev'],
   lob: ['cd', 'rev', 'rainbow'],
   rush: ['cd', 'rev', 'rainbow'],
-  defense: ['amorti', 'tendu', 'lob']
+  // Défense : sélection à 2 niveaux dans pro.html (côté puis profondeur) —
+  // les 6 combinaisons "côté_profondeur" réellement utilisées à la saisie.
+  // Une désynchronisation ici (ex: juste ['amorti','tendu','lob']) ferait
+  // manquer TOUTES les données Défense lors de la régénération du PDF,
+  // puisque les vraies clés stockées sont "defense_cd_amorti_Z" etc.
+  defense: ['cd_amorti','cd_tendu','cd_lob','rev_amorti','rev_tendu','rev_lob'],
+};
+const TWO_LEVEL_VARIANTS = {
+  defense: { level1: ['cd', 'rev'], level2: ['amorti', 'tendu', 'lob'] }
 };
 const VARIANT_LBL = { cd: 'CD', rev: 'REV', amorti: 'Amorti', lobe: 'Lobé', tendu: 'Tendu', rainbow: 'Rainbow', gratte: 'Gratté', fort: 'Fort', lob: 'Lob', rush: 'Rush', smash: 'Smash' };
 function variantLabel(v) { return v.split('_').map(p => VARIANT_LBL[p] || p).join(' '); }
@@ -347,24 +363,62 @@ const DEPTH_BAND_SHOTS = {
   ],
 };
 const ROULE_DEPTH_VARIANTS = DEPTH_BAND_SHOTS.roule;
-const LEAF_SHOT_CATEGORIES = [];
-BASE_SHOTS.forEach(s => {
-  const variants = SHOT_VARIANTS[s];
-  if (!variants.length) {
-    LEAF_SHOT_CATEGORIES.push({ key: s, label: SHOT_BASE_LBL[s] });
-  } else {
-    variants.forEach(v => {
-      LEAF_SHOT_CATEGORIES.push({ key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v) });
-    });
-  }
-});
+// Liste dynamique des catégories affichées dans le PDF (barres de
+// distribution) : une entrée par combinaison coup+variante ENCORE visible
+// selon les réglages actuels (Préférences > Coups, partagés avec pro.html).
+// Voir pro.html pour le détail du raisonnement — logique identique ici.
+function computeLeafShotCategories() {
+  const categories = [];
+  BASE_SHOTS.forEach(s => {
+    if (s === 'defense') {
+      const sideOn = shotSettings.side, depthOn = shotSettings.depth;
+      if (sideOn && depthOn) {
+        SHOT_VARIANTS.defense.forEach(v => categories.push({
+          key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v),
+          match: k => k.indexOf(s + '_' + v + '_') === 0,
+        }));
+      } else if (sideOn && !depthOn) {
+        TWO_LEVEL_VARIANTS.defense.level1.forEach(side => categories.push({
+          key: s + '_' + side, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(side),
+          match: k => k.indexOf(s + '_' + side + '_') === 0,
+        }));
+      } else if (!sideOn && depthOn) {
+        TWO_LEVEL_VARIANTS.defense.level2.forEach(depth => categories.push({
+          key: s + '_' + depth, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(depth),
+          match: k => k.indexOf(s + '_') === 0 && k.indexOf('_' + depth + '_') > 0,
+        }));
+      } else {
+        categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 });
+      }
+      return;
+    }
+
+    const variants = SHOT_VARIANTS[s];
+    if (!variants.length) {
+      categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 || k === s });
+      return;
+    }
+
+    const isDepthShot = !!DEPTH_BAND_SHOTS[s];
+    const dimensionOn = isDepthShot ? shotSettings.depth : shotSettings.side;
+    if (dimensionOn) {
+      variants.forEach(v => categories.push({
+        key: s + '_' + v, label: SHOT_BASE_LBL[s] + ' ' + variantLabel(v),
+        match: k => k.indexOf(s + '_' + v + '_') === 0,
+      }));
+    } else {
+      categories.push({ key: s, label: SHOT_BASE_LBL[s], match: k => k.indexOf(s + '_') === 0 });
+    }
+  });
+  return categories;
+}
 const SHOT_LBL = {};
 const ALL_SHOT_KEYS = [];
 const SHOT_ZONE_KEYS = {};
 BASE_SHOTS.forEach(s => {
   const variants = SHOT_VARIANTS[s];
   const prefixes = variants.length ? variants.map(v => s + '_' + v) : [s];
-  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + VARIANT_LBL[v]) : [SHOT_BASE_LBL[s]];
+  const labels = variants.length ? variants.map(v => SHOT_BASE_LBL[s] + ' ' + variantLabel(v)) : [SHOT_BASE_LBL[s]];
   SHOT_ZONE_KEYS[s] = {};
   ZONES.forEach(z => SHOT_ZONE_KEYS[s][z] = []);
   prefixes.forEach((prefix, i) => {
@@ -993,7 +1047,10 @@ function generateProPDF(record) {
   });
 
   // ══ 5. DÉTAIL DES COUPS — 2 styles au choix (réglage "Préférences") ═════
-  if (pdfStyle === 'classic') {
+  // Les terrains n'ont pas de sens sans zones : garde-fou en plus du
+  // basculement automatique déjà appliqué quand on désactive le réglage.
+  const effectivePdfStyle = (pdfStyle === 'classic' && !shotSettings.zone) ? 'bars' : pdfStyle;
+  if (effectivePdfStyle === 'classic') {
     // ── Style classique : terrains par zone, reskinné sur le thème clair ──
     sectionTitle('CARTOGRAPHIE PAR ZONE', theme.gold);
 
@@ -1056,7 +1113,7 @@ function generateProPDF(record) {
     };
 
     BASE_SHOTS.forEach((shotKey, shotIdx) => {
-      const depthBands = DEPTH_BAND_SHOTS[shotKey];
+      const depthBands = shotSettings.depth ? DEPTH_BAND_SHOTS[shotKey] : undefined;
       const nBands = depthBands ? depthBands.length : 0;
 
       const maxCourtLFromHeight = (244 / gridRows) - 22;
@@ -1190,24 +1247,37 @@ function generateProPDF(record) {
       ];
 
   // Totaux par catégorie de coup pour une entité, toutes zones confondues ou
-  // filtrés sur une zone précise (zoneFilter = null -> vue globale).
+  // filtrés sur une zone précise (zoneFilter = null -> vue globale). Les
+  // catégories dynamiques (voir computeLeafShotCategories) savent déjà
+  // reconnaître toutes les clés qui leur correspondent, même quand une
+  // dimension a été fusionnée par les réglages.
+  const dynamicShotCategories = computeLeafShotCategories();
   const computeCategoryTotals2 = (wp, fp, zoneFilter) => {
     const zones = zoneFilter ? [zoneFilter] : ZONES;
-    return LEAF_SHOT_CATEGORIES.map(cat => {
+    return dynamicShotCategories.map(cat => {
       let w = 0, f = 0;
-      zones.forEach(z => {
-        const k = cat.key + '_' + z;
-        w += stats[wp+k] || 0;
-        f += stats[fp+k] || 0;
+      ALL_SHOT_KEYS.forEach(k => {
+        if (!cat.match(k)) return;
+        const zone = k.slice(k.lastIndexOf('_') + 1);
+        if (zones.includes(zone)) {
+          w += stats[wp+k] || 0;
+          f += stats[fp+k] || 0;
+        }
       });
       return { ...cat, w, f };
     });
   };
 
-  const barViews = [
-    { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
-    ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
-  ];
+  // Les vues "par zone" n'ont de sens que si les zones sont activées
+  // (Préférences > Coups) — sinon on ne garde que la vue globale.
+  const barViews = shotSettings.zone
+    ? [
+        { label: 'VUE GLOBALE — TOUTES ZONES CONFONDUES', zoneFilter: null },
+        ...ZONES.map(z => ({ label: 'ZONE ' + z, zoneFilter: z })),
+      ]
+    : [
+        { label: 'VUE GLOBALE', zoneFilter: null },
+      ];
 
   const labelColW = 40;
   const pctColW = 20;
