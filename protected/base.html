@@ -1015,7 +1015,7 @@ function toggleLiveShare() {
   liveShareCode = genLiveCode();
   document.getElementById('liveShareBtn').classList.add('active');
   pushLiveState();
-  liveSharePushTimer = setInterval(pushLiveState, 45000); // 45s : simple filet de securite, la vraie mise a jour se fait deja a chaque point marque
+  liveSharePushTimer = setInterval(pushLiveState, 5000);
   openLiveModal();
 }
 
@@ -1644,7 +1644,6 @@ function saveProgress() {
   const snapshot = {
     p1, p2, g1, g2, s1, s2, setHistory, inTiebreak, inSuperTiebreak, matchOver,
     stats, setSnapshots, history, matchLog, timerSeconds, matchStarted,
-    liveShareCode,
     teamLabelA, teamLabelB,
     firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
     players, mode,
@@ -1703,12 +1702,6 @@ function applyProgress(snap) {
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
   const s = String(timerSeconds % 60).padStart(2,'0');
   document.getElementById('timerDisplay').textContent = m + ':' + s;
-  if (snap.liveShareCode) {
-    liveShareCode = snap.liveShareCode;
-    document.getElementById('liveShareBtn')?.classList.add('active');
-    pushLiveState();
-    liveSharePushTimer = setInterval(pushLiveState, 45000);
-  }
   updateDisplay();
 }
 
@@ -1878,7 +1871,7 @@ function exportPDF() {
   }
 
   const stripEmoji = (str) => String(str)
-    .replace(/[\u{1F1E6}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
+    .replace(/[\u{1F1E6}-\u{1FFFF}\u{2300}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\uFE0F\u200D]/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
 
