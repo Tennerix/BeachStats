@@ -59,14 +59,14 @@
   --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7; --purple:#7c83fd;
   --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
 }
-[data-theme="magma"]{
-  --bg:linear-gradient(180deg,#0a0302 0%,#380a04 22%,#8a1c04 48%,#ff5b0f 62%,#5c0f0f 84%,#120303 100%);
-  --surface:linear-gradient(135deg,#2e0a06 0%,#66190a 100%);
-  --card:linear-gradient(150deg,#3d0e08 0%,#7d2308 100%);
-  --hover:linear-gradient(135deg,#4d140b 0%,#992e0e 100%);
-  --border:#ff5c1a;
-  --gold:#ffc300; --blue:#3fa9ff; --orange:#ff4b00; --green:#a4d84a; --purple:#ff2e88;
-  --red:#ff2020; --text:#fff2e0; --muted:#d98a5c;
+[data-theme="eclat"]{
+  --bg:linear-gradient(180deg,#ffffff 0%,#fff8ec 20%,#fff1f6 40%,#eff8ff 60%,#f2fff4 80%,#ffffff 100%);
+  --surface:linear-gradient(135deg,#ffffff 0%,#f2f5fb 100%);
+  --card:linear-gradient(150deg,#ffffff 0%,#f8fafd 100%);
+  --hover:linear-gradient(135deg,#f2f5fb 0%,#e6ecf7 100%);
+  --border:#d7deea;
+  --gold:#ffb100; --blue:#0080ff; --orange:#ff5400; --green:#00c853; --purple:#a600ff;
+  --red:#ff1744; --text:#14171f; --muted:#66707f;
 }
 [data-theme="glacier"]{
   --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
@@ -105,7 +105,7 @@ body{transition:background-color .25s ease,color .25s ease}
 .sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
 .sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
 .sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
-.sw-magma{background:linear-gradient(135deg,#0a0302,#ff5b0f)}
+.sw-eclat{background:linear-gradient(135deg,#ffffff,#ff5400)}
 .sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
 
 body{
@@ -153,7 +153,7 @@ body{
 [data-theme="glacier"] .status-pill{color:#0a2e52}
 [data-theme="sunset"] .status-pill{color:#3a140a}
 [data-theme="lagoon"] .status-pill{color:#04302c}
-[data-theme="magma"] .status-pill{color:#3a0a02}
+[data-theme="eclat"] .status-pill{color:#14171f}
 .status-label{font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 
 /* ── SCOREBOARD ── */
@@ -193,7 +193,7 @@ body{
 [data-theme="glacier"] .cell.sets-cell span.won{color:#0a2e52}
 [data-theme="sunset"] .cell.sets-cell span.won{color:#3a140a}
 [data-theme="lagoon"] .cell.sets-cell span.won{color:#04302c}
-[data-theme="magma"] .cell.sets-cell span.won{color:#3a0a02}
+[data-theme="eclat"] .cell.sets-cell span.won{color:#14171f}
 .cell.set-score{
   font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;
   text-align:center;color:var(--muted);
@@ -596,7 +596,7 @@ if ('serviceWorker' in navigator) {
         <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
-        <button class="theme-swatch" data-theme-choice="magma" onclick="setTheme('magma')"><span class="sw sw-magma"></span>Magma<span class="lock-badge">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="eclat" onclick="setTheme('eclat')"><span class="sw sw-eclat"></span>Éclat<span class="lock-badge">🔒 PRO</span></button>
         <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
       </div>
     </div>
@@ -2609,7 +2609,7 @@ if (_savedProgress) {
   logEvent('', '🎾 Match créé');
 }
 // ── THÈMES ────────────────────────────────────────────────────────────────
-const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'eclat', 'glacier'];
 let userTier = null;
 
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }

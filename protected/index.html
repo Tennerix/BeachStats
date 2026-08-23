@@ -48,14 +48,14 @@
   --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7; --purple:#7c83fd;
   --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
 }
-[data-theme="magma"]{
-  --bg:linear-gradient(180deg,#0a0302 0%,#380a04 22%,#8a1c04 48%,#ff5b0f 62%,#5c0f0f 84%,#120303 100%);
-  --surface:linear-gradient(135deg,#2e0a06 0%,#66190a 100%);
-  --card:linear-gradient(150deg,#3d0e08 0%,#7d2308 100%);
-  --hover:linear-gradient(135deg,#4d140b 0%,#992e0e 100%);
-  --border:#ff5c1a;
-  --gold:#ffc300; --blue:#3fa9ff; --orange:#ff4b00; --green:#a4d84a; --purple:#ff2e88;
-  --red:#ff2020; --text:#fff2e0; --muted:#d98a5c;
+[data-theme="eclat"]{
+  --bg:linear-gradient(180deg,#ffffff 0%,#fff8ec 20%,#fff1f6 40%,#eff8ff 60%,#f2fff4 80%,#ffffff 100%);
+  --surface:linear-gradient(135deg,#ffffff 0%,#f2f5fb 100%);
+  --card:linear-gradient(150deg,#ffffff 0%,#f8fafd 100%);
+  --hover:linear-gradient(135deg,#f2f5fb 0%,#e6ecf7 100%);
+  --border:#d7deea;
+  --gold:#ffb100; --blue:#0080ff; --orange:#ff5400; --green:#00c853; --purple:#a600ff;
+  --red:#ff1744; --text:#14171f; --muted:#66707f;
 }
 [data-theme="glacier"]{
   --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
@@ -217,7 +217,7 @@ if ('serviceWorker' in navigator) {
           <option value="neon">Neon Beach 🔒 PRO</option>
           <option value="sunset">Sunset Gold 🔒 PRO</option>
           <option value="lagoon">Lagon 🔒 PRO</option>
-          <option value="magma">Magma 🔒 PRO</option>
+          <option value="eclat">Éclat 🔒 PRO</option>
           <option value="glacier">Glacier 🔒 PRO</option>
         </select>
         <i class="ti ti-chevron-down theme-select-caret"></i>
@@ -377,7 +377,7 @@ function goToSpro() { window.location.href = `/pro?${getParams()}`; }
 function goToHistorique() { window.location.href = `/historique`; }
 
 // ── THÈMES ────────────────────────────────────────────────────────────────
-const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'magma', 'glacier'];
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'eclat', 'glacier'];
 let userTier = null;
 
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
