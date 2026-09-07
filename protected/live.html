@@ -104,7 +104,8 @@ const code = (params.get('code') || '').trim();
 const content = document.getElementById('content');
 const liveBadge = document.getElementById('liveBadge');
 
-let pollTimer = null;
+let liveSocket = null;
+let reconnectTimer = null;
 let hasEverLoaded = false;
 
 function escapeHtml(str) {
@@ -204,40 +205,53 @@ function renderMatch(state) {
       </div>
     </div>
 
-    <div class="footer-note">Mis à jour automatiquement toutes les quelques secondes</div>
+    <div class="footer-note">Mis à jour en direct, dès qu'un point est marqué</div>
   `;
 }
 
-async function poll() {
+// Connexion WebSocket au Durable Object du match — remplace l'ancien
+// sondage HTTP toutes les 4 secondes : les mises à jour arrivent maintenant
+// dès qu'elles sont poussées par le scoreur, sans délai d'attente, et sans
+// requêtes répétées à intervalle fixe.
+function connect() {
   if (!code) {
     renderError("Lien invalide : aucun code de match fourni.");
     return;
   }
-  try {
-    const res = await fetch('/api/live/' + encodeURIComponent(code), { cache: 'no-store' });
-    if (res.status === 404) {
-      if (!hasEverLoaded) {
-        renderError("En attente que le scoreur démarre le partage…");
-      } else {
-        renderError("Ce match n'est plus partagé (terminé ou expiré).");
-        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-      }
-      return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  liveSocket = new WebSocket(proto + '//' + location.host + '/api/live/' + encodeURIComponent(code));
+
+  liveSocket.addEventListener('message', (ev) => {
+    try {
+      const state = JSON.parse(ev.data);
+      hasEverLoaded = true;
+      renderMatch(state);
+    } catch (e) { /* message mal formé : ignoré, on garde le dernier affichage valide */ }
+  });
+
+  liveSocket.addEventListener('close', () => {
+    if (!hasEverLoaded) {
+      renderError("En attente que le scoreur démarre le partage…");
+    } else {
+      renderError("Connexion perdue. Nouvelle tentative dans quelques secondes…");
     }
-    if (!res.ok) {
-      renderError("Impossible de récupérer le match pour le moment.");
-      return;
-    }
-    const state = await res.json();
-    hasEverLoaded = true;
-    renderMatch(state);
-  } catch (e) {
-    renderError("Connexion impossible. Nouvelle tentative dans quelques secondes…");
-  }
+    // Coupure réseau, veille de l'écran, redéploiement du serveur... on
+    // retente automatiquement, sans jamais laisser le spectateur bloqué.
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 3000);
+  });
+
+  liveSocket.addEventListener('error', () => {
+    // 'close' se déclenche juste après : la logique de reconnexion y est déjà.
+  });
 }
 
-poll();
-pollTimer = setInterval(poll, 4000);
+if (!code) {
+  renderError("Lien invalide : aucun code de match fourni.");
+} else {
+  renderError("Connexion au match…");
+  connect();
+}
 </script>
 </body>
 </html>

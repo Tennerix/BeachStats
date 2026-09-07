@@ -974,7 +974,9 @@ const TP = ['0','15','30','40'];
 // vers le Worker (qui le stocke temporairement), et quiconque a le lien peut
 // le consulter via /live?code=xxxxxx sans pouvoir interagir avec le match.
 let liveShareCode = null;
+let liveSocket = null;
 let liveSharePushTimer = null;
+let livePendingPayload = null; // état en attente d'envoi tant que la connexion n'est pas encore ouverte
 
 function genLiveCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans caractères ambigus
@@ -996,27 +998,45 @@ function buildLiveState() {
   };
 }
 
-// Anti-rebond : le partage en direct pousse l'état à chaque action notable
-// (point marqué, jeu ajouté, correction...) en plus du rappel périodique —
-// sans regroupement, une succession rapide d'actions (score suivi d'une
-// annulation, par exemple) déclencherait autant d'écritures KV séparées.
-// Le quota gratuit (1000 écritures/jour, partagé par TOUS les utilisateurs
-// de l'appli) est précieux : on regroupe donc les appels rapprochés en un
-// seul envoi, sans perte de réactivité perceptible pour les spectateurs.
+// Le partage en direct passe par un WebSocket (Durable Object côté serveur)
+// plutôt que par des requêtes HTTP répétées : la diffusion vers les
+// spectateurs ne coûte rien du tout, quel que soit leur nombre — bien plus
+// robuste que l'ancien système à base de KV (quota d'écriture très limité,
+// partagé par tous les utilisateurs de l'appli).
+function connectLiveSocket() {
+  if (!liveShareCode) return;
+  if (liveSocket && (liveSocket.readyState === WebSocket.OPEN || liveSocket.readyState === WebSocket.CONNECTING)) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  liveSocket = new WebSocket(proto + '//' + location.host + '/api/live/' + liveShareCode);
+  liveSocket.addEventListener('open', () => {
+    if (livePendingPayload) { try { liveSocket.send(livePendingPayload); } catch(e) {} livePendingPayload = null; }
+  });
+  liveSocket.addEventListener('close', () => {
+    // Coupure réseau, mise en veille de l'écran... on retente si le partage
+    // est toujours actif, sans jamais bloquer la saisie du match.
+    if (liveShareCode) setTimeout(connectLiveSocket, 3000);
+  });
+  liveSocket.addEventListener('error', () => {});
+}
+
+// Anti-rebond léger : purement pour regrouper plusieurs mises à jour d'état
+// survenant dans le même instant (ex: un point qui termine aussi le jeu et
+// le set), pas pour économiser un quota — avec les WebSockets, le coût d'un
+// message est négligeable.
 let liveSharePushDebounceTimer = null;
 function pushLiveState() {
   if (!liveShareCode) return;
-  if (liveSharePushDebounceTimer) return; // un envoi est déjà programmé
-  liveSharePushDebounceTimer = setTimeout(async () => {
+  if (liveSharePushDebounceTimer) return;
+  liveSharePushDebounceTimer = setTimeout(() => {
     liveSharePushDebounceTimer = null;
-    try {
-      await fetch('/api/live/' + liveShareCode, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildLiveState()),
-      });
-    } catch (e) { /* échec silencieux : le partage reprendra à la prochaine action */ }
-  }, 2500);
+    const payload = JSON.stringify(buildLiveState());
+    if (liveSocket && liveSocket.readyState === WebSocket.OPEN) {
+      try { liveSocket.send(payload); } catch (e) {}
+    } else {
+      livePendingPayload = payload; // sera envoyé dès la reconnexion
+      connectLiveSocket();
+    }
+  }, 400);
 }
 
 function toggleLiveShare() {
@@ -1026,6 +1046,7 @@ function toggleLiveShare() {
   }
   liveShareCode = genLiveCode();
   document.getElementById('liveShareBtn').classList.add('active');
+  connectLiveSocket();
   pushLiveState();
   liveSharePushTimer = setInterval(pushLiveState, 45000);
   openLiveModal();
@@ -1054,10 +1075,9 @@ function copyLiveLink() {
 
 function stopLiveShare() {
   if (liveSharePushTimer) { clearInterval(liveSharePushTimer); liveSharePushTimer = null; }
-  if (liveShareCode) {
-    fetch('/api/live/' + liveShareCode, { method: 'DELETE' }).catch(() => {});
-  }
+  if (liveSocket) { try { liveSocket.close(); } catch(e) {} liveSocket = null; }
   liveShareCode = null;
+  livePendingPayload = null;
   document.getElementById('liveShareBtn').classList.remove('active');
   closeLiveModal();
 }
