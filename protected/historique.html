@@ -1195,8 +1195,6 @@ function generateProPDF(record) {
           {label: nameB, color:theme.orange, wp:'wB_', fp:'fB_'},
         ];
 
-    const gridCols = zoneEntities.length > 2 ? 2 : zoneEntities.length;
-    const gridRows = Math.ceil(zoneEntities.length / gridCols);
     const zcGap = 8;
     const zcNetGap = 5;
     const NON_ROULE_RATIO = 1.8;
@@ -1208,7 +1206,39 @@ function generateProPDF(record) {
       return w > f ? ZONE_WIN : ZONE_FAULT;
     };
 
-    BASE_SHOTS.forEach((shotKey, shotIdx) => {
+    // Un terrain n'a d'intérêt que s'il contient au moins une donnée (gagnant
+    // ou faute), toutes zones/variantes confondues pour ce coup — sinon
+    // c'est juste une grille vide qui n'apporte rien et surcharge le PDF.
+    const entityHasDataForShot = (ent, shotKey) => {
+      let total = 0;
+      ALL_SHOT_KEYS.forEach(k => {
+        if (k === shotKey || k.indexOf(shotKey + '_') === 0) {
+          total += (stats[ent.wp+k] || 0) + (stats[ent.fp+k] || 0);
+        }
+      });
+      return total > 0;
+    };
+
+    // On ne garde que les coups où AU MOINS UNE entité a des données — un
+    // coup jamais joué par personne n'a pas sa place dans le PDF du tout.
+    const shotsWithData = BASE_SHOTS.filter(shotKey =>
+      zoneEntities.some(ent => entityHasDataForShot(ent, shotKey))
+    );
+
+    if (!shotsWithData.length) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...theme.muted);
+      doc.text('Aucun coup enregistré pour ce match.', M, y);
+      y += 10;
+    }
+
+    shotsWithData.forEach((shotKey, shotIdx) => {
+      // Au sein d'un coup qui a au moins une donnée quelque part, certaines
+      // entités (joueurs/équipes) peuvent quand même n'avoir rien joué de ce
+      // coup précis — leur terrain vide est alors aussi sauté.
+      const activeEntities = zoneEntities.filter(ent => entityHasDataForShot(ent, shotKey));
+      const gridCols = activeEntities.length > 2 ? 2 : activeEntities.length;
+      const gridRows = Math.ceil(activeEntities.length / gridCols);
+
       const depthBands = shotSettings.depth ? DEPTH_BAND_SHOTS[shotKey] : undefined;
       const nBands = depthBands ? depthBands.length : 0;
 
@@ -1226,10 +1256,10 @@ function generateProPDF(record) {
       doc.setFont(TF,'bold'); doc.setFontSize(12); doc.setTextColor(...theme.gold);
       doc.text(SHOT_BASE_LBL[shotKey].toUpperCase(), M, y);
       doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...theme.muted);
-      doc.text('Coup ' + (shotIdx+1) + ' / ' + BASE_SHOTS.length, W-M, y, {align:'right'});
+      doc.text('Coup ' + (shotIdx+1) + ' / ' + shotsWithData.length, W-M, y, {align:'right'});
       y += 10;
 
-      zoneEntities.forEach((ent, i) => {
+      activeEntities.forEach((ent, i) => {
         const col = i % gridCols, row = Math.floor(i / gridCols);
         const x0 = M + col * (zcCourtW + zcGap);
         const rowLabelY = y + row * (courtL + 22);
