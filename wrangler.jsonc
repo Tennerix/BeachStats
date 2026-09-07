@@ -8,10 +8,18 @@
     "html_handling": "none",
     "run_worker_first": true
   },
-  "kv_namespaces": [
-    {
-      "binding": "MATCH_LIVE",
-      "id": "90df2c3f04504025b453aa9efbda7a45"
-    }
+  // Le partage en direct utilise maintenant un Durable Object (un par match,
+  // identifié par son code) plutôt que le KV store MATCH_LIVE — voir
+  // src/index.js pour le détail. Le binding KV a été retiré car plus rien
+  // ne l'utilise ; l'espace de nom KV lui-même peut être supprimé côté
+  // dashboard Cloudflare si tu le souhaites (pas obligatoire, il ne coûte
+  // rien tant qu'il n'est pas utilisé).
+  "durable_objects": {
+    "bindings": [
+      { "name": "LIVE_MATCH", "class_name": "LiveMatch" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["LiveMatch"] }
   ]
 }
