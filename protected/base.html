@@ -996,15 +996,27 @@ function buildLiveState() {
   };
 }
 
-async function pushLiveState() {
+// Anti-rebond : le partage en direct pousse l'état à chaque action notable
+// (point marqué, jeu ajouté, correction...) en plus du rappel périodique —
+// sans regroupement, une succession rapide d'actions (score suivi d'une
+// annulation, par exemple) déclencherait autant d'écritures KV séparées.
+// Le quota gratuit (1000 écritures/jour, partagé par TOUS les utilisateurs
+// de l'appli) est précieux : on regroupe donc les appels rapprochés en un
+// seul envoi, sans perte de réactivité perceptible pour les spectateurs.
+let liveSharePushDebounceTimer = null;
+function pushLiveState() {
   if (!liveShareCode) return;
-  try {
-    await fetch('/api/live/' + liveShareCode, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildLiveState()),
-    });
-  } catch (e) { /* échec silencieux : le partage reprendra à la prochaine action */ }
+  if (liveSharePushDebounceTimer) return; // un envoi est déjà programmé
+  liveSharePushDebounceTimer = setTimeout(async () => {
+    liveSharePushDebounceTimer = null;
+    try {
+      await fetch('/api/live/' + liveShareCode, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildLiveState()),
+      });
+    } catch (e) { /* échec silencieux : le partage reprendra à la prochaine action */ }
+  }, 2500);
 }
 
 function toggleLiveShare() {
@@ -1015,7 +1027,7 @@ function toggleLiveShare() {
   liveShareCode = genLiveCode();
   document.getElementById('liveShareBtn').classList.add('active');
   pushLiveState();
-  liveSharePushTimer = setInterval(pushLiveState, 5000);
+  liveSharePushTimer = setInterval(pushLiveState, 45000);
   openLiveModal();
 }
 
