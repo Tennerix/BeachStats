@@ -6,9 +6,16 @@ const COOKIE_MAX_AGE_DAYS = 30;
 const MAX_DEVICES = 3;
 
 // ── PARTAGE EN DIRECT (spectateurs) ──────────────────────────────────────
+// Repose sur un Durable Object (un par code de match) qui garde l'état en
+// mémoire/stockage et relaie chaque mise à jour à tous les WebSockets
+// connectés (scoreur + spectateurs). Remplace l'ancien système à base de KV
+// (limité à 1000 écritures/jour au total, tous utilisateurs confondus) —
+// avec les WebSockets, les messages entrants coûtent une fraction de
+// requête (quota bien plus généreux) et la diffusion vers les spectateurs
+// ne coûte rien du tout, quel que soit leur nombre.
 const LIVE_CODE_RE = /^[a-zA-Z0-9]{4,12}$/;
-const LIVE_TTL_SECONDS = 6 * 3600; // une entrée expire automatiquement après 6h
-const LIVE_MAX_BODY_BYTES = 20000; // garde-fou anti-abus, largement suffisant pour un état de match
+const LIVE_TTL_MS = 6 * 3600 * 1000; // un match sans mise à jour depuis 6h est effacé
+const LIVE_MAX_MESSAGE_BYTES = 20000; // garde-fou anti-abus, largement suffisant pour un état de match
 
 // tier: null = accès libre, aucune vérification. Sinon 'avancees' ou 'pro'.
 const ROUTES = {
@@ -67,12 +74,23 @@ export default {
       return jsonResponse({ tier: session ? session.tier : null });
     }
 
-    // Partage en direct : un scoreur pousse l'état du match (POST), et
-    // n'importe qui muni du lien/code peut le relire (GET) en lecture
-    // seule — aucune authentification requise, le "code" fait office de
-    // ticket d'accès pour cette fonctionnalité volontairement légère.
+    // Partage en direct : un scoreur et n'importe quel nombre de spectateurs
+    // se connectent tous au même Durable Object (identifié par le code du
+    // match) via WebSocket — aucune authentification requise, le "code"
+    // fait office de ticket d'accès pour cette fonctionnalité volontairement
+    // légère, exactement comme avant.
     if (url.pathname.startsWith("/api/live/")) {
-      return handleLive(request, env, url);
+      const code = url.pathname.replace("/api/live/", "").split("?")[0].trim();
+      if (!LIVE_CODE_RE.test(code)) {
+        return jsonResponse({ error: "Code invalide." }, 400);
+      }
+      if (!env.LIVE_MATCH) {
+        // Le binding Durable Object n'a pas encore été créé/lié côté Cloudflare.
+        return jsonResponse({ error: "Le partage en direct n'est pas encore configuré sur ce déploiement." }, 500);
+      }
+      const id = env.LIVE_MATCH.idFromName(code);
+      const stub = env.LIVE_MATCH.get(id);
+      return stub.fetch(request);
     }
 
     const route = ROUTES[url.pathname];
@@ -103,49 +121,79 @@ export default {
   },
 };
 
-async function handleLive(request, env, url) {
-  const code = url.pathname.replace("/api/live/", "").split("?")[0].trim();
-
-  if (!LIVE_CODE_RE.test(code)) {
-    return jsonResponse({ error: "Code invalide." }, 400);
+// ── Durable Object : un par code de match, tant qu'il reste actif ─────────
+// Garde le dernier état connu en stockage persistant (survit à une mise en
+// hibernation de l'objet entre deux messages) et relaie chaque mise à jour
+// à tous les clients connectés — le scoreur ET les spectateurs, qui parlent
+// tous le même petit protocole WebSocket texte (un message = un état complet
+// du match, en JSON).
+export class LiveMatch {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
   }
-  if (!env.MATCH_LIVE) {
-    // Le binding KV n'a pas encore été créé/lié côté Cloudflare.
-    return jsonResponse({ error: "Le partage en direct n'est pas encore configuré sur ce déploiement." }, 500);
-  }
 
-  const key = "live:" + code;
-
-  if (request.method === "POST") {
-    const raw = await request.text();
-    if (raw.length > LIVE_MAX_BODY_BYTES) {
-      return jsonResponse({ error: "Données trop volumineuses." }, 413);
+  async fetch(request) {
+    if (request.headers.get("Upgrade") !== "websocket") {
+      return new Response("Cette route n'accepte que les connexions WebSocket.", { status: 426 });
     }
+
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+
+    // L'API d'hibernation permet à Cloudflare de libérer la mémoire/CPU de
+    // cet objet entre deux messages tout en gardant la connexion ouverte —
+    // bien plus économe qu'un objet actif en continu pour une connexion qui
+    // ne parle, en pratique, que quelques fois par minute.
+    this.ctx.acceptWebSocket(server);
+
+    // Un spectateur qui vient de se connecter (ou le scoreur après une
+    // reconnexion) doit voir l'état actuel tout de suite, sans attendre la
+    // prochaine action — on le lui envoie dès que la connexion est prête.
+    const stored = await this.ctx.storage.get("state");
+    if (stored) {
+      try { server.send(stored); } catch (e) { /* connexion déjà refermée */ }
+    }
+
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  async webSocketMessage(ws, message) {
+    if (typeof message !== "string" || message.length > LIVE_MAX_MESSAGE_BYTES) return;
+
     let parsed;
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(message);
     } catch {
-      return jsonResponse({ error: "JSON invalide." }, 400);
+      return; // message invalide, on ignore silencieusement
     }
     parsed.updatedAt = Date.now();
-    await env.MATCH_LIVE.put(key, JSON.stringify(parsed), { expirationTtl: LIVE_TTL_SECONDS });
-    return jsonResponse({ ok: true });
-  }
+    const toStore = JSON.stringify(parsed);
 
-  if (request.method === "GET") {
-    const stored = await env.MATCH_LIVE.get(key);
-    if (!stored) {
-      return jsonResponse({ error: "Ce match n'est plus disponible (terminé depuis longtemps, ou code invalide)." }, 404);
+    await this.ctx.storage.put("state", toStore);
+    // Ré-arme l'expiration automatique à chaque mise à jour, comme le
+    // faisait le TTL de l'ancien système KV.
+    await this.ctx.storage.setAlarm(Date.now() + LIVE_TTL_MS);
+
+    // Diffuse à tous les clients connectés à ce match (spectateurs et
+    // l'onglet du scoreur lui-même — sans effet néfaste, il a déjà cet état
+    // en local).
+    for (const socket of this.ctx.getWebSockets()) {
+      try { socket.send(toStore); } catch (e) { /* connexion fermée entre-temps */ }
     }
-    return new Response(stored, { headers: { "Content-Type": "application/json" } });
   }
 
-  if (request.method === "DELETE") {
-    await env.MATCH_LIVE.delete(key);
-    return jsonResponse({ ok: true });
+  async webSocketClose(ws, code, reason, wasClean) {
+    try { ws.close(code, reason); } catch (e) {}
   }
 
-  return jsonResponse({ error: "Méthode non supportée." }, 405);
+  async webSocketError(ws) {}
+
+  // Personne n'a mis à jour ce match depuis 6h (LIVE_TTL_MS) : on efface son
+  // état pour ne pas accumuler indéfiniment du stockage inutile.
+  async alarm() {
+    await this.ctx.storage.deleteAll();
+  }
 }
 
 async function handleVerify(request, env, url) {
