@@ -1679,6 +1679,7 @@ function saveProgress() {
     teamLabelA, teamLabelB,
     firstServingTeam, serverTeamAFirst, serverTeamBFirst, matchGameCount, serverManualAdjustment,
     players, mode,
+    liveShareCode,
     nameA, nameB, savedAt: Date.now(),
   };
   try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(snapshot)); } catch(e) {}
@@ -1734,6 +1735,13 @@ function applyProgress(snap) {
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
   const s = String(timerSeconds % 60).padStart(2,'0');
   document.getElementById('timerDisplay').textContent = m + ':' + s;
+  if (snap.liveShareCode) {
+    liveShareCode = snap.liveShareCode;
+    document.getElementById('liveShareBtn')?.classList.add('active');
+    connectLiveSocket();
+    pushLiveState();
+    liveSharePushTimer = setInterval(pushLiveState, 45000);
+  }
   updateDisplay();
 }
 
