@@ -66,28 +66,32 @@
   --gold:#d6faff; --blue:#7fd8ff; --orange:#ffb4a8; --green:#9dfcd8; --purple:#b8c6ff;
   --red:#ff8fa3; --text:#eaf9ff; --muted:#6f93ab;
 }
-/* ── SÉLECTEUR DE THÈME ── */
+/* ── RÉGLAGES (thème + langue, menu unique) ── */
 body{transition:background-color .25s ease,color .25s ease}
 .theme-switch-wrap{position:relative}
-.theme-select-pill{display:flex;align-items:center;gap:6px;background:rgba(10,22,40,.78);border:1.5px solid var(--muted);color:var(--text);
-  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 10px;border-radius:20px;
-  text-transform:uppercase;transition:border-color .18s,color .18s}
-.theme-select-pill:hover,.theme-select-pill:focus-within{border-color:var(--gold);color:var(--gold)}
-.theme-select-pill i{font-size:15px;flex-shrink:0}
-.theme-select-pill .theme-select-caret{font-size:13px;opacity:.7;margin-left:-2px}
-.theme-select-pill select{appearance:none;-webkit-appearance:none;background:none;border:none;outline:none;color:inherit;
-  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0;max-width:118px}
-.theme-select-pill select option{background:var(--card);color:var(--text)}
-.lang-switch-wrap{position:relative}
-.lang-select-pill{display:flex;align-items:center;gap:6px;background:rgba(10,22,40,.78);border:1.5px solid var(--muted);color:var(--text);
-  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 10px;border-radius:20px;
-  text-transform:uppercase;transition:border-color .18s,color .18s}
-.lang-select-pill:hover,.lang-select-pill:focus-within{border-color:var(--gold);color:var(--gold)}
-.lang-select-pill i{font-size:15px;flex-shrink:0}
-.lang-select-pill .lang-select-caret{font-size:13px;opacity:.7;margin-left:-2px}
-.lang-select-pill select{appearance:none;-webkit-appearance:none;background:none;border:none;outline:none;color:inherit;
-  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0;max-width:70px}
-.lang-select-pill select option{background:var(--card);color:var(--text)}
+.theme-menu{position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px;display:none;flex-direction:column;gap:2px;z-index:30;min-width:190px;max-height:70vh;overflow-y:auto;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.theme-menu.open{display:flex}
+.settings-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);padding:8px 8px 2px;margin-top:4px}
+.settings-section-title:first-child{margin-top:0}
+.settings-divider{height:1px;background:var(--border);margin:4px 0}
+.theme-swatch{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);
+  font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.theme-swatch:hover{background:var(--surface)}
+.theme-swatch.active{outline:1px solid var(--gold)}
+.theme-swatch.locked{opacity:.55}
+.theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
+.theme-swatch.locked .lock-badge{display:flex}
+.sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
+.sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
+.sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
+.sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
+.sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
+.sw-eclat{background:linear-gradient(135deg,#ffe0ee,#ff5400 55%,#0080ff)}
+.sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
 body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding:0 1rem 3rem}
 .page-wrapper{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:stretch}
 .install-banner{
@@ -113,11 +117,7 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display
 .hero img{width:100%;display:block;object-fit:cover;max-height:260px}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid var(--gold);color:var(--gold);font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
 .hero-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:.85rem;flex-wrap:wrap;row-gap:8px}
-.hero-actions .theme-switch-wrap,.hero-actions .lang-switch-wrap{display:flex}
-@media(max-width:380px){
-  .theme-select-pill select{max-width:90px}
-  .history-btn{margin-left:auto}
-}
+.hero-actions .theme-switch-wrap{display:flex}
 .history-btn{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--muted);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 12px 6px 10px;border-radius:20px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:border-color .18s,color .18s}
 .history-btn i{font-size:15px}
 .history-btn:hover{border-color:var(--gold);color:var(--gold)}
@@ -224,29 +224,21 @@ if ('serviceWorker' in navigator) {
   </div>
   <div class="hero-actions">
     <div class="theme-switch-wrap">
-      <div class="theme-select-pill">
-        <i class="ti ti-palette"></i>
-        <select id="themeSelect" aria-label="Changer de thème" onchange="onThemeSelectChange(this)">
-          <option value="dark">Sombre</option>
-          <option value="light">Clair</option>
-          <option value="neon">Neon Beach 🔒 PRO</option>
-          <option value="sunset">Sunset Gold 🔒 PRO</option>
-          <option value="lagoon">Lagon 🔒 PRO</option>
-          <option value="eclat">Éclat 🔒 PRO</option>
-          <option value="glacier">Glacier 🔒 PRO</option>
-        </select>
-        <i class="ti ti-chevron-down theme-select-caret"></i>
-      </div>
-    </div>
-    <div class="lang-switch-wrap">
-      <div class="lang-select-pill">
-        <i class="ti ti-world"></i>
-        <select id="langSelect" aria-label="Changer de langue" onchange="onLanguageSelectChange(this)">
-          <option value="fr">FR</option>
-          <option value="en">EN</option>
-          <option value="pt">POR</option>
-        </select>
-        <i class="ti ti-chevron-down lang-select-caret"></i>
+      <button type="button" class="history-btn" onclick="toggleSettingsMenu(event)" aria-label="Réglages"><i class="ti ti-settings"></i></button>
+      <div class="theme-menu settings-menu" id="settingsMenu">
+        <div class="settings-section-title" data-i18n="settings_theme">Thème</div>
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span><span data-i18n="theme_dark">Sombre</span></button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span><span data-i18n="theme_light">Clair</span></button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span><span data-i18n="theme_lagoon">Lagon</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="eclat" onclick="setTheme('eclat')"><span class="sw sw-eclat"></span><span data-i18n="theme_eclat">Éclat</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span><span data-i18n="theme_glacier">Glacier</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <div class="settings-divider"></div>
+        <div class="settings-section-title" data-i18n="settings_lang">Langue</div>
+        <button class="theme-swatch" data-lang-choice="fr" onclick="setLanguage('fr')">Français</button>
+        <button class="theme-swatch" data-lang-choice="en" onclick="setLanguage('en')">English</button>
+        <button class="theme-swatch" data-lang-choice="pt" onclick="setLanguage('pt')">Português</button>
       </div>
     </div>
     <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i><span data-i18n="history_btn">Historique</span></button>
@@ -412,24 +404,37 @@ function applyTheme(theme) { document.documentElement.setAttribute('data-theme',
 function setTheme(theme) {
   if (PRO_THEMES.includes(theme) && userTier !== 'pro') {
     window.open('https://beachstats.gumroad.com/l/jlcqx', '_blank');
-    return false;
+    return;
   }
   localStorage.setItem('beachstats_theme', theme);
   applyTheme(theme);
-  return true;
+  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('settingsMenu')?.classList.remove('open');
 }
 
-function onThemeSelectChange(sel) {
-  const previous = localStorage.getItem('beachstats_theme') || 'dark';
-  if (!setTheme(sel.value)) {
-    sel.value = previous; // thème verrouillé -> on annule la sélection
-  }
+function updateThemeLockUI() {
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => {
+    const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
+    b.classList.toggle('locked', isProTheme && userTier !== 'pro');
+  });
 }
+
+function toggleSettingsMenu(e) {
+  e.stopPropagation();
+  document.getElementById('settingsMenu')?.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.theme-switch-wrap')) document.getElementById('settingsMenu')?.classList.remove('open');
+});
 
 // ── LANGUES ──────────────────────────────────────────────────────────────
 const I18N = {
   fr: {
     history_btn: "Historique",
+    settings_theme: "Thème", settings_lang: "Langue",
+    theme_dark: "Sombre", theme_light: "Clair", theme_lagoon: "Lagon", theme_eclat: "Éclat", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
     hero_badge: "Interface Bêta",
     title_teams: "Equipes &", title_players: "Joueurs",
     team_a: "Equipe A", team_b: "Equipe B",
@@ -459,6 +464,9 @@ const I18N = {
   },
   en: {
     history_btn: "History",
+    settings_theme: "Theme", settings_lang: "Language",
+    theme_dark: "Dark", theme_light: "Light", theme_lagoon: "Lagoon", theme_eclat: "Radiance", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
     hero_badge: "Beta Interface",
     title_teams: "Teams &", title_players: "Players",
     team_a: "Team A", team_b: "Team B",
@@ -488,6 +496,9 @@ const I18N = {
   },
   pt: {
     history_btn: "Histórico",
+    settings_theme: "Tema", settings_lang: "Idioma",
+    theme_dark: "Escuro", theme_light: "Claro", theme_lagoon: "Lagoa", theme_eclat: "Brilho", theme_glacier: "Glaciar",
+    badge_pro: "🔒 PRO",
     hero_badge: "Interface Beta",
     title_teams: "Equipes e", title_players: "Jogadores",
     team_a: "Equipe A", team_b: "Equipe B",
@@ -545,10 +556,10 @@ function applyLanguage(lang) {
 function setLanguage(lang) {
   localStorage.setItem('beachstats_lang', lang);
   applyLanguage(lang);
-}
-
-function onLanguageSelectChange(sel) {
-  setLanguage(sel.value);
+  document.querySelectorAll('[data-lang-choice]').forEach(b => {
+    b.classList.toggle('active', b.dataset.langChoice === lang);
+  });
+  document.getElementById('settingsMenu')?.classList.remove('open');
 }
 
 async function checkTier() {
@@ -559,12 +570,12 @@ async function checkTier() {
   } catch (e) {
     userTier = null;
   }
+  updateThemeLockUI();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
-  const sel = document.getElementById('themeSelect');
-  if (sel) sel.value = current;
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
 
   // Langue : reprend le choix déjà fait, sinon devine depuis la langue du
   // navigateur (utile pour un visiteur brésilien ou anglophone qui arrive
@@ -574,8 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = (navigator.language || 'fr').toLowerCase();
     lang = nav.startsWith('pt') ? 'pt' : nav.startsWith('en') ? 'en' : 'fr';
   }
-  const langSel = document.getElementById('langSelect');
-  if (langSel) langSel.value = lang;
+  document.querySelectorAll('[data-lang-choice]').forEach(b => b.classList.toggle('active', b.dataset.langChoice === lang));
   applyLanguage(lang);
 
   restoreLastNames();
