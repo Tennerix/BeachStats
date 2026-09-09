@@ -513,118 +513,124 @@ if ('serviceWorker' in navigator) {
     <div class="theme-switch-wrap">
       <button class="header-gear-btn" onclick="toggleGearMenu(event)" aria-label="Menu">⚙</button>
       <div class="theme-menu theme-menu-right" id="gearMenu">
-        <button class="theme-swatch gear-menu-item" onclick="openPrefsMenu(event)">Préférences<span class="menu-chevron">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openThemeSubmenu(event)" data-i18n="settings_theme">Thème<span class="menu-chevron">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openLangSubmenu(event)" data-i18n="settings_lang">Langue<span class="menu-chevron">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openPrefsMenu(event)" data-i18n="settings_prefs">Préférences<span class="menu-chevron">›</span></button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="themeSubmenu">
+        <button class="prefs-back-btn" onclick="closeThemeSubmenu(event)" data-i18n="back">‹ Retour</button>
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span><span data-i18n="theme_dark">Sombre</span></button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span><span data-i18n="theme_light">Clair</span></button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span><span data-i18n="theme_lagoon">Lagon</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="eclat" onclick="setTheme('eclat')"><span class="sw sw-eclat"></span><span data-i18n="theme_eclat">Éclat</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span><span data-i18n="theme_glacier">Glacier</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="langSubmenu">
+        <button class="prefs-back-btn" onclick="closeLangSubmenu(event)" data-i18n="back">‹ Retour</button>
+        <button class="theme-swatch" data-lang-choice="fr" onclick="setLanguage('fr')">Français</button>
+        <button class="theme-swatch" data-lang-choice="en" onclick="setLanguage('en')">English</button>
+        <button class="theme-swatch" data-lang-choice="pt" onclick="setLanguage('pt')">Português</button>
       </div>
       <div class="theme-menu theme-menu-right" id="prefsMenu">
-        <button class="prefs-back-btn" onclick="closePrefsMenu(event)">‹ Retour</button>
-        <div class="prefs-menu-label">Match</div>
-        <button class="theme-swatch" data-stats-mode-choice="equipe" onclick="switchStatsMode('equipe')"><span class="sw sw-dark"></span>Par équipe</button>
-        <button class="theme-swatch" data-stats-mode-choice="joueur" onclick="switchStatsMode('joueur')"><span class="sw sw-light"></span>Par joueur</button>
+        <button class="prefs-back-btn" onclick="closePrefsMenu(event)" data-i18n="back">‹ Retour</button>
+        <div class="prefs-menu-label" data-i18n="prefs_match">Match</div>
+        <button class="theme-swatch" data-stats-mode-choice="equipe" onclick="switchStatsMode('equipe')"><span class="sw sw-dark"></span><span data-i18n="mode_team">Par équipe</span></button>
+        <button class="theme-swatch" data-stats-mode-choice="joueur" onclick="switchStatsMode('joueur')"><span class="sw sw-light"></span><span data-i18n="mode_player">Par joueur</span></button>
       </div>
     </div>
   </div>
   <div class="header-actions">
-    <div class="theme-switch-wrap">
-      <button class="header-back" onclick="toggleThemeMenu(event)" aria-label="Changer de theme">Theme</button>
-      <div class="theme-menu" id="themeMenu">
-        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span>Sombre</button>
-        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span>Clair</button>
-        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge">🔒 PRO</span></button>
-        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge">🔒 PRO</span></button>
-        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span>Lagon<span class="lock-badge">🔒 PRO</span></button>
-        <button class="theme-swatch" data-theme-choice="eclat" onclick="setTheme('eclat')"><span class="sw sw-eclat"></span>Éclat<span class="lock-badge">🔒 PRO</span></button>
-        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span>Glacier<span class="lock-badge">🔒 PRO</span></button>
-      </div>
-    </div>
-    <button class="header-back" onclick="window.location.href='/historique'">📋 Historique</button>
-    <button class="header-back" onclick="window.location.href='/'">← Accueil</button>
+    <button class="header-back" onclick="window.location.href='/historique'" data-i18n="btn_historique">📋 Historique</button>
+    <button class="header-back" onclick="window.location.href='/'" data-i18n="btn_accueil">← Accueil</button>
   </div>
 </div>
 
 <div class="status-bar">
-  <div class="status-pill" id="setPill">Échauffement</div>
-  <div class="status-label" id="statusLabel">En cours</div>
+  <div class="status-pill" id="setPill" data-i18n="status_warmup">Échauffement</div>
+  <div class="status-label" id="statusLabel" data-i18n="status_playing">En cours</div>
 </div>
 
 <div class="timer-wrap">
   <div class="timer-display" id="timerDisplay">00:00</div>
   <div class="timer-btns">
-    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()">▶ Start</button>
-    <button class="timer-btn live" id="liveShareBtn" onclick="toggleLiveShare()">📡 Live</button>
+    <button class="timer-btn start" id="timerStartBtn" onclick="timerToggle()" data-i18n="timer_start">▶ Start</button>
+    <button class="timer-btn live" id="liveShareBtn" onclick="toggleLiveShare()" data-i18n="live_btn">📡 Live</button>
   </div>
 </div>
 
 <button type="button" class="correction-toggle" onclick="toggleCorrectionPanel()">
-  <span>⚙️ Rattraper le score</span>
+  <span data-i18n="correction_toggle">⚙️ Rattraper le score</span>
   <i class="correction-toggle-arrow" id="correctionArrow">▾</i>
 </button>
 <div class="correction-panel" id="correctionPanel">
-  <p class="correction-hint">Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié. N'affecte jamais les statistiques par coup.</p>
+  <p class="correction-hint" data-i18n="correction_hint">Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié. N'affecte jamais les statistiques par coup.</p>
   <div class="correction-grid">
     <div class="correction-col">
-      <div class="correction-col-label a">Équipe A</div>
+      <div class="correction-col-label a" data-i18n="team_a">Équipe A</div>
       <div class="correction-btn-row">
-        <button class="correction-btn a minus" onclick="removeManualPoint(1)">−1 Pt</button>
-        <button class="correction-btn a" onclick="addManualPoint(1)">+1 Pt</button>
+        <button class="correction-btn a minus" onclick="removeManualPoint(1)" data-i18n="minus_1pt">−1 Pt</button>
+        <button class="correction-btn a" onclick="addManualPoint(1)" data-i18n="plus_1pt">+1 Pt</button>
       </div>
       <div class="correction-btn-row">
-        <button class="correction-btn a minus" onclick="removeManualGame(1)">−1 Jeu</button>
-        <button class="correction-btn a" onclick="addManualGame(1)">+1 Jeu</button>
+        <button class="correction-btn a minus" onclick="removeManualGame(1)" data-i18n="minus_1game">−1 Jeu</button>
+        <button class="correction-btn a" onclick="addManualGame(1)" data-i18n="plus_1game">+1 Jeu</button>
       </div>
     </div>
     <div class="correction-col">
-      <div class="correction-col-label b">Équipe B</div>
+      <div class="correction-col-label b" data-i18n="team_b">Équipe B</div>
       <div class="correction-btn-row">
-        <button class="correction-btn b minus" onclick="removeManualPoint(2)">−1 Pt</button>
-        <button class="correction-btn b" onclick="addManualPoint(2)">+1 Pt</button>
+        <button class="correction-btn b minus" onclick="removeManualPoint(2)" data-i18n="minus_1pt">−1 Pt</button>
+        <button class="correction-btn b" onclick="addManualPoint(2)" data-i18n="plus_1pt">+1 Pt</button>
       </div>
       <div class="correction-btn-row">
-        <button class="correction-btn b minus" onclick="removeManualGame(2)">−1 Jeu</button>
-        <button class="correction-btn b" onclick="addManualGame(2)">+1 Jeu</button>
+        <button class="correction-btn b minus" onclick="removeManualGame(2)" data-i18n="minus_1game">−1 Jeu</button>
+        <button class="correction-btn b" onclick="addManualGame(2)" data-i18n="plus_1game">+1 Jeu</button>
       </div>
     </div>
   </div>
-  <button type="button" class="correction-super-btn" onclick="jumpToSuperTiebreak()">⏩ Passer directement à 1 set partout (Super Tie-Break)</button>
+  <button type="button" class="correction-super-btn" onclick="jumpToSuperTiebreak()" data-i18n="jump_super_tb">⏩ Passer directement à 1 set partout (Super Tie-Break)</button>
 </div>
 
 <div class="server-indicator" id="serverIndicator" style="display:none">
   <span class="server-ball">🎾</span>
-  <span>Au service : <strong class="server-name"></strong></span>
-  <button type="button" class="server-change-btn" onclick="cycleServerManually()">Changer</button>
+  <span data-i18n="serving_label">Au service :</span> <strong class="server-name"></strong>
+  <button type="button" class="server-change-btn" onclick="cycleServerManually()" data-i18n="btn_change">Changer</button>
 </div>
 
 <div class="server-modal-backdrop" id="serverModal">
   <div class="server-modal-box">
-    <div class="server-modal-title" id="serverModalTitle">Qui sert en premier ?</div>
+    <div class="server-modal-title" id="serverModalTitle" data-i18n="who_serves_first">Qui sert en premier ?</div>
     <div class="server-modal-btns" id="serverModalBtns"></div>
   </div>
 </div>
 
 <div class="live-modal-backdrop" id="liveModalBackdrop" onclick="closeLiveModal(event)">
   <div class="live-modal" onclick="event.stopPropagation()">
-    <div class="live-modal-title">📡 Partage en direct</div>
+    <div class="live-modal-title" data-i18n="live_modal_title">📡 Partage en direct</div>
     <div class="live-modal-body" id="liveModalBody">
-      <p>Toute personne avec ce lien peut suivre le score et les stats en direct, sans pouvoir rien modifier.</p>
+      <p data-i18n="live_modal_desc">Toute personne avec ce lien peut suivre le score et les stats en direct, sans pouvoir rien modifier.</p>
       <div class="live-link-row">
         <input type="text" id="liveLinkInput" readonly>
-        <button onclick="copyLiveLink()" id="liveCopyBtn">Copier</button>
+        <button onclick="copyLiveLink()" id="liveCopyBtn" data-i18n="live_copy_btn">Copier</button>
       </div>
-      <p class="live-modal-note">Le lien reste actif tant que tu marques des points (ou pendant 6h max).</p>
+      <p class="live-modal-note" data-i18n="live_modal_note">Le lien reste actif tant que tu marques des points (ou pendant 6h max).</p>
     </div>
     <div class="live-modal-actions">
-      <button class="live-stop-btn" onclick="stopLiveShare()">Arrêter le partage</button>
-      <button class="live-close-btn" onclick="closeLiveModal()">Fermer</button>
+      <button class="live-stop-btn" onclick="stopLiveShare()" data-i18n="live_stop_btn">Arrêter le partage</button>
+      <button class="live-close-btn" onclick="closeLiveModal()" data-i18n="live_close_btn">Fermer</button>
     </div>
   </div>
 </div>
 
 <div class="scoreboard">
   <div class="score-header" id="scoreHeader">
-    <span>Équipe</span>
+    <span data-i18n="header_team">Équipe</span>
     <span>S1</span>
     <span>S2</span>
     <span>S3</span>
-    <span>Points</span>
+    <span data-i18n="header_points">Points</span>
   </div>
   <div class="team-row team-a" id="rowA">
     <div class="team-info">
@@ -651,19 +657,19 @@ if ('serviceWorker' in navigator) {
 <div id="dynamicControls"></div>
 
 <div class="actions" style="margin-top:1rem">
-  <button class="btn-action undo" onclick="undo()">↩ Annuler</button>
-  <button class="btn-action pdf" onclick="exportPDF()">⬇ PDF</button>
-  <button class="btn-action reset" onclick="resetMatch()">⟳ Reset</button>
+  <button class="btn-action undo" onclick="undo()" data-i18n="btn_undo">↩ Annuler</button>
+  <button class="btn-action pdf" onclick="exportPDF()" data-i18n="btn_export_pdf">⬇ PDF</button>
+  <button class="btn-action reset" onclick="resetMatch()" data-i18n="btn_reset">⟳ Reset</button>
 </div>
 
 <div class="stats-card" id="statsCard">
-  <div class="stats-title">Stats en direct</div>
+  <div class="stats-title" data-i18n="stats_live_title">Stats en direct</div>
   <div class="stats-view-switch" id="statsViewSwitch"></div>
 
   <div id="statsContent">
     <div class="stat-row">
       <div class="stat-val a" id="st-wA">0</div>
-      <div class="stat-name">Coups gagnants</div>
+      <div class="stat-name" data-i18n="stat_winners">Coups gagnants</div>
       <div class="stat-val b" id="st-wB">0</div>
     </div>
     <div class="stat-row">
@@ -672,7 +678,7 @@ if ('serviceWorker' in navigator) {
 
     <div class="stat-row" style="margin-top:.6rem">
       <div class="stat-val a" id="st-fA">0</div>
-      <div class="stat-name">Fautes directes</div>
+      <div class="stat-name" data-i18n="stat_faults">Fautes directes</div>
       <div class="stat-val b" id="st-fB">0</div>
     </div>
     <div class="stat-row">
@@ -681,7 +687,7 @@ if ('serviceWorker' in navigator) {
 
     <div class="stat-row" style="margin-top:.6rem">
       <div class="stat-val a" id="st-pA">0</div>
-      <div class="stat-name">Points gagnés</div>
+      <div class="stat-name" data-i18n="stat_points_won">Points gagnés</div>
       <div class="stat-val b" id="st-pB">0</div>
     </div>
     <div class="stat-row">
@@ -691,29 +697,29 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="log-wrap">
-  <div class="log-title">Journal du match</div>
+  <div class="log-title" data-i18n="log_title">Journal du match</div>
   <div class="log-list" id="logList"></div>
 </div>
 
 <div class="winner-overlay" id="winnerOverlay">
   <div class="winner-box">
     <div class="winner-trophy">🏆</div>
-    <div class="winner-label">Vainqueur du match</div>
+    <div class="winner-label" data-i18n="match_winner">Vainqueur du match</div>
     <div class="winner-name" id="winnerName">—</div>
     <div class="winner-score" id="winnerScore">—</div>
     <div class="winner-stats">
       <div class="ws-box">
-        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl">Winners A</div>
-        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl">Winners B</div>
+        <div class="ws-val a" id="ws-wA">0</div><div class="ws-lbl" data-i18n="ws_winners_a">Winners A</div>
+        <div class="ws-val b" id="ws-wB" style="margin-top:6px">0</div><div class="ws-lbl" data-i18n="ws_winners_b">Winners B</div>
       </div>
       <div class="ws-box">
-        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl">Fautes A</div>
-        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl">Fautes B</div>
+        <div class="ws-val a" id="ws-fA">0</div><div class="ws-lbl" data-i18n="ws_faults_a">Fautes A</div>
+        <div class="ws-val b" id="ws-fB" style="margin-top:6px">0</div><div class="ws-lbl" data-i18n="ws_faults_b">Fautes B</div>
       </div>
     </div>
     <div class="winner-actions">
-      <button class="winner-btn primary" onclick="exportPDF()">⬇ Télécharger PDF</button>
-      <button class="winner-btn secondary" onclick="resetMatch()">Nouveau match</button>
+      <button class="winner-btn primary" onclick="exportPDF()" data-i18n="btn_download_pdf">⬇ Télécharger PDF</button>
+      <button class="winner-btn secondary" onclick="resetMatch()" data-i18n="new_match">Nouveau match</button>
     </div>
   </div>
 </div>
@@ -721,17 +727,210 @@ if ('serviceWorker' in navigator) {
 <div class="winner-overlay" id="resumeOverlay">
   <div class="winner-box">
     <div class="winner-trophy">💾</div>
-    <div class="winner-label">Match en cours détecté</div>
+    <div class="winner-label" data-i18n="match_in_progress">Match en cours détecté</div>
     <div class="winner-name" id="resumeMatchup" style="font-size:22px">—</div>
     <div class="winner-score" id="resumeScoreInfo">—</div>
     <div class="winner-actions">
-      <button class="winner-btn primary" onclick="confirmResume()">Reprendre ce match</button>
-      <button class="winner-btn secondary" onclick="discardResume()">Nouveau match</button>
+      <button class="winner-btn primary" onclick="confirmResume()" data-i18n="resume_match">Reprendre ce match</button>
+      <button class="winner-btn secondary" onclick="discardResume()" data-i18n="new_match">Nouveau match</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── LANGUES (chargé en premier : tout le reste du script en dépend) ───────
+const I18N = {
+  fr: {
+    settings_theme: "Thème", settings_lang: "Langue", settings_prefs: "Préférences",
+    back: "‹ Retour", prefs_match: "Match",
+    theme_dark: "Sombre", theme_light: "Clair", theme_lagoon: "Lagon", theme_eclat: "Éclat", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
+    btn_historique: "📋 Historique", btn_accueil: "← Accueil",
+    mode_team: "Par équipe", mode_player: "Par joueur",
+    status_warmup: "Échauffement", status_playing: "En cours", status_over: "Terminé",
+    status_tb: "Tie-Break", status_tb_target: "7 points, 2 d'écart",
+    status_super_tb: "Super Tie-Break", status_super_tb_target: "10 points, 2 d'écart",
+    timer_start: "▶ Start", timer_pause: "⏸ Pause",
+    live_btn: "📡 Live",
+    correction_toggle: "⚙️ Rattraper le score",
+    correction_hint: "Pour reprendre un match déjà commencé, ou rattraper un point/jeu oublié. N'affecte jamais les statistiques par coup.",
+    team_a: "Équipe A", team_b: "Équipe B",
+    minus_1pt: "−1 Pt", plus_1pt: "+1 Pt", minus_1game: "−1 Jeu", plus_1game: "+1 Jeu",
+    jump_super_tb: "⏩ Passer directement à 1 set partout (Super Tie-Break)",
+    confirm_jump_super_tb: "Passer directement à 1 set partout et démarrer le Super Tie-Break ? Cette action remplace le score actuel des sets.",
+    serving_label: "Au service :", btn_change: "Changer",
+    who_serves_first: "Qui sert en premier ?", who_serves_first_other: "Et en face, qui sert en premier ?",
+    team_prefix: "Équipe ",
+    live_modal_title: "📡 Partage en direct",
+    live_modal_desc: "Toute personne avec ce lien peut suivre le score et les stats en direct, sans pouvoir rien modifier.",
+    live_copy_btn: "Copier", live_copied: "Copié !",
+    live_modal_note: "Le lien reste actif tant que tu marques des points (ou pendant 6h max).",
+    live_stop_btn: "Arrêter le partage", live_close_btn: "Fermer",
+    header_team: "Équipe", header_points: "Points",
+    btn_undo: "↩ Annuler", btn_export_pdf: "⬇ PDF", btn_reset: "⟳ Reset",
+    stats_live_title: "Stats en direct",
+    stat_winners: "Coups gagnants", stat_faults: "Fautes directes", stat_points_won: "Points gagnés",
+    stats_player_header: "Joueur", stats_w_short: "W", stats_f_short: "F",
+    point_winner: "Point gagnant", point_winner_sub: "Coup gagnant",
+    point_fault: "Faute directe", point_fault_sub_a: "Point à B", point_fault_sub_b: "Point à A",
+    total_match: "Total match", set_n: "Set {n}", set_current: " (en cours)",
+    log_title: "Journal du match",
+    match_winner: "Vainqueur du match", ws_winners_a: "Winners A", ws_winners_b: "Winners B",
+    ws_faults_a: "Fautes A", ws_faults_b: "Fautes B",
+    btn_download_pdf: "⬇ Télécharger PDF", new_match: "Nouveau match",
+    match_in_progress: "Match en cours détecté", resume_match: "Reprendre ce match",
+    resume_sets_games: "Sets {s1}-{s2} · Jeux {g1}-{g2}",
+    confirm_reset: "Remettre le match à zéro ?",
+    log_match_created: "🎾 Match créé — {a} vs {b}",
+    log_match_started: "▶️ Match démarré",
+    log_wins_tiebreak: "remporte le Tie-Break !",
+    log_wins_game: "remporte le jeu → {score}",
+    log_wins_supertb_match: "remporte le super tie-break ({score}) et le match !",
+    log_wins_set: "remporte le set ({score})",
+    log_match_winner: "🏆 VAINQUEUR DU MATCH !",
+    log_jump_super_tb: "⏩ Passage direct au Super Tie-Break (1 set partout)",
+    log_super_tb_start3: "⚡ Super Tie-Break (3e set) !",
+    log_tb_start: "🔀 Tie-Break !",
+    winner_score_line: "Sets {s1}-{s2} — {duration}",
+  },
+  en: {
+    settings_theme: "Theme", settings_lang: "Language", settings_prefs: "Preferences",
+    back: "‹ Back", prefs_match: "Match",
+    theme_dark: "Dark", theme_light: "Light", theme_lagoon: "Lagoon", theme_eclat: "Radiance", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
+    btn_historique: "📋 History", btn_accueil: "← Home",
+    mode_team: "By team", mode_player: "By player",
+    status_warmup: "Warm-up", status_playing: "In progress", status_over: "Finished",
+    status_tb: "Tiebreak", status_tb_target: "7 points, win by 2",
+    status_super_tb: "Super Tiebreak", status_super_tb_target: "10 points, win by 2",
+    timer_start: "▶ Start", timer_pause: "⏸ Pause",
+    live_btn: "📡 Live",
+    correction_toggle: "⚙️ Adjust score",
+    correction_hint: "To resume a match already in progress, or fix a missed point/game. Never affects shot-by-shot stats.",
+    team_a: "Team A", team_b: "Team B",
+    minus_1pt: "−1 Pt", plus_1pt: "+1 Pt", minus_1game: "−1 Game", plus_1game: "+1 Game",
+    jump_super_tb: "⏩ Jump straight to 1 set all (Super Tiebreak)",
+    confirm_jump_super_tb: "Jump straight to 1 set all and start the Super Tiebreak? This replaces the current set score.",
+    serving_label: "Serving:", btn_change: "Change",
+    who_serves_first: "Who serves first?", who_serves_first_other: "And on the other side, who serves first?",
+    team_prefix: "Team ",
+    live_modal_title: "📡 Live sharing",
+    live_modal_desc: "Anyone with this link can follow the score and stats live, without being able to change anything.",
+    live_copy_btn: "Copy", live_copied: "Copied!",
+    live_modal_note: "The link stays active as long as you're scoring points (or for 6h max).",
+    live_stop_btn: "Stop sharing", live_close_btn: "Close",
+    header_team: "Team", header_points: "Points",
+    btn_undo: "↩ Undo", btn_export_pdf: "⬇ PDF", btn_reset: "⟳ Reset",
+    stats_live_title: "Live stats",
+    stat_winners: "Winners", stat_faults: "Unforced errors", stat_points_won: "Points won",
+    stats_player_header: "Player", stats_w_short: "W", stats_f_short: "E",
+    point_winner: "Winner", point_winner_sub: "Winning shot",
+    point_fault: "Unforced error", point_fault_sub_a: "Point to B", point_fault_sub_b: "Point to A",
+    total_match: "Full match", set_n: "Set {n}", set_current: " (in progress)",
+    log_title: "Match log",
+    match_winner: "Match winner", ws_winners_a: "Winners A", ws_winners_b: "Winners B",
+    ws_faults_a: "Errors A", ws_faults_b: "Errors B",
+    btn_download_pdf: "⬇ Download PDF", new_match: "New match",
+    match_in_progress: "Match in progress found", resume_match: "Resume this match",
+    resume_sets_games: "Sets {s1}-{s2} · Games {g1}-{g2}",
+    confirm_reset: "Reset the match to zero?",
+    log_match_created: "🎾 Match created — {a} vs {b}",
+    log_match_started: "▶️ Match started",
+    log_wins_tiebreak: "wins the Tiebreak!",
+    log_wins_game: "wins the game → {score}",
+    log_wins_supertb_match: "wins the super tiebreak ({score}) and the match!",
+    log_wins_set: "wins the set ({score})",
+    log_match_winner: "🏆 MATCH WINNER!",
+    log_jump_super_tb: "⏩ Jumped straight to Super Tiebreak (1 set all)",
+    log_super_tb_start3: "⚡ Super Tiebreak (3rd set)!",
+    log_tb_start: "🔀 Tiebreak!",
+    winner_score_line: "Sets {s1}-{s2} — {duration}",
+  },
+  pt: {
+    settings_theme: "Tema", settings_lang: "Idioma", settings_prefs: "Preferências",
+    back: "‹ Voltar", prefs_match: "Partida",
+    theme_dark: "Escuro", theme_light: "Claro", theme_lagoon: "Lagoa", theme_eclat: "Brilho", theme_glacier: "Glaciar",
+    badge_pro: "🔒 PRO",
+    btn_historique: "📋 Histórico", btn_accueil: "← Início",
+    mode_team: "Por equipe", mode_player: "Por jogador",
+    status_warmup: "Aquecimento", status_playing: "Em andamento", status_over: "Encerrada",
+    status_tb: "Tie-Break", status_tb_target: "7 pontos, 2 de diferença",
+    status_super_tb: "Super Tie-Break", status_super_tb_target: "10 pontos, 2 de diferença",
+    timer_start: "▶ Iniciar", timer_pause: "⏸ Pausar",
+    live_btn: "📡 Ao vivo",
+    correction_toggle: "⚙️ Corrigir placar",
+    correction_hint: "Para retomar uma partida já iniciada, ou corrigir um ponto/game esquecido. Nunca afeta as estatísticas por jogada.",
+    team_a: "Equipe A", team_b: "Equipe B",
+    minus_1pt: "−1 Pt", plus_1pt: "+1 Pt", minus_1game: "−1 Game", plus_1game: "+1 Game",
+    jump_super_tb: "⏩ Ir direto para 1 set a 1 (Super Tie-Break)",
+    confirm_jump_super_tb: "Ir direto para 1 set a 1 e começar o Super Tie-Break? Isso substitui o placar atual dos sets.",
+    serving_label: "Sacando:", btn_change: "Trocar",
+    who_serves_first: "Quem saca primeiro?", who_serves_first_other: "E do outro lado, quem saca primeiro?",
+    team_prefix: "Equipe ",
+    live_modal_title: "📡 Compartilhamento ao vivo",
+    live_modal_desc: "Qualquer pessoa com este link pode acompanhar o placar e as estatísticas ao vivo, sem poder alterar nada.",
+    live_copy_btn: "Copiar", live_copied: "Copiado!",
+    live_modal_note: "O link fica ativo enquanto você marcar pontos (ou por até 6h).",
+    live_stop_btn: "Parar compartilhamento", live_close_btn: "Fechar",
+    header_team: "Equipe", header_points: "Pontos",
+    btn_undo: "↩ Desfazer", btn_export_pdf: "⬇ PDF", btn_reset: "⟳ Reiniciar",
+    stats_live_title: "Stats ao vivo",
+    stat_winners: "Winners", stat_faults: "Erros não forçados", stat_points_won: "Pontos ganhos",
+    stats_player_header: "Jogador", stats_w_short: "W", stats_f_short: "E",
+    point_winner: "Winner", point_winner_sub: "Golpe vencedor",
+    point_fault: "Erro não forçado", point_fault_sub_a: "Ponto para B", point_fault_sub_b: "Ponto para A",
+    total_match: "Partida toda", set_n: "Set {n}", set_current: " (em andamento)",
+    log_title: "Histórico da partida",
+    match_winner: "Vencedor da partida", ws_winners_a: "Winners A", ws_winners_b: "Winners B",
+    ws_faults_a: "Erros A", ws_faults_b: "Erros B",
+    btn_download_pdf: "⬇ Baixar PDF", new_match: "Nova partida",
+    match_in_progress: "Partida em andamento encontrada", resume_match: "Retomar esta partida",
+    resume_sets_games: "Sets {s1}-{s2} · Games {g1}-{g2}",
+    confirm_reset: "Zerar a partida?",
+    log_match_created: "🎾 Partida criada — {a} vs {b}",
+    log_match_started: "▶️ Partida iniciada",
+    log_wins_tiebreak: "vence o Tie-Break!",
+    log_wins_game: "vence o game → {score}",
+    log_wins_supertb_match: "vence o super tie-break ({score}) e a partida!",
+    log_wins_set: "vence o set ({score})",
+    log_match_winner: "🏆 VENCEDOR DA PARTIDA!",
+    log_jump_super_tb: "⏩ Avançou direto para o Super Tie-Break (1 set a 1)",
+    log_super_tb_start3: "⚡ Super Tie-Break (3º set)!",
+    log_tb_start: "🔀 Tie-Break!",
+    winner_score_line: "Sets {s1}-{s2} — {duration}",
+  },
+};
+
+let currentLang = localStorage.getItem('beachstats_lang');
+if (!currentLang) {
+  const nav = (navigator.language || 'fr').toLowerCase();
+  currentLang = nav.startsWith('pt') ? 'pt' : nav.startsWith('en') ? 'en' : 'fr';
+}
+
+function t(key, vars) {
+  const dict = I18N[currentLang] || I18N.fr;
+  let str = dict[key] !== undefined ? dict[key] : (I18N.fr[key] !== undefined ? I18N.fr[key] : key);
+  if (vars) Object.keys(vars).forEach(k => { str = str.replace('{'+k+'}', vars[k]); });
+  return str;
+}
+
+function applyLanguageToDOM() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-lang-choice]').forEach(b => {
+    b.classList.toggle('active', b.dataset.langChoice === currentLang);
+  });
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('beachstats_lang', lang);
+  applyLanguageToDOM();
+  document.getElementById('langSubmenu')?.classList.remove('open');
+  initNames();
+  updateDisplay();
+}
+
 // ── PLAYER NAMES & MODE ──────────────────────────────────────────────────────
 const _p = new URLSearchParams(window.location.search);
 // Si l'URL ne contient pas les noms (ex: retour sur cette page via le
@@ -802,9 +1001,9 @@ function initNames() {
 
     // Modifier l'affichage des stats en direct pour le mode individuel
     let statsHTML = `<div class="stat-row" style="grid-template-columns: 1fr 60px 60px; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
-      <div class="stat-name" style="text-align:left">Joueur</div>
-      <div class="stat-name">W</div>
-      <div class="stat-name">F</div>
+      <div class="stat-name" style="text-align:left">${t('stats_player_header')}</div>
+      <div class="stat-name">${t('stats_w_short')}</div>
+      <div class="stat-name">${t('stats_f_short')}</div>
     </div>`;
     ['j1', 'j2', 'j3', 'j4'].forEach((key, index) => {
       const colorClass = index < 2 ? 'var(--blue)' : 'var(--orange)';
@@ -819,8 +1018,8 @@ function initNames() {
   } else {
     const shortA = players.j1.split(' ')[0] + ' & ' + players.j2.split(' ')[0];
     const shortB = players.j3.split(' ')[0] + ' & ' + players.j4.split(' ')[0];
-    container.innerHTML += createControlBlock('a', 'Équipe A — ' + shortA, 1, null);
-    container.innerHTML += createControlBlock('b', 'Équipe B — ' + shortB, 2, null);
+    container.innerHTML += createControlBlock('a', t('team_a') + ' — ' + shortA, 1, null);
+    container.innerHTML += createControlBlock('b', t('team_b') + ' — ' + shortB, 2, null);
 
     // Reconstruit explicitement le bloc de stats "par équipe" — nécessaire
     // pour pouvoir y revenir après être passé en mode joueur (qui remplace
@@ -828,7 +1027,7 @@ function initNames() {
     document.getElementById('statsContent').innerHTML = `
       <div class="stat-row">
         <div class="stat-val a" id="st-wA">0</div>
-        <div class="stat-name">Coups gagnants</div>
+        <div class="stat-name">${t('stat_winners')}</div>
         <div class="stat-val b" id="st-wB">0</div>
       </div>
       <div class="stat-row">
@@ -836,7 +1035,7 @@ function initNames() {
       </div>
       <div class="stat-row" style="margin-top:.6rem">
         <div class="stat-val a" id="st-fA">0</div>
-        <div class="stat-name">Fautes directes</div>
+        <div class="stat-name">${t('stat_faults')}</div>
         <div class="stat-val b" id="st-fB">0</div>
       </div>
       <div class="stat-row">
@@ -844,7 +1043,7 @@ function initNames() {
       </div>
       <div class="stat-row" style="margin-top:.6rem">
         <div class="stat-val a" id="st-pA">0</div>
-        <div class="stat-name">Points gagnés</div>
+        <div class="stat-name">${t('stat_points_won')}</div>
         <div class="stat-val b" id="st-pB">0</div>
       </div>
       <div class="stat-row">
@@ -870,7 +1069,7 @@ function switchStatsMode(newMode) {
 
 function createControlBlock(teamClass, label, teamId, entityKey) {
   const opponentId = teamId === 1 ? 2 : 1;
-  const subLabel = teamId === 1 ? 'Point à B' : 'Point à A';
+  const subLabel = teamId === 1 ? t('point_fault_sub_a') : t('point_fault_sub_b');
   // entityKey vaut toujours 'j1'..'j4' ou null : jamais une valeur saisie
   // par l'utilisateur, donc sûr à insérer tel quel dans le onclick.
   const entityArg = entityKey ? `'${entityKey}'` : 'null';
@@ -880,12 +1079,12 @@ function createControlBlock(teamClass, label, teamId, entityKey) {
       <div class="ctrl-row">
         <button class="btn-winner ${teamClass}" onclick="scorePoint(${teamId},'winner', ${entityArg})">
           <span class="btn-icon">🎯</span>
-          <span class="btn-main">Point gagnant</span>
-          <span class="btn-sub">Coup gagnant</span>
+          <span class="btn-main">${t('point_winner')}</span>
+          <span class="btn-sub">${t('point_winner_sub')}</span>
         </button>
         <button class="btn-faute ${teamClass}" onclick="scorePoint(${opponentId},'faute', ${entityArg})">
           <span class="btn-icon">💥</span>
-          <span class="btn-main">Faute directe</span>
+          <span class="btn-main">${t('point_fault')}</span>
           <span class="btn-sub">${subLabel}</span>
         </button>
       </div>
@@ -951,10 +1150,10 @@ function renderStatsViewSwitch() {
   const showCurrent = !matchOver;
   const totalChips = finishedSets + (showCurrent ? 1 : 0);
 
-  let html = `<button class="sv-chip${statsViewMode==='total'?' active':''}" onclick="setStatsView('total')">Total match</button>`;
+  let html = `<button class="sv-chip${statsViewMode==='total'?' active':''}" onclick="setStatsView('total')">${t('total_match')}</button>`;
   for (let i = 1; i <= totalChips; i++) {
     const isCurrent = i === finishedSets + 1 && showCurrent;
-    html += `<button class="sv-chip${statsViewMode==='set'&&statsViewSetIdx===i?' active':''}" onclick="setStatsView('set',${i})">Set ${i}${isCurrent?' (en cours)':''}</button>`;
+    html += `<button class="sv-chip${statsViewMode==='set'&&statsViewSetIdx===i?' active':''}" onclick="setStatsView('set',${i})">${t('set_n',{n:i})}${isCurrent?t('set_current'):''}</button>`;
   }
   wrap.innerHTML = html;
 }
@@ -1069,7 +1268,7 @@ function copyLiveLink() {
   navigator.clipboard?.writeText(input.value).catch(() => {});
   const btn = document.getElementById('liveCopyBtn');
   const original = btn.textContent;
-  btn.textContent = 'Copié !';
+  btn.textContent = t('live_copied');
   setTimeout(() => { btn.textContent = original; }, 1500);
 }
 
@@ -1175,7 +1374,7 @@ function scorePoint(player, type, entityKey) {
   }
 
   const scoreLabel = scoreSnapshot(player);
-  logPoint(entityName || (player === 1 ? nameA : nameB), type, scoreLabel);
+  logPoint(entityName || (player === 1 ? nameA : nameB), type, scoreLabel, player);
 
   advancePoint(player);
 }
@@ -1228,14 +1427,14 @@ function removeManualGame(player) {
 // jeux/points des 2 sets précédents un par un.
 function jumpToSuperTiebreak() {
   if (matchOver) return;
-  if (!confirm("Passer directement à 1 set partout et démarrer le Super Tie-Break ? Cette action remplace le score actuel des sets.")) return;
+  if (!confirm(t('confirm_jump_super_tb'))) return;
   saveState();
   s1 = 1; s2 = 1;
   g1 = 0; g2 = 0; p1 = 0; p2 = 0;
   inTiebreak = false; inSuperTiebreak = true;
-  document.getElementById('setPill').textContent = 'Super Tie-Break';
-  document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-  logEvent('', '⏩ Passage direct au Super Tie-Break (1 set partout)');
+  document.getElementById('setPill').textContent = t('status_super_tb');
+  document.getElementById('statusLabel').textContent = t('status_super_tb_target');
+  logEvent('', t('log_jump_super_tb'));
   updateDisplay();
 }
 
@@ -1243,7 +1442,7 @@ function winGame(player) {
   const wasTiebreak = inTiebreak;
   p1=0; p2=0; inTiebreak=false;
   if (player === 1) g1++; else g2++;
-  logEvent(player===1 ? nameA : nameB, 'remporte le jeu → ' + g1 + '-' + g2);
+  logEvent(player===1 ? nameA : nameB, t('log_wins_game', {score: g1+'-'+g2}));
 
   matchGameCount++;
   // Le jeu 2 est sur le point de commencer : c'est la première fois que
@@ -1262,14 +1461,14 @@ function winGame(player) {
   if (g1 === 6 && g2 === 6) {
     if (s1 === 1 && s2 === 1) {
       inSuperTiebreak=true; p1=0; p2=0;
-      document.getElementById('setPill').textContent = 'Super Tie-Break';
-      document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
-      logEvent('', '⚡ Super Tie-Break (3e set) !');
+      document.getElementById('setPill').textContent = t('status_super_tb');
+      document.getElementById('statusLabel').textContent = t('status_super_tb_target');
+      logEvent('', t('log_super_tb_start3'));
     } else {
       inTiebreak=true; p1=0; p2=0;
-      document.getElementById('setPill').textContent = 'Tie-Break';
-      document.getElementById('statusLabel').textContent = "7 points, 2 d'écart";
-      logEvent('', '🔀 Tie-Break !');
+      document.getElementById('setPill').textContent = t('status_tb');
+      document.getElementById('statusLabel').textContent = t('status_tb_target');
+      logEvent('', t('log_tb_start'));
     }
   }
   updateDisplay();
@@ -1349,7 +1548,7 @@ function askInitialServer() {
   const title = document.getElementById('serverModalTitle');
   const btnsWrap = document.getElementById('serverModalBtns');
   if (!modal) return;
-  title.textContent = 'Qui sert en premier ?';
+  title.textContent = t('who_serves_first');
   btnsWrap.innerHTML = '';
   // On ne demande QUE le 1er serveur de l'équipe qui commence : on ne sait
   // pas toujours à l'avance qui servira côté adverse. La question "en face"
@@ -1377,7 +1576,7 @@ function askSecondTeamServer() {
   const title = document.getElementById('serverModalTitle');
   const btnsWrap = document.getElementById('serverModalBtns');
   if (!modal) return;
-  title.textContent = 'Et en face, qui sert en premier ?';
+  title.textContent = t('who_serves_first_other');
   btnsWrap.innerHTML = '';
   buildServerTeamGroup(btnsWrap, team, team === 'A' ? ['j1','j2'] : ['j3','j4'], (t, key) => {
     if (t === 'A') serverTeamAFirst = key; else serverTeamBFirst = key;
@@ -1396,7 +1595,7 @@ function buildServerTeamGroup(container, team, keys, onPick) {
   group.className = 'server-modal-group';
   const label = document.createElement('div');
   label.className = 'server-modal-group-label team-' + team.toLowerCase();
-  label.textContent = 'Équipe ' + team;
+  label.textContent = t('team_prefix') + team;
   group.appendChild(label);
   const row = document.createElement('div');
   row.className = 'server-modal-group-row';
@@ -1444,9 +1643,9 @@ function winSet(player, scoreOverride){
   inTiebreak=false; inSuperTiebreak=false;
   if(player===1) s1++; else s2++;
   if (wasSuperTiebreak) {
-    logEvent(player===1?nameA:nameB,"remporte le super tie-break ("+scoreOverride.a+"-"+scoreOverride.b+") et le match !");
+    logEvent(player===1?nameA:nameB,t('log_wins_supertb_match', {score: scoreOverride.a+"-"+scoreOverride.b}));
   } else {
-    logEvent(player===1?nameA:nameB,"remporte le set ("+s1+"-"+s2+")");
+    logEvent(player===1?nameA:nameB,t('log_wins_set', {score: s1+"-"+s2}));
   }
 
   if(s1===2 || s2===2){
@@ -1456,11 +1655,11 @@ function winSet(player, scoreOverride){
 
   if(s1===1 && s2===1){
     inSuperTiebreak = true;
-    document.getElementById('setPill').textContent = "Super Tie-Break";
-    document.getElementById('statusLabel').textContent = "10 points, 2 d'écart";
+    document.getElementById('setPill').textContent = t('status_super_tb');
+    document.getElementById('statusLabel').textContent = t('status_super_tb_target');
   } else {
     document.getElementById('setPill').textContent = "Set "+(s1+s2+1);
-    document.getElementById('statusLabel').textContent = "En cours";
+    document.getElementById('statusLabel').textContent = t('status_playing');
   }
   updateDisplay();
 }
@@ -1470,13 +1669,13 @@ function winMatch(player) {
   if(timerRunning) timerToggle();
   const winner = player === 1 ? nameA : nameB;
   document.getElementById('winnerName').textContent = winner;
-  document.getElementById('winnerScore').textContent = 'Sets ' + s1 + '-' + s2 + ' — ' + formatDuration(timerSeconds);
+  document.getElementById('winnerScore').textContent = t('winner_score_line', {s1, s2, duration: formatDuration(timerSeconds)});
   document.getElementById('ws-wA').textContent = stats.wA;
   document.getElementById('ws-wB').textContent = stats.wB;
   document.getElementById('ws-fA').textContent = stats.fA;
   document.getElementById('ws-fB').textContent = stats.fB;
   document.getElementById('winnerOverlay').classList.add('show');
-  logEvent(winner, '🏆 VAINQUEUR DU MATCH !');
+  logEvent(winner, t('log_match_winner'));
   saveMatchToHistory(winner);
   clearProgress();
   updateDisplay();
@@ -1633,14 +1832,14 @@ function updateBar(idA, idB, vA, vB) {
 }
 
 // ── LOG ───────────────────────────────────────────────────────────────────────
-function logPoint(entity, type, scoreLabel) {
-  const isA = (entity === players.j1 || entity === players.j2 || entity.includes('Équipe A'));
+function logPoint(entity, type, scoreLabel, player) {
+  const isA = player ? (player === 1) : (entity === players.j1 || entity === players.j2 || entity === nameA);
   const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   let label, dotClass;
   if (type === 'winner') {
-    label = '🎯 Point gagnant'; dotClass = isA ? 'dot-a' : 'dot-b';
+    label = '🎯 ' + t('point_winner'); dotClass = isA ? 'dot-a' : 'dot-b';
   } else {
-    label = '💥 Faute directe'; dotClass = isA ? 'dot-a' : 'dot-b';
+    label = '💥 ' + t('point_fault'); dotClass = isA ? 'dot-a' : 'dot-b';
   }
   const entry = {team: entity, type, time, msg: label, score: scoreLabel};
   const className = 'log-entry ' + dotClass;
@@ -1729,8 +1928,8 @@ function applyProgress(snap) {
   serverManualAdjustment = snap.serverManualAdjustment || 0;
   document.getElementById('teamLabelA').value = teamLabelA;
   document.getElementById('teamLabelB').value = teamLabelB;
-  document.getElementById('setPill').textContent = !matchStarted ? 'Échauffement' : (inSuperTiebreak ? 'Super Tie-Break' : 'Set '+(s1+s2+1));
-  document.getElementById('statusLabel').textContent = matchOver ? 'Terminé' : 'En cours';
+  document.getElementById('setPill').textContent = !matchStarted ? t('status_warmup') : (inSuperTiebreak ? t('status_super_tb') : 'Set '+(s1+s2+1));
+  document.getElementById('statusLabel').textContent = matchOver ? t('status_over') : t('status_playing');
   rebuildLog();
   const m = String(Math.floor(timerSeconds / 60)).padStart(2,'0');
   const s = String(timerSeconds % 60).padStart(2,'0');
@@ -1755,7 +1954,7 @@ function discardResume() {
   clearProgress();
   document.getElementById('resumeOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('', '🎾 Match créé — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
+  logEvent('', t('log_match_created', {a: escapeHtml(nameA), b: escapeHtml(nameB)}));
 }
 
 function checkResumeOnLoad() {
@@ -1763,13 +1962,13 @@ function checkResumeOnLoad() {
   if (!snap) return;
   const matchup = (snap.nameA || nameA) + ' vs ' + (snap.nameB || nameB);
   document.getElementById('resumeMatchup').textContent = matchup;
-  document.getElementById('resumeScoreInfo').textContent = `Sets ${snap.s1}-${snap.s2} · Jeux ${snap.g1}-${snap.g2}`;
+  document.getElementById('resumeScoreInfo').textContent = t('resume_sets_games', {s1: snap.s1, s2: snap.s2, g1: snap.g1, g2: snap.g2});
   document.getElementById('resumeOverlay').classList.add('show');
 }
 
 // ── RESET ─────────────────────────────────────────────────────────────────────
 function resetMatch() {
-  if (!confirm('Remettre le match à zéro ?')) return;
+  if (!confirm(t('confirm_reset'))) return;
   clearProgress();
   p1=0;p2=0;g1=0;g2=0;s1=0;s2=0;
   inTiebreak=false;inSuperTiebreak=false;matchOver=false;
@@ -1783,12 +1982,12 @@ function resetMatch() {
   stats={wA:0,wB:0,fA:0,fB:0,pA:0,pB:0, ind: {}};
   setSnapshots=[]; statsViewMode='total'; statsViewSetIdx=1;
   history=[];matchLog=[];
-  document.getElementById('setPill').textContent='Échauffement';
-  document.getElementById('statusLabel').textContent='En cours';
+  document.getElementById('setPill').textContent=t('status_warmup');
+  document.getElementById('statusLabel').textContent=t('status_playing');
   document.getElementById('logList').innerHTML='';
   document.getElementById('winnerOverlay').classList.remove('show');
   updateDisplay();
-  logEvent('','🎾 Match créé — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
+  logEvent('',t('log_match_created', {a: escapeHtml(nameA), b: escapeHtml(nameB)}));
 }
 
 // ── PDF EXPORT ────────────────────────────────────────────────────────────────
@@ -2177,18 +2376,18 @@ function timerToggle() {
   if (timerRunning) {
     clearInterval(timerInterval);
     timerRunning = false;
-    document.getElementById('timerStartBtn').textContent = '▶ Start';
+    document.getElementById('timerStartBtn').textContent = t('timer_start');
     document.getElementById('timerStartBtn').className = 'timer-btn start';
     document.getElementById('timerDisplay').classList.remove('running');
   } else {
     timerRunning = true;
-    document.getElementById('timerStartBtn').textContent = '⏸ Pause';
+    document.getElementById('timerStartBtn').textContent = t('timer_pause');
     document.getElementById('timerStartBtn').className = 'timer-btn pause';
     document.getElementById('timerDisplay').classList.add('running');
     if (!matchStarted) {
       matchStarted = true;
       document.getElementById('setPill').textContent = 'Set 1';
-      logEvent('', '▶️ Match démarré');
+      logEvent('', t('log_match_started'));
       if (!firstServingTeam) askInitialServer();
     }
     timerInterval = setInterval(() => {
@@ -2206,7 +2405,7 @@ function timerReset() {
   timerSeconds = 0;
   document.getElementById('timerDisplay').textContent = '00:00';
   document.getElementById('timerDisplay').classList.remove('running');
-  document.getElementById('timerStartBtn').textContent = '▶ Start';
+  document.getElementById('timerStartBtn').textContent = t('timer_start');
   document.getElementById('timerStartBtn').className = 'timer-btn start';
 }
 
@@ -2217,7 +2416,7 @@ if (_savedProgress) {
   checkResumeOnLoad();
 } else {
   updateDisplay();
-  logEvent('', '🎾 Match créé — '+escapeHtml(nameA)+' vs '+escapeHtml(nameB));
+  logEvent('', t('log_match_created', {a: escapeHtml(nameA), b: escapeHtml(nameB)}));
 }
 // ── THÈMES ────────────────────────────────────────────────────────────────
 const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'eclat', 'glacier'];
@@ -2232,13 +2431,8 @@ function setTheme(theme) {
   }
   localStorage.setItem('beachstats_theme', theme);
   applyTheme(theme);
-  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
-  document.getElementById('themeMenu')?.classList.remove('open');
-}
-
-function toggleThemeMenu(e) {
-  e.stopPropagation();
-  document.getElementById('themeMenu')?.classList.toggle('open');
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('themeSubmenu')?.classList.remove('open');
 }
 
 // ── PRÉFÉRENCES (mode d'affichage du match) ──────────────────────────────
@@ -2248,11 +2442,40 @@ function refreshPrefsMenuUI() {
   });
 }
 
+function closeAllSubmenus() {
+  document.getElementById('themeSubmenu')?.classList.remove('open');
+  document.getElementById('langSubmenu')?.classList.remove('open');
+  document.getElementById('prefsMenu')?.classList.remove('open');
+}
+
 function toggleGearMenu(e) {
   e.stopPropagation();
-  document.getElementById('themeMenu')?.classList.remove('open');
-  document.getElementById('prefsMenu')?.classList.remove('open');
+  closeAllSubmenus();
   document.getElementById('gearMenu')?.classList.toggle('open');
+}
+
+function openThemeSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('gearMenu')?.classList.remove('open');
+  document.getElementById('themeSubmenu')?.classList.add('open');
+}
+
+function closeThemeSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeSubmenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.add('open');
+}
+
+function openLangSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('gearMenu')?.classList.remove('open');
+  document.getElementById('langSubmenu')?.classList.add('open');
+}
+
+function closeLangSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('langSubmenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.add('open');
 }
 
 function openPrefsMenu(e) {
@@ -2270,14 +2493,13 @@ function closePrefsMenu(e) {
 
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.theme-switch-wrap')) {
-    document.getElementById('themeMenu')?.classList.remove('open');
     document.getElementById('gearMenu')?.classList.remove('open');
-    document.getElementById('prefsMenu')?.classList.remove('open');
+    closeAllSubmenus();
   }
 });
 
 function updateThemeLockUI() {
-  document.querySelectorAll('.theme-swatch').forEach(b => {
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => {
     const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
     b.classList.toggle('locked', isProTheme && userTier !== 'pro');
   });
@@ -2296,9 +2518,10 @@ async function checkTier() {
 
 document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
-  document.querySelectorAll('.theme-swatch').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === current));
   refreshPrefsMenuUI();
   checkTier();
+  applyLanguageToDOM();
 });
 
 </script>
