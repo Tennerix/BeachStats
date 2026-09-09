@@ -78,6 +78,16 @@ body{transition:background-color .25s ease,color .25s ease}
 .theme-select-pill select{appearance:none;-webkit-appearance:none;background:none;border:none;outline:none;color:inherit;
   font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0;max-width:118px}
 .theme-select-pill select option{background:var(--card);color:var(--text)}
+.lang-switch-wrap{position:relative}
+.lang-select-pill{display:flex;align-items:center;gap:6px;background:rgba(10,22,40,.78);border:1.5px solid var(--muted);color:var(--text);
+  font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 10px;border-radius:20px;
+  text-transform:uppercase;transition:border-color .18s,color .18s}
+.lang-select-pill:hover,.lang-select-pill:focus-within{border-color:var(--gold);color:var(--gold)}
+.lang-select-pill i{font-size:15px;flex-shrink:0}
+.lang-select-pill .lang-select-caret{font-size:13px;opacity:.7;margin-left:-2px}
+.lang-select-pill select{appearance:none;-webkit-appearance:none;background:none;border:none;outline:none;color:inherit;
+  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;padding:0;max-width:70px}
+.lang-select-pill select option{background:var(--card);color:var(--text)}
 body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding:0 1rem 3rem}
 .page-wrapper{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:stretch}
 .install-banner{
@@ -102,7 +112,12 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display
 .hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
 .hero img{width:100%;display:block;object-fit:cover;max-height:260px}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid var(--gold);color:var(--gold);font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
-.hero-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:.85rem}
+.hero-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:.85rem;flex-wrap:wrap;row-gap:8px}
+.hero-actions .theme-switch-wrap,.hero-actions .lang-switch-wrap{display:flex}
+@media(max-width:380px){
+  .theme-select-pill select{max-width:90px}
+  .history-btn{margin-left:auto}
+}
 .history-btn{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--muted);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:6px 12px 6px 10px;border-radius:20px;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:border-color .18s,color .18s}
 .history-btn i{font-size:15px}
 .history-btn:hover{border-color:var(--gold);color:var(--gold)}
@@ -197,7 +212,7 @@ if ('serviceWorker' in navigator) {
 <div class="install-banner" id="installBanner">
   <div class="install-banner-icon">📲</div>
   <div class="install-banner-text">
-    <strong>Installe BeachStats</strong>
+    <strong data-i18n="install_title">Installe BeachStats</strong>
     <span id="installBannerInstructions"></span>
   </div>
   <button class="install-banner-close" onclick="dismissInstallBanner()" aria-label="Fermer">✕</button>
@@ -205,7 +220,7 @@ if ('serviceWorker' in navigator) {
 <div class="page-wrapper">
   <div class="hero">
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
-    <div class="hero-badge">Interface Bêta</div>
+    <div class="hero-badge" data-i18n="hero_badge">Interface Bêta</div>
   </div>
   <div class="hero-actions">
     <div class="theme-switch-wrap">
@@ -223,37 +238,48 @@ if ('serviceWorker' in navigator) {
         <i class="ti ti-chevron-down theme-select-caret"></i>
       </div>
     </div>
-    <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i>Historique</button>
+    <div class="lang-switch-wrap">
+      <div class="lang-select-pill">
+        <i class="ti ti-world"></i>
+        <select id="langSelect" aria-label="Changer de langue" onchange="onLanguageSelectChange(this)">
+          <option value="fr">FR</option>
+          <option value="en">EN</option>
+          <option value="pt">PT</option>
+        </select>
+        <i class="ti ti-chevron-down lang-select-caret"></i>
+      </div>
+    </div>
+    <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i><span data-i18n="history_btn">Historique</span></button>
   </div>
   <div class="bt-card">
-    <p class="bt-title"><i class="ti ti-users"></i>Equipes &amp; <span class="hl">Joueurs</span></p>
+    <p class="bt-title"><i class="ti ti-users"></i><span data-i18n="title_teams">Equipes &amp;</span> <span class="hl" data-i18n="title_players">Joueurs</span></p>
     <div class="team-label a">
-      <span>Equipe A</span>
-      <input type="text" id="teamA" class="team-name-input" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+      <span data-i18n="team_a">Equipe A</span>
+      <input type="text" id="teamA" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
     </div>
     <div class="names-grid">
-      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" placeholder="Joueur 1"></div>
-      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" placeholder="Joueur 2"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" data-i18n-placeholder="player1" placeholder="Joueur 1"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" data-i18n-placeholder="player2" placeholder="Joueur 2"></div>
     </div>
     <div class="vs-divider"><span>VS</span></div>
     <div class="team-label b">
-      <span>Equipe B</span>
-      <input type="text" id="teamB" class="team-name-input" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+      <span data-i18n="team_b">Equipe B</span>
+      <input type="text" id="teamB" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
     </div>
     <div class="names-grid">
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" placeholder="Joueur 3"></div>
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" placeholder="Joueur 4"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" data-i18n-placeholder="player3" placeholder="Joueur 3"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" data-i18n-placeholder="player4" placeholder="Joueur 4"></div>
     </div>
 
     <div class="mode-selector">
       <div class="mode-label-wrap">
-        <span class="mode-label" id="modeText">Stats par Joueur</span>
-        <button type="button" class="info-btn" data-target="infoTooltip-mode" aria-label="Explication du mode" onclick="toggleInfo(event, this)">
+        <span class="mode-label" id="modeText" data-i18n="mode_player">Stats par Joueur</span>
+        <button type="button" class="info-btn" data-target="infoTooltip-mode" aria-label="Explication du mode" data-i18n-aria="aria_mode_info" onclick="toggleInfo(event, this)">
           <i class="ti ti-info-circle"></i>
         </button>
         <div class="info-tooltip" id="infoTooltip-mode">
-          <p><b>Par Équipe :</b> les statistiques cumulent les actions des deux joueurs d'une même équipe (Équipe A vs Équipe B).</p>
-          <p><b>Par Joueur :</b> les statistiques sont détaillées individuellement pour chacun des 4 joueurs.</p>
+          <p><b data-i18n="mode_info_team_title">Par Équipe :</b> <span data-i18n="mode_info_team">les statistiques cumulent les actions des deux joueurs d'une même équipe (Équipe A vs Équipe B).</span></p>
+          <p><b data-i18n="mode_info_player_title">Par Joueur :</b> <span data-i18n="mode_info_player">les statistiques sont détaillées individuellement pour chacun des 4 joueurs.</span></p>
         </div>
       </div>
       <label class="switch">
@@ -264,53 +290,54 @@ if ('serviceWorker' in navigator) {
 
     <div class="btn-group">
       <div class="stat-row">
-        <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i>Comptage de points<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat points" onclick="goToCDP()"><i class="ti ti-trophy"></i><span data-i18n="btn_points">Comptage de points</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-points" aria-label="Explication Comptage de points" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-points">
-          <p>Sert uniquement à <b>compter les points</b> du match, sans relever aucune autre statistique de jeu.</p>
+          <p data-i18n-html="info_points">Sert uniquement à <b>compter les points</b> du match, sans relever aucune autre statistique de jeu.</p>
         </div>
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i>Stats de base<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat base" onclick="goToSbase()"><i class="ti ti-chart-bar"></i><span data-i18n="btn_base">Stats de base</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-base" aria-label="Explication Stats de base" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-base">
-          <p>Relève uniquement les <b>coups gagnants</b> et les <b>fautes directes</b>.</p>
+          <p data-i18n-html="info_base">Relève uniquement les <b>coups gagnants</b> et les <b>fautes directes</b>.</p>
         </div>
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat intermediaire" onclick="goToSintermediaire()"><i class="ti ti-chart-area-line"></i>Stats intermediaires<i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat intermediaire" onclick="goToSintermediaire()"><i class="ti ti-chart-area-line"></i><span data-i18n="btn_inter">Stats intermediaires</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-inter" aria-label="Explication Stats intermediaires" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-inter">
-          <p>Relève les <b>coups gagnants</b> et les <b>fautes</b>, ainsi que le <b>type de coup</b> joué (smash, service, amorti, etc.).</p>
+          <p data-i18n-html="info_inter">Relève les <b>coups gagnants</b> et les <b>fautes</b>, ainsi que le <b>type de coup</b> joué (smash, service, amorti, etc.).</p>
         </div>
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i>Stats avancees<span class="paid-badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat avancees" onclick="goToSavancee()"><i class="ti ti-chart-dots"></i><span data-i18n="btn_avancees">Stats avancees</span><span class="paid-badge" data-i18n="paid_badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-avancees" aria-label="Explication Stats avancees" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-avancees">
-          <p>Relève le <b>type de coup</b>, s'il est joué en <b>coup droit ou en revers</b>, ainsi que les <b>zones de service</b>.</p>
+          <p data-i18n-html="info_avancees">Relève le <b>type de coup</b>, s'il est joué en <b>coup droit ou en revers</b>, ainsi que les <b>zones de service</b>.</p>
         </div>
       </div>
 
       <div class="stat-row">
-        <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i>Stats pro<span class="paid-badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
+        <button type="button" class="btn-stat pro" onclick="goToSpro()"><i class="ti ti-medal"></i><span data-i18n="btn_pro">Stats pro</span><span class="paid-badge" data-i18n="paid_badge">🔒 Payant</span><i class="ti ti-chevron-right arrow"></i></button>
         <button type="button" class="info-btn" data-target="infoTooltip-pro" aria-label="Explication Stats pro" onclick="toggleInfo(event, this)"><i class="ti ti-info-circle"></i></button>
         <div class="info-tooltip" id="infoTooltip-pro">
-          <p>Le mode le plus complet : <b>tous les types de coups</b>, <b>toutes les zones</b> du terrain, avec un <b>schéma de statistiques</b> détaillé.</p>
+          <p data-i18n-html="info_pro">Le mode le plus complet : <b>tous les types de coups</b>, <b>toutes les zones</b> du terrain, avec un <b>schéma de statistiques</b> détaillé.</p>
         </div>
       </div>
     </div>
 
-    <a class="contact-link" href="mailto:supportsbeachstats@gmail.com"><i class="ti ti-mail"></i>Nous contacter</a>
+    <a class="contact-link" href="mailto:supportsbeachstats@gmail.com"><i class="ti ti-mail"></i><span data-i18n="contact">Nous contacter</span></a>
   </div>
 </div>
 <script>
 function updateModeText() {
   const isChecked = document.getElementById('modeToggle').checked;
-  document.getElementById('modeText').textContent = isChecked ? "Stats par Joueur" : "Stats par Équipe";
+  const dict = I18N[currentLang] || I18N.fr;
+  document.getElementById('modeText').textContent = isChecked ? dict.mode_player : dict.mode_team;
 }
 
 function toggleInfo(event, btn) {
@@ -399,6 +426,131 @@ function onThemeSelectChange(sel) {
   }
 }
 
+// ── LANGUES ──────────────────────────────────────────────────────────────
+const I18N = {
+  fr: {
+    history_btn: "Historique",
+    hero_badge: "Interface Bêta",
+    title_teams: "Equipes &", title_players: "Joueurs",
+    team_a: "Equipe A", team_b: "Equipe B",
+    team_name_placeholder: "Nom d'équipe (optionnel)",
+    player1: "Joueur 1", player2: "Joueur 2", player3: "Joueur 3", player4: "Joueur 4",
+    mode_team: "Stats par Équipe", mode_player: "Stats par Joueur",
+    mode_info_team_title: "Par Équipe :",
+    mode_info_team: "les statistiques cumulent les actions des deux joueurs d'une même équipe (Équipe A vs Équipe B).",
+    mode_info_player_title: "Par Joueur :",
+    mode_info_player: "les statistiques sont détaillées individuellement pour chacun des 4 joueurs.",
+    btn_points: "Comptage de points",
+    info_points: "Sert uniquement à <b>compter les points</b> du match, sans relever aucune autre statistique de jeu.",
+    btn_base: "Stats de base",
+    info_base: "Relève uniquement les <b>coups gagnants</b> et les <b>fautes directes</b>.",
+    btn_inter: "Stats intermediaires",
+    info_inter: "Relève les <b>coups gagnants</b> et les <b>fautes</b>, ainsi que le <b>type de coup</b> joué (smash, service, amorti, etc.).",
+    btn_avancees: "Stats avancees",
+    info_avancees: "Relève le <b>type de coup</b>, s'il est joué en <b>coup droit ou en revers</b>, ainsi que les <b>zones de service</b>.",
+    btn_pro: "Stats pro",
+    info_pro: "Le mode le plus complet : <b>tous les types de coups</b>, <b>toutes les zones</b> du terrain, avec un <b>schéma de statistiques</b> détaillé.",
+    paid_badge: "🔒 Payant",
+    contact: "Nous contacter",
+    install_title: "Installe BeachStats",
+    install_ios: "Appuie sur <b>Partager</b> puis <b>« Sur l'écran d'accueil »</b>",
+    install_android: "Ajoute l'appli sur ton écran d'accueil pour y accéder plus vite, même hors ligne.",
+    install_btn: "Installer",
+  },
+  en: {
+    history_btn: "History",
+    hero_badge: "Beta Interface",
+    title_teams: "Teams &", title_players: "Players",
+    team_a: "Team A", team_b: "Team B",
+    team_name_placeholder: "Team name (optional)",
+    player1: "Player 1", player2: "Player 2", player3: "Player 3", player4: "Player 4",
+    mode_team: "Team Stats", mode_player: "Player Stats",
+    mode_info_team_title: "By Team:",
+    mode_info_team: "stats combine the actions of both players on the same team (Team A vs Team B).",
+    mode_info_player_title: "By Player:",
+    mode_info_player: "stats are tracked individually for each of the 4 players.",
+    btn_points: "Score Counter",
+    info_points: "Only counts the match <b>score</b>, with no other stat tracked.",
+    btn_base: "Basic Stats",
+    info_base: "Tracks only <b>winners</b> and <b>unforced errors</b>.",
+    btn_inter: "Intermediate Stats",
+    info_inter: "Tracks <b>winners</b> and <b>errors</b>, plus the <b>shot type</b> played (smash, serve, drop shot, etc.).",
+    btn_avancees: "Advanced Stats",
+    info_avancees: "Tracks the <b>shot type</b>, whether played <b>forehand or backhand</b>, plus <b>serve zones</b>.",
+    btn_pro: "Pro Stats",
+    info_pro: "The most complete mode: <b>every shot type</b>, <b>every court zone</b>, with a detailed <b>stats map</b>.",
+    paid_badge: "🔒 Paid",
+    contact: "Contact us",
+    install_title: "Install BeachStats",
+    install_ios: "Tap <b>Share</b> then <b>\"Add to Home Screen\"</b>",
+    install_android: "Add the app to your home screen for faster access, even offline.",
+    install_btn: "Install",
+  },
+  pt: {
+    history_btn: "Histórico",
+    hero_badge: "Interface Beta",
+    title_teams: "Equipes e", title_players: "Jogadores",
+    team_a: "Equipe A", team_b: "Equipe B",
+    team_name_placeholder: "Nome da equipe (opcional)",
+    player1: "Jogador 1", player2: "Jogador 2", player3: "Jogador 3", player4: "Jogador 4",
+    mode_team: "Stats por Equipe", mode_player: "Stats por Jogador",
+    mode_info_team_title: "Por Equipe:",
+    mode_info_team: "as estatísticas somam as ações dos dois jogadores da mesma equipe (Equipe A vs Equipe B).",
+    mode_info_player_title: "Por Jogador:",
+    mode_info_player: "as estatísticas são detalhadas individualmente para cada um dos 4 jogadores.",
+    btn_points: "Contagem de Pontos",
+    info_points: "Serve apenas para <b>contar os pontos</b> da partida, sem registrar nenhuma outra estatística.",
+    btn_base: "Stats Básicas",
+    info_base: "Registra apenas <b>winners</b> e <b>erros não forçados</b>.",
+    btn_inter: "Stats Intermediárias",
+    info_inter: "Registra <b>winners</b> e <b>erros</b>, além do <b>tipo de golpe</b> jogado (smash, saque, amortecida, etc.).",
+    btn_avancees: "Stats Avançadas",
+    info_avancees: "Registra o <b>tipo de golpe</b>, se foi jogado de <b>direita ou de esquerda</b>, além das <b>zonas de saque</b>.",
+    btn_pro: "Stats Pro",
+    info_pro: "O modo mais completo: <b>todos os tipos de golpe</b>, <b>todas as zonas</b> da quadra, com um <b>mapa de estatísticas</b> detalhado.",
+    paid_badge: "🔒 Pago",
+    contact: "Fale conosco",
+    install_title: "Instale o BeachStats",
+    install_ios: "Toque em <b>Compartilhar</b> e depois em <b>\"Adicionar à Tela de Início\"</b>",
+    install_android: "Adicione o app à tela inicial para acessar mais rápido, mesmo offline.",
+    install_btn: "Instalar",
+  },
+};
+
+let currentLang = 'fr';
+
+function applyLanguage(lang) {
+  const dict = I18N[lang] || I18N.fr;
+  currentLang = lang;
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.dataset.i18nHtml;
+    if (dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (dict[key] !== undefined) el.placeholder = dict[key];
+  });
+
+  // Le texte du mode (Équipe/Joueur) dépend de l'état du bouton, pas d'un
+  // simple attribut fixe : on le recalcule à chaque changement de langue.
+  updateModeText();
+}
+
+function setLanguage(lang) {
+  localStorage.setItem('beachstats_lang', lang);
+  applyLanguage(lang);
+}
+
+function onLanguageSelectChange(sel) {
+  setLanguage(sel.value);
+}
+
 async function checkTier() {
   try {
     const res = await fetch('/api/tier');
@@ -413,6 +565,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const current = localStorage.getItem('beachstats_theme') || 'dark';
   const sel = document.getElementById('themeSelect');
   if (sel) sel.value = current;
+
+  // Langue : reprend le choix déjà fait, sinon devine depuis la langue du
+  // navigateur (utile pour un visiteur brésilien ou anglophone qui arrive
+  // pour la première fois), sinon retombe sur le français par défaut.
+  let lang = localStorage.getItem('beachstats_lang');
+  if (!lang) {
+    const nav = (navigator.language || 'fr').toLowerCase();
+    lang = nav.startsWith('pt') ? 'pt' : nav.startsWith('en') ? 'en' : 'fr';
+  }
+  const langSel = document.getElementById('langSelect');
+  if (langSel) langSel.value = lang;
+  applyLanguage(lang);
+
   restoreLastNames();
   checkTier();
 });
@@ -442,13 +607,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!banner || !textEl) return;
 
     if (type === 'ios') {
-      textEl.innerHTML = 'Appuie sur <b>Partager</b> puis <b>« Sur l\'écran d\'accueil »</b>';
+      textEl.innerHTML = (I18N[currentLang] || I18N.fr).install_ios;
     } else {
-      textEl.textContent = "Ajoute l'appli sur ton écran d'accueil pour y accéder plus vite, même hors ligne.";
+      textEl.textContent = (I18N[currentLang] || I18N.fr).install_android;
       if (!banner.querySelector('.install-banner-action')) {
         const btn = document.createElement('button');
         btn.className = 'install-banner-action';
-        btn.textContent = 'Installer';
+        btn.textContent = (I18N[currentLang] || I18N.fr).install_btn;
         btn.onclick = async function() {
           if (deferredPrompt) {
             deferredPrompt.prompt();
