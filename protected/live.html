@@ -18,11 +18,83 @@
   --gold:#f5c518; --blue:#3b82f6; --orange:#f97316; --green:#22c55e;
   --red:#ef4444; --text:#e2eaf8; --muted:#4a6494;
 }
+[data-theme="light"]{
+  --bg:#eef1f6; --surface:#e7ecf3; --card:#f7f9fc; --border:#aebad2;
+  --gold:#b3860f; --blue:#3b66c4; --orange:#c9601e; --green:#1f8a4c;
+  --red:#c23a3a; --text:#2c3646; --muted:#748094;
+}
+[data-theme="neon"]{
+  --bg:#050214; --surface:#0d0620; --card:#140a2e; --border:#3d1a6b;
+  --gold:#ffe600; --blue:#00e5ff; --orange:#ff2e97; --green:#39ff14;
+  --red:#ff2e5f; --text:#f2ecff; --muted:#8c6bc9;
+}
+[data-theme="sunset"]{
+  --bg:linear-gradient(180deg,#200a12 0%,#4a1f16 22%,#b8531f 48%,#f0c542 62%,#6b2a52 84%,#241130 100%);
+  --surface:linear-gradient(135deg,#3c1a14 0%,#6b3420 100%);
+  --card:linear-gradient(150deg,#481f18 0%,#7a3f22 100%);
+  --border:#a35a35;
+  --gold:#ffcb3d; --blue:#5ec8f5; --orange:#ff7f3f; --green:#3fd9ae;
+  --red:#ef4a4a; --text:#fff8ec; --muted:#e0b89f;
+}
+[data-theme="lagoon"]{
+  --bg:linear-gradient(180deg,#02141a 0%,#053b3f 22%,#0a6e6e 48%,#17d6d0 62%,#0a4a5c 84%,#02121e 100%);
+  --surface:linear-gradient(135deg,#04262b 0%,#0a4a4a 100%);
+  --card:linear-gradient(150deg,#063339 0%,#0d5555 100%);
+  --border:#1ec9c9;
+  --gold:#ffd166; --blue:#22d3ee; --orange:#ff8c42; --green:#2dd4a7;
+  --red:#ff5c5c; --text:#e0fbfc; --muted:#5fa8ac;
+}
+[data-theme="eclat"]{
+  --bg:linear-gradient(180deg,#ffffff 0%,#fff3d1 18%,#ffe0ee 36%,#e3f3ff 54%,#dffbe8 72%,#fff9f0 88%,#ffffff 100%);
+  --surface:linear-gradient(135deg,#fffaf0 0%,#ffeaf3 100%);
+  --card:linear-gradient(150deg,#ffffff 0%,#fff3fa 100%);
+  --border:#ffb4d1;
+  --gold:#ffb100; --blue:#0080ff; --orange:#ff5400; --green:#00c853;
+  --red:#ff1744; --text:#14171f; --muted:#66707f;
+}
+[data-theme="glacier"]{
+  --bg:linear-gradient(180deg,#020a12 0%,#062038 22%,#0f3f5c 48%,#63d8ff 62%,#123048 84%,#02101c 100%);
+  --surface:linear-gradient(135deg,#04182a 0%,#0a3550 100%);
+  --card:linear-gradient(150deg,#082238 0%,#0e3d5c 100%);
+  --border:#3fa0cf;
+  --gold:#d6faff; --blue:#7fd8ff; --orange:#ffb4a8; --green:#9dfcd8;
+  --red:#ff8fa3; --text:#eaf9ff; --muted:#6f93ab;
+}
+/* ── RÉGLAGES (thème + langue) ── */
+body{transition:background-color .25s ease,color .25s ease}
+.theme-switch-wrap{position:relative}
+.header-gear-btn{background:none;border:1px solid var(--border);color:var(--muted);
+  width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;transition:border-color .18s,color .18s,transform .3s}
+.header-gear-btn:hover{border-color:var(--gold);color:var(--gold);transform:rotate(25deg)}
+.theme-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:8px;display:none;flex-direction:column;gap:2px;z-index:30;min-width:190px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.theme-menu.open{display:flex}
+.theme-menu-right{right:0;left:auto}
+.settings-section-title{font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);padding:8px 8px 2px;margin-top:4px}
+.settings-section-title:first-child{margin-top:0}
+.settings-divider{height:1px;background:var(--border);margin:4px 0}
+.theme-swatch{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text);
+  font-family:Barlow,sans-serif;font-size:13px;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;width:100%}
+.theme-swatch:hover{background:var(--surface)}
+.theme-swatch.active{outline:1px solid var(--gold)}
+.theme-swatch.locked{opacity:.55}
+.theme-swatch .lock-badge{margin-left:auto;font-size:9px;font-weight:900;letter-spacing:.5px;color:var(--gold);display:none;align-items:center;gap:2px;flex-shrink:0}
+.theme-swatch.locked .lock-badge{display:flex}
+.sw{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.25)}
+.sw-dark{background:linear-gradient(135deg,#080f1e,#3b82f6)}
+.sw-light{background:linear-gradient(135deg,#f7f9fc,#3b66c4)}
+.sw-neon{background:linear-gradient(135deg,#050214,#ff2e97)}
+.sw-sunset{background:linear-gradient(135deg,#2a130f,#ff6b1a)}
+.sw-lagoon{background:linear-gradient(135deg,#02141a,#17d6d0)}
+.sw-eclat{background:linear-gradient(135deg,#ffe0ee,#ff5400 55%,#0080ff)}
+.sw-glacier{background:linear-gradient(135deg,#020a12,#63d8ff)}
 body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:var(--text);
   display:flex;flex-direction:column;align-items:center;padding:0 1rem 4rem}
 
 .header{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;
-  padding:1.2rem 0 1rem}
+  padding:1.2rem 0 1rem;flex-wrap:wrap;row-gap:8px;gap:10px}
 .header-logo{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;
   text-transform:uppercase;color:var(--gold)}
 .header-logo span{color:var(--text);opacity:.5}
@@ -77,9 +149,6 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 </style>
 
 <script>
-// Enregistrement du service worker (mode hors ligne). Échec silencieux si
-// non supporté ou si le fichier n'est pas encore déployé, pour ne jamais
-// bloquer le chargement normal de la page.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -91,7 +160,32 @@ if ('serviceWorker' in navigator) {
 
 <div class="header">
   <div class="header-logo">Beach<span>/</span>Stats</div>
-  <div class="live-badge" id="liveBadge"><span class="live-dot"></span>En direct</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="live-badge" id="liveBadge"><span class="live-dot"></span><span data-i18n="live_label">En direct</span></div>
+    <div class="theme-switch-wrap">
+      <button class="header-gear-btn" onclick="toggleGearMenu(event)" aria-label="Menu">⚙</button>
+      <div class="theme-menu theme-menu-right" id="gearMenu">
+        <button class="theme-swatch gear-menu-item" onclick="openThemeSubmenu(event)" data-i18n="settings_theme">Thème<span class="menu-chevron" style="margin-left:auto;color:var(--muted)">›</span></button>
+        <button class="theme-swatch gear-menu-item" onclick="openLangSubmenu(event)" data-i18n="settings_lang">Langue<span class="menu-chevron" style="margin-left:auto;color:var(--muted)">›</span></button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="themeSubmenu">
+        <button class="prefs-back-btn" onclick="closeThemeSubmenu(event)" data-i18n="back" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--muted);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;cursor:pointer;width:100%;text-align:left">‹ Retour</button>
+        <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span><span data-i18n="theme_dark">Sombre</span></button>
+        <button class="theme-swatch" data-theme-choice="light" onclick="setTheme('light')"><span class="sw sw-light"></span><span data-i18n="theme_light">Clair</span></button>
+        <button class="theme-swatch" data-theme-choice="neon" onclick="setTheme('neon')"><span class="sw sw-neon"></span>Neon Beach<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="sunset" onclick="setTheme('sunset')"><span class="sw sw-sunset"></span>Sunset Gold<span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="lagoon" onclick="setTheme('lagoon')"><span class="sw sw-lagoon"></span><span data-i18n="theme_lagoon">Lagon</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="eclat" onclick="setTheme('eclat')"><span class="sw sw-eclat"></span><span data-i18n="theme_eclat">Éclat</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+        <button class="theme-swatch" data-theme-choice="glacier" onclick="setTheme('glacier')"><span class="sw sw-glacier"></span><span data-i18n="theme_glacier">Glacier</span><span class="lock-badge" data-i18n="badge_pro">🔒 PRO</span></button>
+      </div>
+      <div class="theme-menu theme-menu-right" id="langSubmenu">
+        <button class="prefs-back-btn" onclick="closeLangSubmenu(event)" data-i18n="back" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--muted);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;cursor:pointer;width:100%;text-align:left">‹ Retour</button>
+        <button class="theme-swatch" data-lang-choice="fr" onclick="setLanguage('fr')">Français</button>
+        <button class="theme-swatch" data-lang-choice="en" onclick="setLanguage('en')">English</button>
+        <button class="theme-swatch" data-lang-choice="pt" onclick="setLanguage('pt')">Português</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="content">
@@ -99,6 +193,182 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <script>
+// ── LANGUES (chargé en premier, tout le rendu en dépend) ────────────────
+const I18N = {
+  fr: {
+    live_label: "En direct",
+    settings_theme: "Thème", settings_lang: "Langue", back: "‹ Retour",
+    theme_dark: "Sombre", theme_light: "Clair", theme_lagoon: "Lagon", theme_eclat: "Éclat", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
+    connecting: "Connexion au match…",
+    invalid_link: "Lien invalide : aucun code de match fourni.",
+    waiting_scorer: "En attente que le scoreur démarre le partage…",
+    connection_lost: "Connexion perdue. Nouvelle tentative dans quelques secondes…",
+    match_over: "Match terminé",
+    warmup: "Échauffement — le match n'a pas encore commencé",
+    super_tb_progress: "Super tie-break en cours",
+    tb_progress: "Tie-break en cours",
+    set_n_progress: "Set {n} en cours",
+    winner_label: "🏆 Vainqueur",
+    team_a: "Équipe A", team_b: "Équipe B",
+    header_team: "Équipe", header_points: "Points",
+    stats_title: "Stats du match",
+    stat_winners: "Winners", stat_faults: "Fautes directes", stat_points_won: "Points gagnés",
+    footer_note: "Mis à jour en direct, dès qu'un point est marqué",
+  },
+  en: {
+    live_label: "Live",
+    settings_theme: "Theme", settings_lang: "Language", back: "‹ Back",
+    theme_dark: "Dark", theme_light: "Light", theme_lagoon: "Lagoon", theme_eclat: "Radiance", theme_glacier: "Glacier",
+    badge_pro: "🔒 PRO",
+    connecting: "Connecting to match…",
+    invalid_link: "Invalid link: no match code provided.",
+    waiting_scorer: "Waiting for the scorer to start sharing…",
+    connection_lost: "Connection lost. Retrying in a few seconds…",
+    match_over: "Match finished",
+    warmup: "Warm-up — the match hasn't started yet",
+    super_tb_progress: "Super tiebreak in progress",
+    tb_progress: "Tiebreak in progress",
+    set_n_progress: "Set {n} in progress",
+    winner_label: "🏆 Winner",
+    team_a: "Team A", team_b: "Team B",
+    header_team: "Team", header_points: "Points",
+    stats_title: "Match stats",
+    stat_winners: "Winners", stat_faults: "Unforced errors", stat_points_won: "Points won",
+    footer_note: "Updated live, as soon as a point is scored",
+  },
+  pt: {
+    live_label: "Ao vivo",
+    settings_theme: "Tema", settings_lang: "Idioma", back: "‹ Voltar",
+    theme_dark: "Escuro", theme_light: "Claro", theme_lagoon: "Lagoa", theme_eclat: "Brilho", theme_glacier: "Glaciar",
+    badge_pro: "🔒 PRO",
+    connecting: "Conectando à partida…",
+    invalid_link: "Link inválido: nenhum código de partida fornecido.",
+    waiting_scorer: "Aguardando o marcador iniciar o compartilhamento…",
+    connection_lost: "Conexão perdida. Nova tentativa em alguns segundos…",
+    match_over: "Partida encerrada",
+    warmup: "Aquecimento — a partida ainda não começou",
+    super_tb_progress: "Super tie-break em andamento",
+    tb_progress: "Tie-break em andamento",
+    set_n_progress: "Set {n} em andamento",
+    winner_label: "🏆 Vencedor",
+    team_a: "Equipe A", team_b: "Equipe B",
+    header_team: "Equipe", header_points: "Pontos",
+    stats_title: "Stats da partida",
+    stat_winners: "Winners", stat_faults: "Erros não forçados", stat_points_won: "Pontos ganhos",
+    footer_note: "Atualizado ao vivo, assim que um ponto é marcado",
+  },
+};
+
+let currentLang = localStorage.getItem('beachstats_lang');
+if (!currentLang) {
+  const nav = (navigator.language || 'fr').toLowerCase();
+  currentLang = nav.startsWith('pt') ? 'pt' : nav.startsWith('en') ? 'en' : 'fr';
+}
+
+function t(key, vars) {
+  const dict = I18N[currentLang] || I18N.fr;
+  let str = dict[key] !== undefined ? dict[key] : (I18N.fr[key] !== undefined ? I18N.fr[key] : key);
+  if (vars) Object.keys(vars).forEach(k => { str = str.replace('{'+k+'}', vars[k]); });
+  return str;
+}
+
+function applyLanguageToDOM() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-lang-choice]').forEach(b => {
+    b.classList.toggle('active', b.dataset.langChoice === currentLang);
+  });
+}
+
+// ── THÈMES ────────────────────────────────────────────────────────────────
+const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'eclat', 'glacier'];
+let userTier = null;
+
+function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+function setTheme(theme) {
+  if (PRO_THEMES.includes(theme) && userTier !== 'pro') {
+    window.open('https://beachstats.gumroad.com/l/jlcqx', '_blank');
+    return;
+  }
+  localStorage.setItem('beachstats_theme', theme);
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => b.classList.toggle('active', b.dataset.themeChoice === theme));
+  document.getElementById('themeSubmenu')?.classList.remove('open');
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('beachstats_lang', lang);
+  applyLanguageToDOM();
+  document.getElementById('langSubmenu')?.classList.remove('open');
+  // Le dernier état reçu doit être ré-affiché dans la nouvelle langue
+  // immédiatement, sans attendre le prochain message du serveur.
+  if (window._lastState) renderMatch(window._lastState);
+  else if (!hasEverLoaded) renderError(t(code ? 'connecting' : 'invalid_link'));
+}
+
+function closeAllSubmenus() {
+  document.getElementById('themeSubmenu')?.classList.remove('open');
+  document.getElementById('langSubmenu')?.classList.remove('open');
+}
+
+function toggleGearMenu(e) {
+  e.stopPropagation();
+  closeAllSubmenus();
+  document.getElementById('gearMenu')?.classList.toggle('open');
+}
+
+function openThemeSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('gearMenu')?.classList.remove('open');
+  document.getElementById('themeSubmenu')?.classList.add('open');
+}
+
+function closeThemeSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('themeSubmenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.add('open');
+}
+
+function openLangSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('gearMenu')?.classList.remove('open');
+  document.getElementById('langSubmenu')?.classList.add('open');
+}
+
+function closeLangSubmenu(e) {
+  e.stopPropagation();
+  document.getElementById('langSubmenu')?.classList.remove('open');
+  document.getElementById('gearMenu')?.classList.add('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.theme-switch-wrap')) {
+    document.getElementById('gearMenu')?.classList.remove('open');
+    closeAllSubmenus();
+  }
+});
+
+function updateThemeLockUI() {
+  document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => {
+    const isProTheme = PRO_THEMES.includes(b.dataset.themeChoice);
+    b.classList.toggle('locked', isProTheme && userTier !== 'pro');
+  });
+}
+
+async function checkTier() {
+  try {
+    const res = await fetch('/api/tier');
+    const data = await res.json();
+    userTier = data.tier;
+  } catch (e) {
+    userTier = null;
+  }
+  updateThemeLockUI();
+}
+
 const params = new URLSearchParams(window.location.search);
 const code = (params.get('code') || '').trim();
 const content = document.getElementById('content');
@@ -116,10 +386,12 @@ function escapeHtml(str) {
 
 function renderError(msg) {
   liveBadge.style.opacity = '.35';
+  window._lastState = null;
   content.innerHTML = `<div class="state-msg">${escapeHtml(msg)}</div>`;
 }
 
 function renderMatch(state) {
+  window._lastState = state;
   liveBadge.style.opacity = '1';
   const aWon = state.matchOver && state.winner === state.nameA;
   const bWon = state.matchOver && state.winner === state.nameB;
@@ -138,15 +410,15 @@ function renderMatch(state) {
 
   let statusLine;
   if (state.matchOver) {
-    statusLine = 'Match terminé';
+    statusLine = t('match_over');
   } else if (state.matchStarted === false) {
-    statusLine = 'Échauffement — le match n\'a pas encore commencé';
+    statusLine = t('warmup');
   } else if (state.inSuperTiebreak) {
-    statusLine = 'Super tie-break en cours';
+    statusLine = t('super_tb_progress');
   } else if (state.inTiebreak) {
-    statusLine = 'Tie-break en cours';
+    statusLine = t('tb_progress');
   } else {
-    statusLine = 'Set ' + (setHist.length + 1) + ' en cours';
+    statusLine = t('set_n_progress', {n: setHist.length + 1});
   }
 
   const pointDisplay = (state.inSuperTiebreak || state.inTiebreak)
@@ -156,18 +428,18 @@ function renderMatch(state) {
   const s = state.stats || {};
   const winnerBanner = state.matchOver ? `
     <div class="winner-banner show">
-      <div class="lbl">🏆 Vainqueur</div>
+      <div class="lbl">${t('winner_label')}</div>
       <div class="name">${escapeHtml(state.winner || '—')}</div>
     </div>` : '';
 
-  const labelA = (state.teamLabelA && state.teamLabelA.trim()) || 'Équipe A';
-  const labelB = (state.teamLabelB && state.teamLabelB.trim()) || 'Équipe B';
+  const labelA = (state.teamLabelA && state.teamLabelA.trim()) || t('team_a');
+  const labelB = (state.teamLabelB && state.teamLabelB.trim()) || t('team_b');
 
   content.innerHTML = `
     ${winnerBanner}
     <div class="card">
       <div class="score-header">
-        <span>Équipe</span><span>S1</span><span>S2</span><span>S3</span><span>Points</span>
+        <span>${t('header_team')}</span><span>S1</span><span>S2</span><span>S3</span><span>${t('header_points')}</span>
       </div>
       <div class="team-row a">
         <div class="team-info">
@@ -193,29 +465,25 @@ function renderMatch(state) {
     </div>
 
     <div class="card">
-      <div class="stats-title">Stats du match</div>
+      <div class="stats-title">${t('stats_title')}</div>
       <div class="stat-row">
-        <div class="stat-val a">${s.wA||0}</div><div class="stat-name">Winners</div><div class="stat-val b">${s.wB||0}</div>
+        <div class="stat-val a">${s.wA||0}</div><div class="stat-name">${t('stat_winners')}</div><div class="stat-val b">${s.wB||0}</div>
       </div>
       <div class="stat-row">
-        <div class="stat-val a">${s.fA||0}</div><div class="stat-name">Fautes directes</div><div class="stat-val b">${s.fB||0}</div>
+        <div class="stat-val a">${s.fA||0}</div><div class="stat-name">${t('stat_faults')}</div><div class="stat-val b">${s.fB||0}</div>
       </div>
       <div class="stat-row">
-        <div class="stat-val a">${s.pA||0}</div><div class="stat-name">Points gagnés</div><div class="stat-val b">${s.pB||0}</div>
+        <div class="stat-val a">${s.pA||0}</div><div class="stat-name">${t('stat_points_won')}</div><div class="stat-val b">${s.pB||0}</div>
       </div>
     </div>
 
-    <div class="footer-note">Mis à jour en direct, dès qu'un point est marqué</div>
+    <div class="footer-note">${t('footer_note')}</div>
   `;
 }
 
-// Connexion WebSocket au Durable Object du match — remplace l'ancien
-// sondage HTTP toutes les 4 secondes : les mises à jour arrivent maintenant
-// dès qu'elles sont poussées par le scoreur, sans délai d'attente, et sans
-// requêtes répétées à intervalle fixe.
 function connect() {
   if (!code) {
-    renderError("Lien invalide : aucun code de match fourni.");
+    renderError(t('invalid_link'));
     return;
   }
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -226,30 +494,36 @@ function connect() {
       const state = JSON.parse(ev.data);
       hasEverLoaded = true;
       renderMatch(state);
-    } catch (e) { /* message mal formé : ignoré, on garde le dernier affichage valide */ }
+    } catch (e) { }
   });
 
   liveSocket.addEventListener('close', () => {
     if (!hasEverLoaded) {
-      renderError("En attente que le scoreur démarre le partage…");
+      renderError(t('waiting_scorer'));
     } else {
-      renderError("Connexion perdue. Nouvelle tentative dans quelques secondes…");
+      renderError(t('connection_lost'));
     }
-    // Coupure réseau, veille de l'écran, redéploiement du serveur... on
-    // retente automatiquement, sans jamais laisser le spectateur bloqué.
     clearTimeout(reconnectTimer);
     reconnectTimer = setTimeout(connect, 3000);
   });
 
   liveSocket.addEventListener('error', () => {
-    // 'close' se déclenche juste après : la logique de reconnexion y est déjà.
   });
 }
 
+// ── INIT ─────────────────────────────────────────────────────────────────
+applyTheme(localStorage.getItem('beachstats_theme') || 'dark');
+document.querySelectorAll('.theme-swatch[data-theme-choice]').forEach(b => {
+  b.classList.toggle('active', b.dataset.themeChoice === (localStorage.getItem('beachstats_theme') || 'dark'));
+});
+document.querySelectorAll('[data-lang-choice]').forEach(b => b.classList.toggle('active', b.dataset.langChoice === currentLang));
+applyLanguageToDOM();
+checkTier();
+
 if (!code) {
-  renderError("Lien invalide : aucun code de match fourni.");
+  renderError(t('invalid_link'));
 } else {
-  renderError("Connexion au match…");
+  renderError(t('connecting'));
   connect();
 }
 </script>
