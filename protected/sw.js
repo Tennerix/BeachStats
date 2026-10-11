@@ -7,9 +7,9 @@
 // version de l'appli quand le réseau est disponible.
 //
 // Pour forcer tout le monde à récupérer une nouvelle version après une mise
-// à jour du site, il suffit d'incrémenter CACHE_NAME (ex: 'beachstats-v2') :
+// à jour du site, il suffit d'incrémenter CACHE_NAME (ex: 'beachstats-v3') :
 // l'ancien cache sera automatiquement supprimé à l'étape "activate".
-const CACHE_NAME = 'beachstats-v1';
+const CACHE_NAME = 'beachstats-v3';
 
 // Pages principales pré-chargées dès l'installation, pour qu'elles soient
 // utilisables hors ligne dès la première visite (pas besoin d'attendre
@@ -21,6 +21,8 @@ const APP_SHELL = [
   '/intermediaire',
   '/historique',
   '/live',
+  '/shared.js',
+  '/barlow-font.js',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
