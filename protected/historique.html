@@ -231,6 +231,7 @@ if ('serviceWorker' in navigator) {
   <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importHistory(event)">
 </div>
 
+<div id="syncNotice" style="width:100%"></div>
 <div id="content"></div>
 
 <script>
@@ -703,6 +704,8 @@ function formatDate(iso) {
   return d.toLocaleDateString(locale, {day:'2-digit', month:'2-digit', year:'numeric'}) +
     atWord + d.toLocaleTimeString(locale, {hour:'2-digit', minute:'2-digit'});
 }
+
+window.addEventListener('bs-history-updated', function(){ render(); });
 
 function render() {
   const hist = loadHistory();
@@ -2204,5 +2207,6 @@ document.addEventListener('DOMContentLoaded', function() {
   applyLanguageToDOM();
 });
 </script>
+<script src="/sync.js"></script>
 </body>
 </html>
