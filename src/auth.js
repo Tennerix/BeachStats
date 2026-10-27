@@ -1,6 +1,6 @@
 // ── COMPTES UTILISATEURS (email + mot de passe) ──────────────────────────
 // Données stockées dans la base D1 (binding "DB") : users, sessions,
-// login_tokens (liens de réinitialisation), entitlements (niveau payant),
+
 // auth_attempts (limitation des essais).
 import { WorkerMailer } from "worker-mailer";
 
