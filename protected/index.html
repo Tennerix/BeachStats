@@ -242,6 +242,7 @@ if ('serviceWorker' in navigator) {
       </div>
     </div>
     <button type="button" class="history-btn" onclick="goToHistorique()"><i class="ti ti-history"></i><span data-i18n="history_btn">Historique</span></button>
+    <a class="history-btn" href="/compte" id="accountBtn"><i class="ti ti-user"></i><span data-i18n="account_btn">Compte</span></a>
   </div>
   <div class="bt-card">
     <p class="bt-title"><i class="ti ti-users"></i><span data-i18n="title_teams">Equipes &amp;</span> <span class="hl" data-i18n="title_players">Joueurs</span></p>
@@ -432,6 +433,7 @@ document.addEventListener('click', function(e) {
 const I18N = {
   fr: {
     history_btn: "Historique",
+    account_btn: "Compte",
     settings_theme: "Thème", settings_lang: "Langue",
     theme_dark: "Sombre", theme_light: "Clair", theme_lagoon: "Lagon", theme_eclat: "Éclat", theme_glacier: "Glacier",
     badge_pro: "🔒 PRO",
@@ -464,6 +466,7 @@ const I18N = {
   },
   en: {
     history_btn: "History",
+    account_btn: "Account",
     settings_theme: "Theme", settings_lang: "Language",
     theme_dark: "Dark", theme_light: "Light", theme_lagoon: "Lagoon", theme_eclat: "Radiance", theme_glacier: "Glacier",
     badge_pro: "🔒 PRO",
@@ -496,6 +499,7 @@ const I18N = {
   },
   pt: {
     history_btn: "Histórico",
+    account_btn: "Conta",
     settings_theme: "Tema", settings_lang: "Idioma",
     theme_dark: "Escuro", theme_light: "Claro", theme_lagoon: "Lagoa", theme_eclat: "Brilho", theme_glacier: "Glaciar",
     badge_pro: "🔒 PRO",
