@@ -1,3 +1,5 @@
+import { handleAuth, getAccount, getAccountTier } from "./auth.js";
+
 // ── CONFIGURATION ────────────────────────────────────────────────────────
 const GUMROAD_PRODUCT_ID = "Gm9Hj8rUABWevGSi6DZZ1w==";
 const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
@@ -25,6 +27,7 @@ const ROUTES = {
   "/intermediaire": { file: "/intermediaire.html",  tier: null },
   "/historique":    { file: "/historique.html",     tier: null },
   "/live":          { file: "/live.html",           tier: null },
+  "/compte":        { file: "/compte.html",         tier: null },
   "/avancees":      { file: "/avancees.html",       tier: "avancees" },
   "/pro":           { file: "/pro.html",            tier: "pro" },
 };
@@ -58,7 +61,7 @@ function jsonResponse(obj, status = 200) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname === "/verify" && request.method === "POST") {
@@ -70,8 +73,13 @@ export default {
     // qui reste HttpOnly) si le visiteur a un accès Avancées/Pro valide,
     // peu importe la page où il se trouve.
     if (url.pathname === "/api/tier") {
-      const session = await readSessionCookie(request, env);
-      return jsonResponse({ tier: session ? session.tier : null });
+      const access = await readAccess(request, env);
+      return jsonResponse({ tier: access.tier, email: access.email });
+    }
+
+    // Comptes utilisateurs : inscription, connexion, mot de passe oublié...
+    if (url.pathname.startsWith("/api/auth/")) {
+      return handleAuth(request, env, ctx, url);
     }
 
     // Partage en direct : un scoreur et n'importe quel nombre de spectateurs
@@ -100,9 +108,9 @@ export default {
         return env.ASSETS.fetch(new Request(assetUrl, request));
       }
 
-      const session = await readSessionCookie(request, env);
+      const access = await readAccess(request, env);
       const hasAccess =
-        session && (session.tier === "pro" || session.tier === route.tier);
+        access.tier && (access.tier === "pro" || access.tier === route.tier);
 
       if (hasAccess) {
         const assetUrl = new URL(route.file, request.url);
@@ -256,22 +264,49 @@ async function createSessionCookie(tier, env) {
   return `${COOKIE_NAME}=${value}; Path=/; Max-Age=${COOKIE_MAX_AGE_DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 
+// Niveau d'accès du visiteur : d'abord celui rattaché à son compte (s'il est
+// connecté), sinon celui de l'ancien cookie issu d'un code Gumroad saisi
+// directement. Les deux systèmes cohabitent, personne ne perd son accès.
+async function readAccess(request, env) {
+  let email = null;
+  let tier = null;
+  try {
+    const account = await getAccount(request, env);
+    if (account) {
+      email = account.email;
+      tier = await getAccountTier(env, account.id);
+    }
+  } catch (e) {
+    // base indisponible ou non configurée : on retombe sur l'ancien cookie
+  }
+  if (!tier) {
+    const legacy = await readSessionCookie(request, env);
+    if (legacy) tier = legacy.tier;
+  }
+  return { email, tier };
+}
+
 async function readSessionCookie(request, env) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const match = cookieHeader.match(new RegExp(COOKIE_NAME + "=([^;]+)"));
-  if (!match) return null;
+  try {
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const match = cookieHeader.match(new RegExp(COOKIE_NAME + "=([^;]+)"));
+    if (!match) return null;
 
-  const [encodedPayload, signature] = match[1].split(".");
-  if (!encodedPayload || !signature) return null;
+    const [encodedPayload, signature] = match[1].split(".");
+    if (!encodedPayload || !signature) return null;
 
-  const payload = atob(encodedPayload);
-  const expectedSig = await sign(payload, env.COOKIE_SECRET);
-  if (expectedSig !== signature) return null;
+    const payload = atob(encodedPayload);
+    const expectedSig = await sign(payload, env.COOKIE_SECRET);
+    if (expectedSig !== signature) return null;
 
-  const session = JSON.parse(payload);
-  if (Date.now() > session.exp) return null;
+    const session = JSON.parse(payload);
+    if (Date.now() > session.exp) return null;
 
-  return session;
+    return session;
+  } catch (e) {
+    // cookie illisible ou abîmé : on le traite comme absent
+    return null;
+  }
 }
 
 async function sign(text, secret) {
