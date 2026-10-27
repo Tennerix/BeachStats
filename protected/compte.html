@@ -27,6 +27,10 @@ input:focus{outline:2px solid #f5c518;outline-offset:1px}
 .ok{color:#4ade80;font-size:13px;margin:0 0 1rem}
 .who{background:#0d1a2e;border:1px solid #1e3560;border-radius:10px;padding:12px;margin-bottom:1rem;font-size:14px;word-break:break-all}
 .who small{display:block;color:#8ba3c7;margin-top:4px;font-size:12px}
+.licbox{margin-bottom:1rem}
+.small{font-size:12px;color:#8ba3c7}
+.small a{color:#f5c518;text-decoration:none;font-weight:700}
+.secondary{width:100%;padding:10px;border-radius:8px;border:1px solid #1e3560;background:transparent;color:#e0eaf8;font-weight:600;cursor:pointer;font-size:14px}
 a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:13px;text-decoration:none}
 .hide{display:none}
 </style>
@@ -39,7 +43,15 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
   <!-- Connecté -->
   <div id="vIn" class="hide">
     <div class="who"><span id="whoEmail"></span><small id="whoTier"></small></div>
-    <button class="primary" id="btnOut" type="button">Se déconnecter</button>
+    <form id="fLic" novalidate class="licbox">
+      <label for="lic" id="licLabel">Tu as un code d'accès ?</label>
+      <input id="lic" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX">
+      <p class="err" id="errLic" role="alert"></p>
+      <p class="ok hide" id="okLic"></p>
+      <button class="primary" id="btnLic" type="submit">Débloquer l'accès</button>
+      <p class="center small">Pas encore de code ? <a href="https://beachstats.gumroad.com/l/jlcqx" target="_blank" rel="noopener">Débloquer l'accès ici →</a></p>
+    </form>
+    <button class="secondary" id="btnOut" type="button">Se déconnecter</button>
     <a class="back" href="/">← Retour à l'appli</a>
   </div>
 
@@ -208,6 +220,34 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
       });
   };
 
+  function showMe(d) {
+    $('whoEmail').textContent = d.email;
+    $('whoTier').textContent = TIER_LABEL[d.tier] || 'Version gratuite';
+    $('licLabel').textContent = d.tier ? 'Ajouter un autre code d\'accès' : 'Tu as un code d\'accès ?';
+  }
+
+  $('fLic').onsubmit = function (e) {
+    e.preventDefault();
+    var code = $('lic').value.trim();
+    $('okLic').classList.add('hide');
+    if (!code) { showError($('errLic'), 'Entre ton code d\'accès.'); return; }
+    busy($('btnLic'), true, 'Vérification…');
+    api('/api/auth/license', { license_key: code })
+      .then(function (r) {
+        busy($('btnLic'), false, 'Débloquer l\'accès');
+        if (!r.ok) { showError($('errLic'), r.data.error || 'Une erreur est survenue.'); return; }
+        $('errLic').textContent = '';
+        $('lic').value = '';
+        $('okLic').textContent = 'C\'est bon, ton accès est rattaché à ton compte.';
+        $('okLic').classList.remove('hide');
+        return fetch('/api/auth/me', { credentials: 'same-origin' }).then(function (x) { return x.json(); }).then(showMe);
+      })
+      .catch(function () {
+        showError($('errLic'), 'Impossible de joindre le serveur.');
+        busy($('btnLic'), false, 'Débloquer l\'accès');
+      });
+  };
+
   $('btnOut').onclick = function () {
     busy($('btnOut'), true, 'Déconnexion…');
     api('/api/auth/logout').then(function () { location.href = '/compte'; });
@@ -224,8 +264,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
     .then(function (d) {
       if (d && d.email) {
         $('sub').textContent = 'Tu es connecté.';
-        $('whoEmail').textContent = d.email;
-        $('whoTier').textContent = TIER_LABEL[d.tier] || 'Version gratuite';
+        showMe(d);
         show('vIn');
       } else {
         $('sub').textContent = 'Connecte-toi pour retrouver ton niveau et ton historique sur tous tes appareils.';
