@@ -1,7 +1,6 @@
-import { handleAuth, getAccount, getAccountTier } from "./auth.js";
+import { handleAuth, getAccount, getAccountTier, checkGumroadKey, linkLicense } from "./auth.js";
 
 // ── CONFIGURATION ────────────────────────────────────────────────────────
-const GUMROAD_PRODUCT_ID = "Gm9Hj8rUABWevGSi6DZZ1w==";
 const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
 const COOKIE_NAME = "beachstats_access";
 const COOKIE_MAX_AGE_DAYS = 30;
@@ -116,7 +115,7 @@ export default {
         const assetUrl = new URL(route.file, request.url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
       }
-      return renderLoginPage(sanitizeDest(url.pathname + url.search));
+      return renderLoginPage(sanitizeDest(url.pathname + url.search), undefined, access.email);
     }
 
     // Pas une route connue : on tente quand même de servir un asset statique
@@ -213,38 +212,39 @@ async function handleVerify(request, env, url) {
     return renderLoginPage(dest, "Merci d'entrer un code.");
   }
 
-  const body = new URLSearchParams();
-  body.append("product_id", GUMROAD_PRODUCT_ID);
-  body.append("license_key", licenseKey);
-  body.append("increment_uses_count", "true");
-
-  const gumroadRes = await fetch("https://api.gumroad.com/v2/licenses/verify", {
-    method: "POST",
-    body,
-  });
-  const data = await gumroadRes.json();
-
-  const purchase = data.purchase;
-  const isActive =
-    data.success &&
-    purchase &&
-    !purchase.refunded &&
-    !purchase.chargebacked &&
-    !purchase.subscription_cancelled_at &&
-    !purchase.subscription_failed_at;
-
-  if (!isActive) {
-    return renderLoginPage(dest, "Code invalide ou abonnement inactif.");
+  // Visiteur connecté à un compte : le code est rattaché à son compte, ce qui
+  // lui donne accès sur tous ses appareils sans repasser par ce formulaire.
+  let account = null;
+  try {
+    account = await getAccount(request, env);
+  } catch (e) {
+    account = null;
+  }
+  if (account) {
+    try {
+      const linked = await linkLicense(env, account.id, licenseKey);
+      if (linked.ok) {
+        return new Response(null, { status: 302, headers: { Location: dest } });
+      }
+      return renderLoginPage(dest, linked.error, account.email);
+    } catch (e) {
+      // base indisponible : on retombe sur le fonctionnement par cookie ci-dessous
+    }
   }
 
-  if (data.uses > MAX_DEVICES) {
+  const check = await checkGumroadKey(env, licenseKey, true);
+
+  if (check.status === "unavailable") {
+    return renderLoginPage(dest, "Impossible de vérifier le code pour le moment. Réessaie dans un instant.");
+  }
+  if (check.status !== "active") {
+    return renderLoginPage(dest, "Code invalide ou abonnement inactif.");
+  }
+  if (check.uses > MAX_DEVICES) {
     return renderLoginPage(dest, "Ce code a déjà été utilisé sur trop d'appareils.");
   }
 
-  const variantText = (purchase.variants || "").toLowerCase();
-  const tier = variantText.includes("pro") ? "pro" : "avancees";
-
-  const cookie = await createSessionCookie(tier, env);
+  const cookie = await createSessionCookie(check.tier, env);
   return new Response(null, {
     status: 302,
     headers: {
@@ -321,7 +321,7 @@ async function sign(text, secret) {
   return btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 }
 
-function renderLoginPage(dest, error) {
+function renderLoginPage(dest, error, accountEmail) {
   const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -350,6 +350,9 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
     Un code débloque l'accès sur 3 appareils maximum.<br>
     L'accès est automatiquement suspendu si l'abonnement n'est pas renouvelé.
   </p>
+  ${accountEmail
+    ? `<p class="info">Connecté avec ${escapeHtml(accountEmail)} : le code sera rattaché à ton compte.</p>`
+    : `<p class="info">Tu as un compte ? <a href="/compte?next=${encodeURIComponent(dest)}" style="color:#f5c518">Connecte-toi</a> pour que ton accès te suive sur tous tes appareils.</p>`}
   <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank">Débloquer l'accès ici →</a></p>
 </div>
 </body></html>`;

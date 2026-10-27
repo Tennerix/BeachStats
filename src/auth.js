@@ -11,6 +11,11 @@ const PBKDF2_ITERATIONS = 100000; // maximum accepté par les Workers
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD = 200;
 
+// Gumroad : produit vendu et vérification des codes d'accès.
+const GUMROAD_PRODUCT_ID = "Gm9Hj8rUABWevGSi6DZZ1w==";
+const GUMROAD_VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify";
+const TIER_RECHECK_MS = 24 * 3600 * 1000; // un accès payant est revérifié auprès de Gumroad au plus une fois par jour
+
 const enc = new TextEncoder();
 
 // ── Outils de chiffrement ────────────────────────────────────────────────
@@ -127,13 +132,121 @@ export async function getAccount(request, env) {
   return row || null;
 }
 
+// ── Gumroad ──────────────────────────────────────────────────────────────
+// Vérifie un code d'accès. Renvoie { status: "active", tier, uses },
+// { status: "inactive" } (code inconnu, remboursé, abonnement arrêté...)
+// ou { status: "unavailable" } si Gumroad ne répond pas : dans ce cas on ne
+// retire jamais un accès, on réessaiera plus tard.
+export async function checkGumroadKey(env, licenseKey, increment) {
+  const body = new URLSearchParams();
+  body.append("product_id", GUMROAD_PRODUCT_ID);
+  body.append("license_key", licenseKey);
+  body.append("increment_uses_count", increment ? "true" : "false");
+
+  let data;
+  try {
+    const res = await fetch(env.GUMROAD_VERIFY_URL || GUMROAD_VERIFY_URL, { method: "POST", body });
+    if (res.status >= 500) return { status: "unavailable" };
+    data = await res.json();
+  } catch (e) {
+    return { status: "unavailable" };
+  }
+
+  const purchase = data && data.purchase;
+  const active =
+    data && data.success &&
+    purchase &&
+    !purchase.refunded &&
+    !purchase.chargebacked &&
+    !purchase.subscription_cancelled_at &&
+    !purchase.subscription_failed_at;
+  if (!active) return { status: "inactive" };
+
+  const tier = (purchase.variants || "").toLowerCase().includes("pro") ? "pro" : "avancees";
+  return { status: "active", tier, uses: data.uses };
+}
+
+// Rattache un code Gumroad à un compte. Le code ne compte plus comme un
+// appareil de plus : c'est le compte qui porte l'accès, sur autant d'appareils
+// que la personne veut. Un code ne peut appartenir qu'à un seul compte.
+export async function linkLicense(env, userId, licenseKey) {
+  const hash = await sha256Hex(licenseKey);
+  const existing = await env.DB
+    .prepare("SELECT id, user_id FROM entitlements WHERE license_hash = ?1")
+    .bind(hash)
+    .first();
+  if (existing && existing.user_id !== userId) {
+    return { error: "Ce code est déjà rattaché à un autre compte.", status: 409 };
+  }
+
+  const check = await checkGumroadKey(env, licenseKey, false);
+  if (check.status === "unavailable") {
+    return { error: "Impossible de vérifier le code pour le moment. Réessaie dans un instant.", status: 503 };
+  }
+  if (check.status !== "active") {
+    return { error: "Code invalide ou abonnement inactif.", status: 400 };
+  }
+
+  const now = Date.now();
+  if (existing) {
+    await env.DB
+      .prepare("UPDATE entitlements SET tier = ?1, license_key = ?2, checked_at = ?3, revoked_at = NULL WHERE id = ?4")
+      .bind(check.tier, licenseKey, now, existing.id)
+      .run();
+  } else {
+    try {
+      await env.DB
+        .prepare(
+          "INSERT INTO entitlements (user_id, tier, source, license_hash, license_key, created_at, checked_at) " +
+          "VALUES (?1, ?2, 'gumroad', ?3, ?4, ?5, ?5)"
+        )
+        .bind(userId, check.tier, hash, licenseKey, now)
+        .run();
+    } catch (e) {
+      if (String(e && e.message).includes("UNIQUE")) {
+        return { error: "Ce code est déjà rattaché à un autre compte.", status: 409 };
+      }
+      throw e;
+    }
+  }
+  return { ok: true, tier: check.tier };
+}
+
 // Niveau payant rattaché au compte : 'pro', 'avancees' ou null.
+// Les accès issus d'un code Gumroad sont revérifiés au plus une fois par jour :
+// un remboursement ou un abonnement arrêté retire l'accès automatiquement.
 export async function getAccountTier(env, userId) {
   const { results } = await env.DB
-    .prepare("SELECT tier FROM entitlements WHERE user_id = ?1 AND revoked_at IS NULL")
+    .prepare("SELECT id, tier, license_key, checked_at FROM entitlements WHERE user_id = ?1 AND revoked_at IS NULL")
     .bind(userId)
     .all();
-  const tiers = (results || []).map(r => r.tier);
+
+  const now = Date.now();
+  const tiers = [];
+  for (const e of results || []) {
+    let tier = e.tier;
+    if (e.license_key && (!e.checked_at || now - e.checked_at > TIER_RECHECK_MS)) {
+      const check = await checkGumroadKey(env, e.license_key, false);
+      if (check.status === "inactive") {
+        await env.DB.prepare("UPDATE entitlements SET revoked_at = ?1 WHERE id = ?2").bind(now, e.id).run();
+        continue;
+      }
+      if (check.status === "active") {
+        tier = check.tier;
+        await env.DB
+          .prepare("UPDATE entitlements SET tier = ?1, checked_at = ?2 WHERE id = ?3")
+          .bind(tier, now, e.id)
+          .run();
+      } else {
+        // Gumroad ne répond pas : on garde l'accès et on réessaiera dans une heure.
+        await env.DB
+          .prepare("UPDATE entitlements SET checked_at = ?1 WHERE id = ?2")
+          .bind(now - TIER_RECHECK_MS + 3600000, e.id)
+          .run();
+      }
+    }
+    tiers.push(tier);
+  }
   if (tiers.includes("pro")) return "pro";
   if (tiers.includes("avancees")) return "avancees";
   return null;
@@ -203,6 +316,21 @@ export async function handleAuth(request, env, ctx, url) {
   if (!body || typeof body !== "object") return json({ error: "Requête invalide." }, 400);
 
   const ip = clientIp(request);
+
+  // ── Rattacher un code d'accès Gumroad au compte connecté ──
+  if (path === "/api/auth/license") {
+    const account = await getAccount(request, env);
+    if (!account) return json({ error: "Connecte-toi d'abord." }, 401);
+    const licenseKey = typeof body.license_key === "string" ? body.license_key.trim() : "";
+    if (!licenseKey || licenseKey.length > 200) return json({ error: "Merci d'entrer un code." }, 400);
+    if ((await countAttempts(env, "license:" + account.id, 3600000)) >= 10) {
+      return json({ error: "Trop d'essais. Réessaie dans une heure." }, 429);
+    }
+    await recordAttempt(env, "license:" + account.id);
+    const result = await linkLicense(env, account.id, licenseKey);
+    if (!result.ok) return json({ error: result.error }, result.status);
+    return json({ ok: true, tier: result.tier });
+  }
 
   // ── Inscription ──
   if (path === "/api/auth/register") {
