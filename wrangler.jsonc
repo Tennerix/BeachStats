@@ -2,12 +2,17 @@
   "name": "beachstats",
   "main": "src/index.js",
   "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./protected",
     "binding": "ASSETS",
     "html_handling": "none",
     "run_worker_first": true
   },
+  // Base de données D1 : comptes, sessions, niveaux payants, historique des matchs.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "beachstats-db", "database_id": "493d3898-3f34-4972-a3a1-066097653e05" }
+  ],
   // Le partage en direct utilise maintenant un Durable Object (un par match,
   // identifié par son code) plutôt que le KV store MATCH_LIVE — voir
   // src/index.js pour le détail. Le binding KV a été retiré car plus rien
