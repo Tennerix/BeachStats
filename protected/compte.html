@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#090f1a">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Mon compte – BeachStats</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0a1628;color:#e0eaf8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px}
+.box{background:#111e35;border:1px solid #1e3560;border-radius:16px;padding:1.75rem;max-width:380px;width:100%}
+h1{font-size:19px;margin:0 0 .25rem}
+.sub{font-size:13px;color:#8ba3c7;margin:0 0 1.25rem;line-height:1.45}
+.tabs{display:flex;gap:6px;margin-bottom:1.25rem;background:#0d1a2e;border-radius:10px;padding:4px}
+.tabs button{flex:1;padding:9px;border:none;border-radius:7px;background:transparent;color:#8ba3c7;font-weight:600;cursor:pointer;font-size:14px}
+.tabs button.on{background:#1e3560;color:#fff}
+label{display:block;font-size:12px;color:#8ba3c7;margin:0 0 5px}
+input{width:100%;padding:11px;border-radius:8px;border:1px solid #1e3560;background:#0d1a2e;color:#fff;margin-bottom:1rem;font-size:16px}
+input:focus{outline:2px solid #f5c518;outline-offset:1px}
+.primary{width:100%;padding:11px;border-radius:8px;border:none;background:#f5c518;color:#0a1628;font-weight:700;cursor:pointer;font-size:15px}
+.primary:disabled{opacity:.6;cursor:default}
+.link{background:none;border:none;color:#f5c518;cursor:pointer;font-size:13px;padding:0;text-decoration:underline}
+.center{text-align:center;margin-top:1rem}
+.err{color:#f97316;font-size:13px;margin:0 0 1rem;min-height:1px}
+.ok{color:#4ade80;font-size:13px;margin:0 0 1rem}
+.who{background:#0d1a2e;border:1px solid #1e3560;border-radius:10px;padding:12px;margin-bottom:1rem;font-size:14px;word-break:break-all}
+.who small{display:block;color:#8ba3c7;margin-top:4px;font-size:12px}
+a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:13px;text-decoration:none}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Mon compte</h1>
+  <p class="sub" id="sub">Chargement…</p>
+
+  <!-- Connecté -->
+  <div id="vIn" class="hide">
+    <div class="who"><span id="whoEmail"></span><small id="whoTier"></small></div>
+    <button class="primary" id="btnOut" type="button">Se déconnecter</button>
+    <a class="back" href="/">← Retour à l'appli</a>
+  </div>
+
+  <!-- Connexion / inscription -->
+  <div id="vAuth" class="hide">
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabLogin" class="on">Connexion</button>
+      <button type="button" id="tabReg">Créer un compte</button>
+    </div>
+    <form id="fAuth" novalidate>
+      <label for="email">Adresse email</label>
+      <input id="email" type="email" autocomplete="email" inputmode="email" required>
+      <label for="pw">Mot de passe</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <p class="err" id="errAuth" role="alert"></p>
+      <button class="primary" id="btnAuth" type="submit">Se connecter</button>
+    </form>
+    <p class="center" id="forgotLine"><button class="link" id="btnForgot" type="button">Mot de passe oublié ?</button></p>
+    <a class="back" href="/">← Retour à l'appli</a>
+  </div>
+
+  <!-- Mot de passe oublié -->
+  <div id="vForgot" class="hide">
+    <form id="fForgot" novalidate>
+      <label for="femail">Adresse email du compte</label>
+      <input id="femail" type="email" autocomplete="email" inputmode="email" required>
+      <p class="err" id="errForgot" role="alert"></p>
+      <p class="ok hide" id="okForgot"></p>
+      <button class="primary" id="btnSend" type="submit">Envoyer le lien</button>
+    </form>
+    <p class="center"><button class="link" id="btnBack" type="button">← Retour à la connexion</button></p>
+  </div>
+
+  <!-- Nouveau mot de passe (lien reçu par email) -->
+  <div id="vReset" class="hide">
+    <form id="fReset" novalidate>
+      <label for="npw">Nouveau mot de passe</label>
+      <input id="npw" type="password" autocomplete="new-password" required>
+      <label for="npw2">Confirmer le mot de passe</label>
+      <input id="npw2" type="password" autocomplete="new-password" required>
+      <p class="err" id="errReset" role="alert"></p>
+      <button class="primary" id="btnReset" type="submit">Changer le mot de passe</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var params = new URLSearchParams(location.search);
+  var resetToken = params.get('reset');
+  var mode = 'login'; // 'login' | 'register'
+
+  // Page vers laquelle revenir après connexion : uniquement un chemin interne.
+  var next = params.get('next') || '/';
+  if (next.charAt(0) !== '/' || next.indexOf('//') === 0 || next.indexOf('\\') !== -1) next = '/';
+
+  var TIER_LABEL = { avancees: 'Niveau Avancées', pro: 'Niveau Pro' };
+
+  function show(id) {
+    ['vIn', 'vAuth', 'vForgot', 'vReset'].forEach(function (v) { $(v).classList.toggle('hide', v !== id); });
+  }
+
+  function api(path, body) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      credentials: 'same-origin'
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+    });
+  }
+
+  function busy(btn, on, label) {
+    btn.disabled = on;
+    if (label) btn.textContent = label;
+  }
+
+  function setMode(m) {
+    mode = m;
+    $('tabLogin').classList.toggle('on', m === 'login');
+    $('tabReg').classList.toggle('on', m === 'register');
+    $('btnAuth').textContent = m === 'login' ? 'Se connecter' : 'Créer mon compte';
+    $('pw').autocomplete = m === 'login' ? 'current-password' : 'new-password';
+    $('forgotLine').classList.toggle('hide', m !== 'login');
+    $('errAuth').textContent = m === 'register' ? 'Au moins 8 caractères pour le mot de passe.' : '';
+    $('errAuth').style.color = m === 'register' ? '#8ba3c7' : '';
+  }
+
+  function showError(el, msg) { el.style.color = ''; el.textContent = msg; }
+
+  $('tabLogin').onclick = function () { setMode('login'); };
+  $('tabReg').onclick = function () { setMode('register'); };
+
+  $('fAuth').onsubmit = function (e) {
+    e.preventDefault();
+    var email = $('email').value.trim(), pw = $('pw').value;
+    if (!email || !pw) { showError($('errAuth'), 'Remplis l\'email et le mot de passe.'); return; }
+    var label = mode === 'login' ? 'Se connecter' : 'Créer mon compte';
+    busy($('btnAuth'), true, 'Patiente…');
+    api(mode === 'login' ? '/api/auth/login' : '/api/auth/register', { email: email, password: pw })
+      .then(function (r) {
+        if (r.ok) { location.href = next; return; }
+        showError($('errAuth'), r.data.error || 'Une erreur est survenue.');
+        busy($('btnAuth'), false, label);
+      })
+      .catch(function () {
+        showError($('errAuth'), 'Impossible de joindre le serveur. Vérifie ta connexion.');
+        busy($('btnAuth'), false, label);
+      });
+  };
+
+  $('btnForgot').onclick = function () {
+    $('femail').value = $('email').value;
+    $('errForgot').textContent = '';
+    $('okForgot').classList.add('hide');
+    $('sub').textContent = 'Entre ton email : si un compte existe, tu recevras un lien pour choisir un nouveau mot de passe.';
+    show('vForgot');
+  };
+  $('btnBack').onclick = function () {
+    $('sub').textContent = 'Connecte-toi pour retrouver ton niveau et ton historique sur tous tes appareils.';
+    show('vAuth');
+  };
+
+  $('fForgot').onsubmit = function (e) {
+    e.preventDefault();
+    var email = $('femail').value.trim();
+    if (!email) { showError($('errForgot'), 'Entre ton adresse email.'); return; }
+    busy($('btnSend'), true, 'Envoi…');
+    api('/api/auth/forgot', { email: email })
+      .then(function () {
+        $('errForgot').textContent = '';
+        $('okForgot').textContent = 'C\'est envoyé. Si un compte existe avec cette adresse, tu vas recevoir un email (pense à regarder les courriers indésirables).';
+        $('okForgot').classList.remove('hide');
+        busy($('btnSend'), false, 'Renvoyer le lien');
+      })
+      .catch(function () {
+        showError($('errForgot'), 'Impossible de joindre le serveur.');
+        busy($('btnSend'), false, 'Envoyer le lien');
+      });
+  };
+
+  $('fReset').onsubmit = function (e) {
+    e.preventDefault();
+    var a = $('npw').value, b = $('npw2').value;
+    if (a.length < 8) { showError($('errReset'), 'Au moins 8 caractères.'); return; }
+    if (a !== b) { showError($('errReset'), 'Les deux mots de passe ne sont pas identiques.'); return; }
+    busy($('btnReset'), true, 'Patiente…');
+    api('/api/auth/reset', { token: resetToken, password: a })
+      .then(function (r) {
+        if (r.ok) {
+          history.replaceState(null, '', '/compte');
+          resetToken = null;
+          $('sub').textContent = 'Mot de passe changé. Tu peux te connecter.';
+          setMode('login');
+          show('vAuth');
+          return;
+        }
+        showError($('errReset'), r.data.error || 'Une erreur est survenue.');
+        busy($('btnReset'), false, 'Changer le mot de passe');
+      })
+      .catch(function () {
+        showError($('errReset'), 'Impossible de joindre le serveur.');
+        busy($('btnReset'), false, 'Changer le mot de passe');
+      });
+  };
+
+  $('btnOut').onclick = function () {
+    busy($('btnOut'), true, 'Déconnexion…');
+    api('/api/auth/logout').then(function () { location.href = '/compte'; });
+  };
+
+  // Démarrage
+  if (resetToken) {
+    $('sub').textContent = 'Choisis ton nouveau mot de passe.';
+    show('vReset');
+    return;
+  }
+  fetch('/api/auth/me', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.email) {
+        $('sub').textContent = 'Tu es connecté.';
+        $('whoEmail').textContent = d.email;
+        $('whoTier').textContent = TIER_LABEL[d.tier] || 'Version gratuite';
+        show('vIn');
+      } else {
+        $('sub').textContent = 'Connecte-toi pour retrouver ton niveau et ton historique sur tous tes appareils.';
+        setMode('login');
+        show('vAuth');
+      }
+    })
+    .catch(function () {
+      $('sub').textContent = 'Impossible de charger ton compte pour le moment.';
+      setMode('login');
+      show('vAuth');
+    });
+})();
+</script>
+</body>
+</html>
