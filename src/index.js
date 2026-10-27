@@ -1,10 +1,9 @@
-import { handleAuth, getAccount, getAccountTier, checkGumroadKey, linkLicense } from "./auth.js";
+import { handleMatches } from "./matches.js";
+import { handleAuth, getAccount, getAccountTier, linkLicense } from "./auth.js";
 
 // ── CONFIGURATION ────────────────────────────────────────────────────────
 const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
 const COOKIE_NAME = "beachstats_access";
-const COOKIE_MAX_AGE_DAYS = 30;
-const MAX_DEVICES = 3;
 
 // ── PARTAGE EN DIRECT (spectateurs) ──────────────────────────────────────
 // Repose sur un Durable Object (un par code de match) qui garde l'état en
@@ -81,6 +80,11 @@ export default {
       return handleAuth(request, env, ctx, url);
     }
 
+    // Historique des matchs synchronisé avec le compte
+    if (url.pathname.startsWith("/api/matches/")) {
+      return handleMatches(request, env, url);
+    }
+
     // Partage en direct : un scoreur et n'importe quel nombre de spectateurs
     // se connectent tous au même Durable Object (identifié par le code du
     // match) via WebSocket — aucune authentification requise, le "code"
@@ -115,7 +119,7 @@ export default {
         const assetUrl = new URL(route.file, request.url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
       }
-      return renderLoginPage(sanitizeDest(url.pathname + url.search), undefined, access.email);
+      return renderAccessPage(sanitizeDest(url.pathname + url.search), route.tier, undefined, access.email);
     }
 
     // Pas une route connue : on tente quand même de servir un asset statique
@@ -203,70 +207,43 @@ export class LiveMatch {
   }
 }
 
+// Saisie d'un code d'accès depuis la page d'accès réservé. Le code n'ouvre
+// plus rien tout seul : il est rattaché au compte connecté, et c'est le compte
+// qui donne accès sur tous les appareils.
 async function handleVerify(request, env, url) {
   const form = await request.formData();
   const licenseKey = (form.get("license_key") || "").trim();
   const dest = sanitizeDest(form.get("dest"));
+  const neededTier = ROUTES[dest.split("?")[0]]?.tier || "avancees";
 
-  if (!licenseKey) {
-    return renderLoginPage(dest, "Merci d'entrer un code.");
-  }
-
-  // Visiteur connecté à un compte : le code est rattaché à son compte, ce qui
-  // lui donne accès sur tous ses appareils sans repasser par ce formulaire.
   let account = null;
   try {
     account = await getAccount(request, env);
   } catch (e) {
     account = null;
   }
-  if (account) {
-    try {
-      const linked = await linkLicense(env, account.id, licenseKey);
-      if (linked.ok) {
-        return new Response(null, { status: 302, headers: { Location: dest } });
-      }
-      return renderLoginPage(dest, linked.error, account.email);
-    } catch (e) {
-      // base indisponible : on retombe sur le fonctionnement par cookie ci-dessous
+  if (!account) {
+    return renderAccessPage(dest, neededTier, "Connecte-toi d'abord à ton compte pour utiliser un code.");
+  }
+  if (!licenseKey) {
+    return renderAccessPage(dest, neededTier, "Merci d'entrer un code.", account.email);
+  }
+
+  try {
+    const linked = await linkLicense(env, account.id, licenseKey);
+    if (linked.ok) {
+      return new Response(null, { status: 302, headers: { Location: dest } });
     }
+    return renderAccessPage(dest, neededTier, linked.error, account.email);
+  } catch (e) {
+    return renderAccessPage(dest, neededTier, "Une erreur est survenue. Réessaie dans un instant.", account.email);
   }
-
-  const check = await checkGumroadKey(env, licenseKey, true);
-
-  if (check.status === "unavailable") {
-    return renderLoginPage(dest, "Impossible de vérifier le code pour le moment. Réessaie dans un instant.");
-  }
-  if (check.status !== "active") {
-    return renderLoginPage(dest, "Code invalide ou abonnement inactif.");
-  }
-  if (check.uses > MAX_DEVICES) {
-    return renderLoginPage(dest, "Ce code a déjà été utilisé sur trop d'appareils.");
-  }
-
-  const cookie = await createSessionCookie(check.tier, env);
-  return new Response(null, {
-    status: 302,
-    headers: {
-      "Set-Cookie": cookie,
-      Location: dest,
-    },
-  });
-}
-
-async function createSessionCookie(tier, env) {
-  const payload = JSON.stringify({
-    tier,
-    exp: Date.now() + COOKIE_MAX_AGE_DAYS * 86400000,
-  });
-  const signature = await sign(payload, env.COOKIE_SECRET);
-  const value = btoa(payload) + "." + signature;
-  return `${COOKIE_NAME}=${value}; Path=/; Max-Age=${COOKIE_MAX_AGE_DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 
 // Niveau d'accès du visiteur : d'abord celui rattaché à son compte (s'il est
-// connecté), sinon celui de l'ancien cookie issu d'un code Gumroad saisi
-// directement. Les deux systèmes cohabitent, personne ne perd son accès.
+// connecté), sinon celui de l'ancien cookie délivré avant les comptes. On ne
+// crée plus de tels cookies : ceux qui existent encore expirent d'ici 30 jours
+// maximum après leur création, le temps que chacun rattache son code à son compte.
 async function readAccess(request, env) {
   let email = null;
   let tier = null;
@@ -321,7 +298,22 @@ async function sign(text, secret) {
   return btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 }
 
-function renderLoginPage(dest, error, accountEmail) {
+function renderAccessPage(dest, neededTier, error, accountEmail) {
+  const tierName = neededTier === "pro" ? "Pro" : "Avancées";
+  const next = encodeURIComponent(dest);
+  const intro = accountEmail
+    ? `<p class="sub">Connecté avec <b>${escapeHtml(accountEmail)}</b>. Entre ton code d'accès pour débloquer le niveau ${tierName} sur ton compte, sur tous tes appareils.</p>`
+    : `<p class="sub">Cette page demande l'accès ${tierName}, rattaché à ton compte. Connecte-toi ou crée un compte, puis entre ton code d'accès une seule fois.</p>`;
+  const body = accountEmail
+    ? `${error ? `<div class="err">${escapeHtml(error)}</div>` : ""}
+  <form method="POST" action="/verify">
+    <input type="hidden" name="dest" value="${escapeHtml(dest)}">
+    <input type="text" name="license_key" placeholder="Ton code d'accès" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+    <button type="submit">Débloquer l'accès</button>
+  </form>`
+    : `${error ? `<div class="err">${escapeHtml(error)}</div>` : ""}
+  <a class="btn" href="/compte?next=${next}">Se connecter ou créer un compte</a>`;
+
   const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -329,35 +321,25 @@ function renderLoginPage(dest, error, accountEmail) {
 <style>
 body{font-family:sans-serif;background:#0a1628;color:#e0eaf8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .box{background:#111e35;border:1px solid #1e3560;border-radius:16px;padding:2rem;max-width:360px;width:90%}
-h1{font-size:18px;margin:0 0 1rem}
-input{width:100%;padding:10px;border-radius:8px;border:1px solid #1e3560;background:#0d1a2e;color:#fff;margin-bottom:1rem;box-sizing:border-box}
-button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;font-weight:bold;cursor:pointer}
+h1{font-size:18px;margin:0 0 .5rem}
+.sub{font-size:13px;color:#8ba3c7;line-height:1.5;margin:0 0 1.25rem}
+.sub b{color:#e0eaf8;word-break:break-all}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid #1e3560;background:#0d1a2e;color:#fff;margin-bottom:1rem;box-sizing:border-box;font-size:16px}
+button,.btn{display:block;width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;color:#0a1628;font-weight:bold;cursor:pointer;text-align:center;text-decoration:none;box-sizing:border-box;font-size:15px}
 .err{color:#f97316;font-size:13px;margin-bottom:1rem}
-.info{text-align:center;font-size:11px;color:#5a7299;margin-top:1rem;line-height:1.5}
-.buy{text-align:center;margin-top:.75rem;font-size:13px;color:#8ba3c7}
+.buy{text-align:center;margin-top:1rem;font-size:13px;color:#8ba3c7}
 .buy a{color:#f5c518;text-decoration:none;font-weight:bold}
 .home{display:block;text-align:center;margin-top:1.1rem;font-size:13px;color:#8ba3c7;text-decoration:none}
 .home:hover{color:#f5c518}
 </style></head>
 <body>
 <div class="box">
-  <h1>Entre ton code d'accès</h1>
-  ${error ? `<div class="err">${error}</div>` : ""}
-  <form method="POST" action="/verify">
-    <input type="hidden" name="dest" value="${escapeHtml(dest)}">
-    <input type="text" name="license_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" required>
-    <button type="submit">Débloquer l'accès</button>
-  </form>
-  <p class="info">
-    Un code débloque l'accès sur 3 appareils maximum.<br>
-    L'accès est automatiquement suspendu si l'abonnement n'est pas renouvelé.
-  </p>
-  ${accountEmail
-    ? `<p class="info">Connecté avec ${escapeHtml(accountEmail)} : le code sera rattaché à ton compte.</p>`
-    : `<p class="info">Tu as un compte ? <a href="/compte?next=${encodeURIComponent(dest)}" style="color:#f5c518">Connecte-toi</a> pour que ton accès te suive sur tous tes appareils.</p>`}
-  <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank">Débloquer l'accès ici →</a></p>
+  <h1>Accès ${tierName}</h1>
+  ${intro}
+  ${body}
+  <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank" rel="noopener">Débloquer l'accès ici →</a></p>
   <a class="home" href="/">← Retour à l'accueil</a>
 </div>
 </body></html>`;
-  return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+  return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "no-store" } });
 }
