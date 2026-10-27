@@ -1,6 +1,6 @@
 import { handleAuth, getAccount, getAccountTier } from "./auth.js";
 
-
+// ── CONFIGURATION ────────────────────────────────────────────────────────
 const GUMROAD_PRODUCT_ID = "Gm9Hj8rUABWevGSi6DZZ1w==";
 const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
 const COOKIE_NAME = "beachstats_access";
