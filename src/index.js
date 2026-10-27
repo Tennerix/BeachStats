@@ -336,6 +336,8 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
 .info{text-align:center;font-size:11px;color:#5a7299;margin-top:1rem;line-height:1.5}
 .buy{text-align:center;margin-top:.75rem;font-size:13px;color:#8ba3c7}
 .buy a{color:#f5c518;text-decoration:none;font-weight:bold}
+.home{display:block;text-align:center;margin-top:1.1rem;font-size:13px;color:#8ba3c7;text-decoration:none}
+.home:hover{color:#f5c518}
 </style></head>
 <body>
 <div class="box">
@@ -354,6 +356,7 @@ button{width:100%;padding:10px;border-radius:8px;border:none;background:#f5c518;
     ? `<p class="info">Connecté avec ${escapeHtml(accountEmail)} : le code sera rattaché à ton compte.</p>`
     : `<p class="info">Tu as un compte ? <a href="/compte?next=${encodeURIComponent(dest)}" style="color:#f5c518">Connecte-toi</a> pour que ton accès te suive sur tous tes appareils.</p>`}
   <p class="buy">Pas encore de code ? <a href="${GUMROAD_PURCHASE_URL}" target="_blank">Débloquer l'accès ici →</a></p>
+  <a class="home" href="/">← Retour à l'accueil</a>
 </div>
 </body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
