@@ -55,6 +55,11 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
   <!-- Connecté -->
   <div id="vIn" class="hide">
     <div class="who"><span id="whoEmail"></span><small id="whoTier"></small></div>
+    <div class="notice hide" id="verifyNote">
+      <span>Confirme ton adresse email : un lien t'a été envoyé (pense aux courriers indésirables). Tant que ce n'est pas fait, le code d'accès et la sauvegarde cloud sont en attente.</span>
+      <button type="button" class="link" id="btnResend">Renvoyer le lien</button>
+      <span class="ok hide" id="okResend" style="display:block;margin:6px 0 0">Lien renvoyé.</span>
+    </div>
     <p class="notice hide" id="legacyNote">Ton accès actuel est lié à cet appareil uniquement. Entre ton code ci-dessous pour le rattacher à ton compte : tu le retrouveras alors sur tous tes appareils.</p>
     <form id="fLic" novalidate class="licbox">
       <label for="lic" id="licLabel">Tu as un code d'accès ?</label>
@@ -131,6 +136,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
   var $ = function (id) { return document.getElementById(id); };
   var params = new URLSearchParams(location.search);
   var resetToken = params.get('reset');
+  var verifyToken = params.get('verify');
   var mode = 'login'; // 'login' | 'register'
 
   // Page vers laquelle revenir après connexion : uniquement un chemin interne.
@@ -184,7 +190,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
     busy($('btnAuth'), true, 'Patiente…');
     api(mode === 'login' ? '/api/auth/login' : '/api/auth/register', { email: email, password: pw })
       .then(function (r) {
-        if (r.ok) { location.href = next; return; }
+        if (r.ok) { location.href = (mode === 'register') ? '/compte' : next; return; }
         showError($('errAuth'), r.data.error || 'Une erreur est survenue.');
         busy($('btnAuth'), false, label);
       })
@@ -252,6 +258,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
   function showMe(d) {
     $('whoEmail').textContent = d.email;
     $('whoTier').textContent = TIER_LABEL[d.tier] || 'Version gratuite';
+    $('verifyNote').classList.toggle('hide', d.verified !== false);
     $('licLabel').textContent = d.tier ? 'Ajouter un autre code d\'accès' : 'Tu as un code d\'accès ?';
   }
 
@@ -277,6 +284,17 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
         showError($('errLic'), 'Impossible de joindre le serveur.');
         busy($('btnLic'), false, 'Débloquer l\'accès');
       });
+  };
+
+  $('btnResend').onclick = function () {
+    busy($('btnResend'), true);
+    api('/api/auth/resend-verification').then(function (r) {
+      busy($('btnResend'), false);
+      var el = $('okResend');
+      if (r.ok) { el.textContent = 'Lien renvoyé.'; el.style.color = ''; }
+      else { el.textContent = r.data.error || 'Envoi impossible.'; el.style.color = '#f97316'; }
+      el.classList.remove('hide');
+    }).catch(function () { busy($('btnResend'), false); });
   };
 
   $('btnOut').onclick = function () {
@@ -310,6 +328,19 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
   };
 
   // Démarrage
+  if (verifyToken) {
+    history.replaceState(null, '', '/compte');
+    $('sub').textContent = 'Confirmation de ton adresse…';
+    api('/api/auth/verify', { token: verifyToken }).then(function (r) {
+      $('sub').textContent = r.ok ? 'Adresse confirmée, merci !' : (r.data.error || 'Lien invalide ou expiré.');
+      if (r.ok) { try { localStorage.removeItem('beachstats_sync_rej'); } catch (x) {} }
+      return fetch('/api/auth/me', { credentials: 'same-origin' }).then(function (x) { return x.json(); });
+    }).then(function (d) {
+      if (d && d.email) { showMe(d); show('vIn'); }
+      else { setMode('login'); show('vAuth'); }
+    }).catch(function () { $('sub').textContent = 'Impossible de joindre le serveur.'; });
+    return;
+  }
   if (resetToken) {
     $('sub').textContent = 'Choisis ton nouveau mot de passe.';
     show('vReset');
