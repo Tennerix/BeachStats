@@ -35,6 +35,7 @@ export async function handleMatches(request, env, url) {
 
   const account = await getAccount(request, env);
   if (!account) return json({ error: "Non connecté." }, 401);
+  if (!account.verified_at) return json({ error: "Adresse email non confirmée.", unverified: true }, 403);
 
   let body;
   try {

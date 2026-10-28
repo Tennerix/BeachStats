@@ -6,6 +6,7 @@ import { WorkerMailer } from "worker-mailer";
 
 const SESSION_COOKIE = "beachstats_session";
 const SESSION_DAYS = 30;
+const VERIFY_TTL_MS = 48 * 3600000;
 const RESET_TTL_MS = 60 * 60 * 1000; // lien de réinitialisation valable 1 heure
 const PBKDF2_ITERATIONS = 100000; // maximum accepté par les Workers
 const MIN_PASSWORD = 8;
@@ -118,13 +119,35 @@ function readSessionToken(request) {
 }
 
 // Renvoie { id, email } si le visiteur est connecté, sinon null.
+// Envoie (ou renvoie) le lien de confirmation d'adresse email, valable 48 h.
+async function sendVerification(env, ctx, origin, email) {
+  const token = randomHex(32);
+  await env.DB.prepare("DELETE FROM login_tokens WHERE email = ?1 AND purpose = 'verify'").bind(email).run();
+  await env.DB
+    .prepare("INSERT INTO login_tokens (token_hash, email, expires_at, purpose) VALUES (?1, ?2, ?3, 'verify')")
+    .bind(await sha256Hex(token), email, Date.now() + VERIFY_TTL_MS)
+    .run();
+  const text =
+    "Bonjour,\n\n" +
+    "Bienvenue sur BeachStats ! Clique sur ce lien pour confirmer ton adresse email " +
+    "(il est valable 48 heures) :\n\n" +
+    `${origin}/compte?verify=${token}\n\n` +
+    "Si tu n'as pas créé de compte BeachStats, ignore simplement ce message.\n\n" +
+    "BeachStats";
+  ctx.waitUntil(
+    sendMail(env, email, "BeachStats – confirme ton adresse email", text).catch(e =>
+      console.error("Échec de l'envoi de l'email de confirmation :", e && e.message)
+    )
+  );
+}
+
 export async function getAccount(request, env) {
   if (!env.DB) return null;
   const token = readSessionToken(request);
   if (!token) return null;
   const row = await env.DB
     .prepare(
-      "SELECT u.id AS id, u.email AS email FROM sessions s JOIN users u ON u.id = s.user_id " +
+      "SELECT u.id AS id, u.email AS email, u.email_verified_at AS verified_at FROM sessions s JOIN users u ON u.id = s.user_id " +
       "WHERE s.token_hash = ?1 AND s.expires_at > ?2"
     )
     .bind(await sha256Hex(token), Date.now())
@@ -294,7 +317,7 @@ export async function handleAuth(request, env, ctx, url) {
   if (path === "/api/auth/me" && request.method === "GET") {
     const account = await getAccount(request, env);
     if (!account) return json({ email: null, tier: null });
-    return json({ email: account.email, tier: await getAccountTier(env, account.id) });
+    return json({ email: account.email, verified: !!account.verified_at, tier: await getAccountTier(env, account.id) });
   }
 
   // ── Export des données du compte (droit d'accès / portabilité) ──
@@ -359,6 +382,7 @@ export async function handleAuth(request, env, ctx, url) {
   if (path === "/api/auth/license") {
     const account = await getAccount(request, env);
     if (!account) return json({ error: "Connecte-toi d'abord." }, 401);
+    if (!account.verified_at) return json({ error: "Confirme d'abord ton adresse email (lien reçu par mail).", unverified: true }, 403);
     const licenseKey = typeof body.license_key === "string" ? body.license_key.trim() : "";
     if (!licenseKey || licenseKey.length > 200) return json({ error: "Merci d'entrer un code." }, 400);
     if ((await countAttempts(env, "license:" + account.id, 3600000)) >= 10) {
@@ -397,8 +421,40 @@ export async function handleAuth(request, env, ctx, url) {
       }
       throw e;
     }
+    await sendVerification(env, ctx, url.origin, email);
     const cookie = await startSession(env, userId);
-    return json({ ok: true, email }, 200, { "Set-Cookie": cookie });
+    return json({ ok: true, email, verified: false }, 200, { "Set-Cookie": cookie });
+  }
+
+  // ── Confirmation de l'adresse email (lien reçu à l'inscription) ──
+  if (path === "/api/auth/verify") {
+    if (typeof body.token !== "string" || !/^[a-f0-9]{64}$/.test(body.token)) {
+      return json({ error: "Lien invalide ou expiré." }, 400);
+    }
+    const tokenHash = await sha256Hex(body.token);
+    const row = await env.DB
+      .prepare("SELECT email FROM login_tokens WHERE token_hash = ?1 AND purpose = 'verify' AND used_at IS NULL AND expires_at > ?2")
+      .bind(tokenHash, Date.now())
+      .first();
+    if (!row) return json({ error: "Lien invalide ou expiré. Connecte-toi pour en recevoir un nouveau." }, 400);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE users SET email_verified_at = ?1 WHERE email = ?2 AND email_verified_at IS NULL").bind(Date.now(), row.email),
+      env.DB.prepare("UPDATE login_tokens SET used_at = ?1 WHERE token_hash = ?2").bind(Date.now(), tokenHash),
+    ]);
+    return json({ ok: true });
+  }
+
+  // ── Renvoi du lien de confirmation ──
+  if (path === "/api/auth/resend-verification") {
+    const account = await getAccount(request, env);
+    if (!account) return json({ error: "Connecte-toi d'abord." }, 401);
+    if (account.verified_at) return json({ ok: true, verified: true });
+    if ((await countAttempts(env, "verify:" + account.id, 3600000)) >= 3) {
+      return json({ error: "Trop de demandes. Réessaie dans une heure." }, 429);
+    }
+    await recordAttempt(env, "verify:" + account.id);
+    await sendVerification(env, ctx, url.origin, account.email);
+    return json({ ok: true });
   }
 
   // ── Connexion ──
@@ -530,7 +586,8 @@ export async function handleAuth(request, env, ctx, url) {
     const salt = randomHex(16);
     const hash = await hashPassword(body.password, salt);
     await env.DB.batch([
-      env.DB.prepare("UPDATE users SET password_hash = ?1, password_salt = ?2 WHERE id = ?3").bind(hash, salt, user.id),
+      // Recevoir ce lien prouve aussi que l'adresse email est bien la sienne.
+      env.DB.prepare("UPDATE users SET password_hash = ?1, password_salt = ?2, email_verified_at = COALESCE(email_verified_at, ?4) WHERE id = ?3").bind(hash, salt, user.id, Date.now()),
       env.DB.prepare("UPDATE login_tokens SET used_at = ?1 WHERE token_hash = ?2").bind(Date.now(), tokenHash),
       // Toutes les sessions ouvertes sont fermées : si quelqu'un d'autre avait accès au compte, il est déconnecté.
       env.DB.prepare("DELETE FROM sessions WHERE user_id = ?1").bind(user.id),
