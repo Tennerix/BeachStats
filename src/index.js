@@ -28,6 +28,7 @@ const ROUTES = {
   "/compte":        { file: "/compte.html",         tier: null },
   "/confidentialite": { file: "/confidentialite.html", tier: null },
   "/mentions-legales": { file: "/mentions-legales.html", tier: null },
+  "/conditions":     { file: "/conditions.html",     tier: null },
   "/avancees":      { file: "/avancees.html",       tier: "avancees" },
   "/pro":           { file: "/pro.html",            tier: "pro" },
 };
@@ -60,8 +61,28 @@ function jsonResponse(obj, status = 200) {
   });
 }
 
+// En-têtes de sécurité ajoutés à toutes les réponses (sauf WebSocket) :
+// empêche le navigateur de deviner le type d'un fichier, limite les
+// informations envoyées aux sites externes, et interdit d'afficher le site
+// dans un cadre (iframe) d'un autre site.
+function withSecurityHeaders(response) {
+  if (response.status === 101 || response.webSocket) return response;
+  const headers = new Headers(response.headers);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("X-Frame-Options", "SAMEORIGIN");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request, env, ctx) {
+    return withSecurityHeaders(await handleRequest(request, env, ctx));
+  },
+};
+
+async function handleRequest(request, env, ctx) {
+  {
     const url = new URL(request.url);
 
     // Les pages existent aussi sous leur nom de fichier (/pro.html...). Sans cette
@@ -143,8 +164,8 @@ export default {
     } catch {
       return new Response("Page introuvable", { status: 404 });
     }
-  },
-};
+  }
+}
 
 // ── Durable Object : un par code de match, tant qu'il reste actif ─────────
 // Garde le dernier état connu en stockage persistant (survit à une mise en
