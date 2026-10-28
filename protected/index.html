@@ -11,7 +11,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BeachStats">
-<title>Beach Tennis - Stats</title>
+<title>BeachStats – Statistiques de beach tennis point par point</title>
+<meta name="description" content="Application gratuite de statistiques pour le beach tennis : score en direct, suivi des coups, zones du terrain et bilan de match. Fonctionne sur téléphone, sans installation.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"BeachStats","url":"https://beachstats.appbeachstats.workers.dev/","applicationCategory":"SportsApplication","operatingSystem":"Web","inLanguage":["fr","en","pt"],"description":"Application de statistiques de beach tennis : score en direct, coups gagnants, fautes, types de coups et zones du terrain.","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}
+</script>
+<link rel="canonical" href="https://beachstats.appbeachstats.workers.dev/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="BeachStats – Statistiques de beach tennis">
+<meta property="og:description" content="Score en direct, suivi des coups, zones du terrain et bilan de match pour le beach tennis.">
+<meta property="og:url" content="https://beachstats.appbeachstats.workers.dev/">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -196,6 +205,21 @@ input:checked+.slider:before{transform:translateX(26px)}
 .contact-link i{font-size:16px}
 .contact-link:hover{color:var(--gold)}
 @media(max-width:380px){.names-grid{grid-template-columns:1fr}.bt-title{font-size:17px;letter-spacing:2px}.btn-stat{font-size:13px;padding:11px 12px}.hero img{max-height:180px}.stat-row .info-btn{width:38px;height:43px}}
+
+.seo-h1{font-family:Barlow Condensed,sans-serif;font-size:21px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--text);margin-top:1.1rem;line-height:1.2}
+.seo-h1 .hl{color:var(--gold)}
+.seo-lead{font-size:14px;line-height:1.55;text-align:center;color:var(--text);opacity:.8;margin-top:.5rem}
+.seo{width:100%;margin-top:1.75rem;color:var(--text)}
+.seo h2{font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:1.6rem 0 .6rem}
+.seo p,.seo li{font-size:14px;line-height:1.6;opacity:.88}
+.seo p+p{margin-top:.6rem}
+.seo ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.seo li{padding:.7rem .9rem;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.seo li b{color:var(--gold);font-weight:600}
+.seo details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.75rem .9rem;margin-bottom:.5rem}
+.seo summary{cursor:pointer;font-size:14px;font-weight:500;opacity:1}
+.seo details p{margin-top:.5rem}
+.seo-foot{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center;font-size:12px;opacity:.6}
 </style>
 
 <script>
@@ -223,6 +247,8 @@ if ('serviceWorker' in navigator) {
     <img src="https://tennerix.github.io/BeachStats/image1.png" alt="Beach Tennis">
     <div class="hero-badge" data-i18n="hero_badge">Interface Bêta</div>
   </div>
+  <h1 class="seo-h1">Beach<span class="hl">Stats</span> – statistiques de beach tennis</h1>
+  <p class="seo-lead">Score en direct, coups gagnants, fautes et zones du terrain : suis ton match point par point et relis ton jeu avec des chiffres.</p>
   <div class="hero-actions">
     <div class="theme-switch-wrap">
       <button type="button" class="history-btn" onclick="toggleSettingsMenu(event)" aria-label="Réglages"><i class="ti ti-settings"></i></button>
@@ -326,6 +352,46 @@ if ('serviceWorker' in navigator) {
 
     <a class="contact-link" href="mailto:supportsbeachstats@gmail.com"><i class="ti ti-mail"></i><span data-i18n="contact">Nous contacter</span></a>
   </div>
+
+  <section class="seo" id="presentation">
+    <h2>Une application de stats pour le beach tennis</h2>
+    <p>BeachStats est une application gratuite pour suivre un match de beach tennis en direct. Tu notes chaque point depuis ton téléphone, sur le sable, et l'application calcule le score et les statistiques pour toi : coups gagnants, fautes directes, types de coups, zones du terrain.</p>
+    <p>Elle fonctionne directement dans le navigateur, sur téléphone, tablette ou ordinateur. Il n'y a rien à installer, et tu peux aussi l'ajouter à l'écran d'accueil comme une application. Elle est disponible en français, en anglais et en portugais.</p>
+
+    <h2>Ce que tu peux faire</h2>
+    <ul>
+      <li><b>Compter les points</b> : un tableau de score pour le beach tennis (jeux, sets, service), sans rien d'autre à noter.</li>
+      <li><b>Stats de base</b> : les coups gagnants et les fautes directes, par équipe ou par joueur.</li>
+      <li><b>Stats intermédiaires</b> : en plus, le type de coup joué (service, smash, amorti, lob…).</li>
+      <li><b>Stats avancées et Pro</b> : coup droit ou revers, zones de service, cartographie du terrain zone par zone et schéma de statistiques détaillé.</li>
+      <li><b>Historique et PDF</b> : retrouve tes matchs passés et télécharge un bilan en PDF. Avec un compte, ton historique se synchronise entre tes appareils.</li>
+      <li><b>Partage en direct</b> : un code à donner à tes amis ou à ton coach pour suivre le score en direct.</li>
+    </ul>
+
+    <h2>Questions fréquentes</h2>
+    <details>
+      <summary>BeachStats est-il gratuit ?</summary>
+      <p>Oui, le comptage de points, les stats de base et les stats intermédiaires sont gratuits. Les stats avancées et Pro sont en abonnement mensuel, avec un compte BeachStats.</p>
+    </details>
+    <details>
+      <summary>Faut-il installer l'application ?</summary>
+      <p>Non. Ouvre simplement le site dans ton navigateur. Tu peux l'ajouter à l'écran d'accueil de ton téléphone pour l'ouvrir comme une application.</p>
+    </details>
+    <details>
+      <summary>Peut-on l'utiliser sans connexion à la plage ?</summary>
+      <p>Oui, une fois chargée, l'application continue de fonctionner pour noter un match, même avec peu ou pas de réseau.</p>
+    </details>
+    <details>
+      <summary>Où sont enregistrés mes matchs ?</summary>
+      <p>Sur ton appareil. Si tu crées un compte, ils sont aussi sauvegardés dans le cloud, dans la limite de ton niveau (4 matchs en gratuit, 10 en Avancées, illimité en Pro), et tu les retrouves sur tous tes appareils.</p>
+    </details>
+    <details>
+      <summary>Comment suivre un match en direct ?</summary>
+      <p>Depuis la page de partage en direct, tu génères un code. Les personnes qui ont ce code suivent le score en temps réel sur leur propre téléphone.</p>
+    </details>
+
+    <p class="seo-foot">BeachStats – statistiques de beach tennis pour les joueurs, les couples et les coachs.</p>
+  </section>
 </div>
 <script>
 function updateModeText() {

@@ -1099,9 +1099,28 @@ function removeManualPoint(player) {
 function removeManualGame(player) {
   if (matchOver) return;
   saveState();
-  if (player === 1) { if (g1 > 0) g1--; } else { if (g2 > 0) g2--; }
-  if (matchGameCount > 0) matchGameCount--;
+  let removed = false;
+  if (player === 1) { if (g1 > 0) { g1--; removed = true; } } else { if (g2 > 0) { g2--; removed = true; } }
+  if (removed && matchGameCount > 0) matchGameCount--;
   logEvent(player === 1 ? nameA : nameB, '➖ Jeu retiré manuellement');
+
+  // Le tie-break (ou super tie-break) n'existe qu'à 6-6 : si on redescend
+  // sous ce score, on repasse en jeux normaux.
+  if ((inTiebreak || inSuperTiebreak) && !(g1 === 6 && g2 === 6)) {
+    inTiebreak = false;
+    inSuperTiebreak = false;
+    p1 = 0; p2 = 0;
+    document.getElementById('setPill').textContent = 'Set ' + (s1 + s2 + 1);
+    document.getElementById('statusLabel').textContent = t('status_playing');
+  }
+
+  // Après correction, un score comme 6/4 ou 6/3 doit valider le set
+  // (6 jeux avec 2 d'écart). À 6/5 le set continue (7/5 ou 6/6).
+  const maxG = Math.max(g1, g2), minG = Math.min(g1, g2);
+  if (maxG >= 6 && maxG - minG >= 2) {
+    winSet(g1 > g2 ? 1 : 2);
+    return;
+  }
   updateDisplay();
 }
 
