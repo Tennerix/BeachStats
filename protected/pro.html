@@ -2464,19 +2464,20 @@ function closeShotModal() {
 }
 
 function confirmShot(shotKey) {
-  // Normalisation par côté : la zone saisie est toujours "la zone physique
-  // observée sur le terrain", mais on la stocke normalisée pour que la zone 1
-  // représente systématiquement "le long de la ligne" du joueur, peu importe
-  // qu'il soit à droite ou à gauche (mode fixe "gauche", ou mode adaptatif).
+  // Mode fixe "gauche" : la zone saisie est inversée pour que la zone 1
+  // représente toujours "le long de la ligne" du joueur. En mode adaptatif, la
+  // saisie est déjà relative au joueur (voir plus bas), rien à inverser.
   let finalShot = shotKey;
   pendingSide = null;
 
   if (zoneOrientation === 'left') {
     finalShot = mirrorShotZone(shotKey);
   } else if (zoneOrientation === 'adaptive' && pendingPlayerNum) {
-    const side = playerSide['j' + pendingPlayerNum];
-    pendingSide = side;
-    if (side === 'L') finalShot = mirrorShotZone(shotKey);
+    // En mode adaptatif, la zone saisie est celle du joueur : zone 1 = son
+    // côté "long de ligne", qu'il soit à droite ou à gauche. Elle est donc
+    // enregistrée telle quelle (Combinée = tout ensemble ; Côté Gauche = même
+    // numérotation, dessinée en miroir). On garde seulement le côté en mémoire.
+    pendingSide = playerSide['j' + pendingPlayerNum];
   }
 
   pendingShot = finalShot;
@@ -3806,5 +3807,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+<script src="/sync.js"></script>
 </body>
 </html>
