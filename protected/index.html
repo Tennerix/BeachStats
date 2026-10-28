@@ -23,7 +23,7 @@
 <meta property="og:image" content="https://beachstats.appbeachstats.workers.dev/hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:url" content="https://beachstats.appbeachstats.workers.dev/">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.50.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -126,7 +126,9 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);display
 }
 .install-banner-close:hover{color:var(--text)}
 .hero{width:100%;position:relative;border-radius:0 0 20px 20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
-.hero img{width:100%;display:block;object-fit:cover;max-height:260px}
+.hero{background:var(--surface);aspect-ratio:1040/693;max-height:260px}
+.hero img{width:100%;height:100%;display:block;object-fit:cover;opacity:0;transition:opacity .4s ease}
+.hero img.loaded{opacity:1}
 .hero-badge{position:absolute;bottom:14px;right:16px;background:rgba(10,22,40,.78);border:1.5px solid var(--gold);color:var(--gold);font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase}
 .hero-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:.85rem;flex-wrap:wrap;row-gap:8px}
 .hero-actions .theme-switch-wrap{display:flex}
@@ -261,7 +263,8 @@ if ('serviceWorker' in navigator) {
 </div>
 <div class="page-wrapper">
   <div class="hero">
-    <img src="/hero.jpg" width="1040" height="693" alt="Beach Tennis : raquettes et balle sur la plage" fetchpriority="high">
+    <img src="/hero.jpg" width="1040" height="693" alt="Beach Tennis : raquettes et balle sur la plage" fetchpriority="high" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+    <script>(function(){var i=document.querySelector('.hero img');if(i&&i.complete)i.classList.add('loaded');})();</script>
     <div class="hero-badge" data-i18n="hero_badge">Interface Bêta</div>
   </div>
   <div class="intro">
@@ -276,7 +279,7 @@ if ('serviceWorker' in navigator) {
   </div>
   <div class="hero-actions">
     <div class="theme-switch-wrap">
-      <button type="button" class="history-btn" onclick="toggleSettingsMenu(event)" aria-label="Réglages"><i class="ti ti-settings"></i></button>
+      <button type="button" class="history-btn" onclick="toggleSettingsMenu(event)" aria-label="Réglages"><svg class="gear-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/></svg></button>
       <div class="theme-menu settings-menu" id="settingsMenu">
         <div class="settings-section-title" data-i18n="settings_theme">Thème</div>
         <button class="theme-swatch" data-theme-choice="dark" onclick="setTheme('dark')"><span class="sw sw-dark"></span><span data-i18n="theme_dark">Sombre</span></button>
