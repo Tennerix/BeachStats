@@ -26,6 +26,8 @@ const ROUTES = {
   "/historique":    { file: "/historique.html",     tier: null },
   "/live":          { file: "/live.html",           tier: null },
   "/compte":        { file: "/compte.html",         tier: null },
+  "/confidentialite": { file: "/confidentialite.html", tier: null },
+  "/mentions-legales": { file: "/mentions-legales.html", tier: null },
   "/avancees":      { file: "/avancees.html",       tier: "avancees" },
   "/pro":           { file: "/pro.html",            tier: "pro" },
 };
@@ -61,6 +63,18 @@ function jsonResponse(obj, status = 200) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // Les pages existent aussi sous leur nom de fichier (/pro.html...). Sans cette
+    // règle, quelqu'un pourrait ouvrir /pro.html directement et contourner la
+    // vérification d'accès : on renvoie toujours vers l'adresse propre (/pro),
+    // qui, elle, passe par le contrôle du niveau.
+    if (url.pathname.endsWith(".html")) {
+      const clean = url.pathname === "/index.html" ? "/" : url.pathname.slice(0, -5);
+      if (clean in ROUTES) {
+        return Response.redirect(url.origin + clean + url.search, 301);
+      }
+      return new Response("Page introuvable", { status: 404 });
+    }
 
     if (url.pathname === "/verify" && request.method === "POST") {
       return handleVerify(request, env, url);

@@ -297,6 +297,44 @@ export async function handleAuth(request, env, ctx, url) {
     return json({ email: account.email, tier: await getAccountTier(env, account.id) });
   }
 
+  // ── Export des données du compte (droit d'accès / portabilité) ──
+  if (path === "/api/auth/export" && request.method === "GET") {
+    const account = await getAccount(request, env);
+    if (!account) return json({ error: "Non connecté." }, 401);
+    const user = await env.DB.prepare("SELECT created_at FROM users WHERE id = ?1").bind(account.id).first();
+    const ents = await env.DB
+      .prepare("SELECT tier, source, license_key, created_at, revoked_at FROM entitlements WHERE user_id = ?1")
+      .bind(account.id).all();
+    const ms = await env.DB
+      .prepare("SELECT data FROM matches WHERE user_id = ?1 ORDER BY played_at DESC")
+      .bind(account.id).all();
+    const matches = [];
+    for (const row of ms.results || []) {
+      try { matches.push(JSON.parse(row.data)); } catch { /* ignoré */ }
+    }
+    const payload = {
+      app: "BeachStats",
+      exportedAt: new Date().toISOString(),
+      account: { email: account.email, createdAt: user ? new Date(user.created_at).toISOString() : null },
+      access: (ents.results || []).map((e) => ({
+        tier: e.tier,
+        source: e.source,
+        licenseKey: e.license_key,
+        linkedAt: new Date(e.created_at).toISOString(),
+        revokedAt: e.revoked_at ? new Date(e.revoked_at).toISOString() : null,
+      })),
+      matches,
+    };
+    return new Response(JSON.stringify(payload, null, 2), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+        "Content-Disposition": 'attachment; filename="beachstats-mes-donnees.json"',
+      },
+    });
+  }
+
   if (request.method !== "POST") return json({ error: "Méthode non autorisée." }, 405);
 
   // Protection contre les envois depuis un autre site : le navigateur indique
@@ -398,6 +436,33 @@ export async function handleAuth(request, env, ctx, url) {
     if (token) {
       await env.DB.prepare("DELETE FROM sessions WHERE token_hash = ?1").bind(await sha256Hex(token)).run();
     }
+    return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });
+  }
+
+  // ── Suppression définitive du compte (mot de passe demandé) ──
+  if (path === "/api/auth/delete") {
+    const account = await getAccount(request, env);
+    if (!account) return json({ error: "Non connecté." }, 401);
+    const password = typeof body.password === "string" ? body.password.slice(0, MAX_PASSWORD) : "";
+    const emailKey = "login:" + account.email.toLowerCase();
+    const ipKey = "login-ip:" + ip;
+    if ((await countAttempts(env, emailKey, 900000)) >= 8 || (await countAttempts(env, ipKey, 900000)) >= 30) {
+      return json({ error: "Trop d'essais. Réessaie dans 15 minutes." }, 429);
+    }
+    const user = await env.DB.prepare("SELECT password_hash, password_salt FROM users WHERE id = ?1").bind(account.id).first();
+    const computed = await hashPassword(password, user && user.password_salt ? user.password_salt : "00".repeat(16));
+    if (!user || !user.password_hash || !safeEqual(computed, user.password_hash)) {
+      await recordAttempt(env, emailKey);
+      await recordAttempt(env, ipKey);
+      return json({ error: "Mot de passe incorrect." }, 401);
+    }
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM matches WHERE user_id = ?1").bind(account.id),
+      env.DB.prepare("DELETE FROM entitlements WHERE user_id = ?1").bind(account.id),
+      env.DB.prepare("DELETE FROM sessions WHERE user_id = ?1").bind(account.id),
+      env.DB.prepare("DELETE FROM login_tokens WHERE email = ?1").bind(account.email),
+      env.DB.prepare("DELETE FROM users WHERE id = ?1").bind(account.id),
+    ]);
     return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });
   }
 
