@@ -156,6 +156,39 @@ export async function getAccount(request, env) {
 }
 
 // ── Gumroad ──────────────────────────────────────────────────────────────
+// Un abonnement résilié reste valable jusqu'à la fin de la période déjà payée
+// (ou de l'essai gratuit). Remboursement, litige et paiement échoué coupent
+// l'accès tout de suite.
+export function evaluatePurchase(purchase, now) {
+  if (purchase.refunded || purchase.chargebacked || purchase.subscription_failed_at) {
+    return { active: false };
+  }
+  const ts = (v) => {
+    const t = v ? Date.parse(v) : NaN;
+    return Number.isNaN(t) ? null : t;
+  };
+  const ended = ts(purchase.subscription_ended_at);
+  if (ended !== null) return { active: ended > now };
+
+  const cancelled = ts(purchase.subscription_cancelled_at);
+  if (cancelled === null) return { active: true };
+
+  // Résiliation demandée : l'accès court jusqu'à la prochaine échéance mensuelle
+  // (au plus tôt 1 mois après l'achat, ce qui couvre l'essai gratuit).
+  const start = ts(purchase.sale_timestamp) ?? ts(purchase.created_at);
+  let until = cancelled + 31 * 86400000; // secours si la date d'achat est illisible
+  if (start !== null) {
+    until = null;
+    for (let n = 1; n <= 600; n++) {
+      const d = new Date(start);
+      d.setUTCMonth(d.getUTCMonth() + n);
+      if (d.getTime() > cancelled) { until = d.getTime(); break; }
+    }
+    if (until === null) until = cancelled;
+  }
+  return { active: now < until, until };
+}
+
 // Vérifie un code d'accès. Renvoie { status: "active", tier, uses },
 // { status: "inactive" } (code inconnu, remboursé, abonnement arrêté...)
 // ou { status: "unavailable" } si Gumroad ne répond pas : dans ce cas on ne
@@ -176,14 +209,9 @@ export async function checkGumroadKey(env, licenseKey, increment) {
   }
 
   const purchase = data && data.purchase;
-  const active =
-    data && data.success &&
-    purchase &&
-    !purchase.refunded &&
-    !purchase.chargebacked &&
-    !purchase.subscription_cancelled_at &&
-    !purchase.subscription_failed_at;
-  if (!active) return { status: "inactive" };
+  if (!data || !data.success || !purchase || !evaluatePurchase(purchase, Date.now()).active) {
+    return { status: "inactive" };
+  }
 
   const tier = (purchase.variants || "").toLowerCase().includes("pro") ? "pro" : "avancees";
   return { status: "active", tier, uses: data.uses };
