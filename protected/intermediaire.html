@@ -1295,7 +1295,7 @@ let liveSharePushDebounceTimer = null;
 // ── SAVE STATE ────────────────────────────────────────────────────────────────
 function saveState() {
   history.push({
-    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory: JSON.parse(JSON.stringify(setHistory)),
+    p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,matchGameCount,setHistory: JSON.parse(JSON.stringify(setHistory)),
     stats: JSON.parse(JSON.stringify(stats)),
     setSnapshots: JSON.parse(JSON.stringify(setSnapshots)),
     pill: document.getElementById('setPill').innerText,

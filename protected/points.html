@@ -1017,7 +1017,7 @@ function initNames(){
 
 // ── SAVE / RESTORE ───────────────────────────────────────────────────────────
 function saveState(){
-  history.push({p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,setHistory:JSON.parse(JSON.stringify(setHistory)),
+  history.push({p1,p2,g1,g2,s1,s2,inTiebreak,inSuperTiebreak,matchGameCount,setHistory:JSON.parse(JSON.stringify(setHistory)),
     status:document.getElementById('statusLabel').innerText,
     pill:document.getElementById('setPill').innerText});
 }
@@ -1080,6 +1080,7 @@ function addManualPoint(player) {
 
 function addManualGame(player) {
   if (matchOver) return;
+  if (inSuperTiebreak) return; // pas de « jeu » dans un super tie-break : seuls les points comptent
   const pending = serverQuestionNeeded();
   if (pending === 'initial') { askInitialServer(); return; }
   if (pending === 'second') { askSecondTeamServer(); return; }
@@ -1098,10 +1099,12 @@ function removeManualPoint(player) {
 
 function removeManualGame(player) {
   if (matchOver) return;
+  // Rien à retirer (0 jeu pour cette équipe) : on ne touche à rien, surtout pas
+  // au tie-break / super tie-break en cours.
+  if ((player === 1 ? g1 : g2) <= 0) return;
   saveState();
-  let removed = false;
-  if (player === 1) { if (g1 > 0) { g1--; removed = true; } } else { if (g2 > 0) { g2--; removed = true; } }
-  if (removed && matchGameCount > 0) matchGameCount--;
+  if (player === 1) g1--; else g2--;
+  if (matchGameCount > 0) matchGameCount--;
   logEvent(player === 1 ? nameA : nameB, '➖ Jeu retiré manuellement');
 
   // Le tie-break (ou super tie-break) n'existe qu'à 6-6 : si on redescend
@@ -1405,6 +1408,7 @@ function undo(){
   const last=history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  if(typeof last.matchGameCount==='number') matchGameCount=last.matchGameCount;
   setHistory=last.setHistory||[];
   document.getElementById('statusLabel').innerText=last.status;
   document.getElementById('setPill').innerText=last.pill;

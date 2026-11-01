@@ -205,6 +205,7 @@ function addManualPoint(player) {
 
 function addManualGame(player) {
   if (matchOver) return;
+  if (inSuperTiebreak) return; // pas de « jeu » dans un super tie-break : seuls les points comptent
   ensureTimerRunning();
   const pending = serverQuestionNeeded();
   if (pending === 'initial') { askInitialServer(); return; }
@@ -224,10 +225,31 @@ function removeManualPoint(player) {
 
 function removeManualGame(player) {
   if (matchOver) return;
+  // Rien à retirer (0 jeu pour cette équipe) : on ne touche à rien, surtout pas
+  // au tie-break / super tie-break en cours.
+  if ((player === 1 ? g1 : g2) <= 0) return;
   saveState();
-  if (player === 1) { if (g1 > 0) g1--; } else { if (g2 > 0) g2--; }
+  if (player === 1) g1--; else g2--;
   if (matchGameCount > 0) matchGameCount--;
   logEvent(player === 1 ? nameA : nameB, '➖ Jeu retiré manuellement');
+
+  // Le tie-break (ou super tie-break) n'existe qu'à 6-6 : si on redescend
+  // sous ce score, on repasse en jeux normaux.
+  if ((inTiebreak || inSuperTiebreak) && !(g1 === 6 && g2 === 6)) {
+    inTiebreak = false;
+    inSuperTiebreak = false;
+    p1 = 0; p2 = 0;
+    document.getElementById('setPill').textContent = 'Set ' + (s1 + s2 + 1);
+    document.getElementById('statusLabel').textContent = t('status_playing');
+  }
+
+  // Après correction, un score comme 6/4 ou 6/3 doit valider le set
+  // (6 jeux avec 2 d'écart). À 6/5 le set continue (7/5 ou 6/6).
+  const maxG = Math.max(g1, g2), minG = Math.min(g1, g2);
+  if (maxG >= 6 && maxG - minG >= 2) {
+    winSet(g1 > g2 ? 1 : 2);
+    return;
+  }
   updateDisplay();
 }
 
@@ -315,6 +337,7 @@ function undo() {
   const last = history.pop();
   p1=last.p1; p2=last.p2; g1=last.g1; g2=last.g2; s1=last.s1; s2=last.s2;
   inTiebreak=last.inTiebreak; inSuperTiebreak=last.inSuperTiebreak;
+  if (typeof last.matchGameCount === 'number') matchGameCount = last.matchGameCount;
   setHistory=last.setHistory||[];
   stats = JSON.parse(JSON.stringify(last.stats));
   setSnapshots = JSON.parse(JSON.stringify(last.setSnapshots || []));
