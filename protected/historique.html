@@ -146,6 +146,8 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 .empty-cta:hover{opacity:.85}
 
 
+.btn-share{width:100%;margin-top:8px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:12px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
+.btn-share:disabled{opacity:.6}
 /* ── Tendances ── */
 .trends{width:100%;max-width:580px;margin:0 0 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .trends summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
@@ -739,15 +741,18 @@ const TRN = {
   fr: { title:'Tendances', follow:'Suivre', wins:'Victoires', wpm:'Coups gagnants / match', fpm:'Fautes / match', net:'Solde (gagnants − fautes)',
         vs:'vs matchs précédents', last:'Derniers matchs', win:'V', loss:'D', lw:'Coups gagnants', lf:'Fautes',
         need:'Joue au moins 2 matchs avec la même équipe pour voir ta progression.', locked:'Les tendances sont disponibles avec les abonnements Avancées et Pro.', unlock:'Voir mon compte',
-        note:'Calculé sur les matchs de cet appareil.', result:'Résultats' },
+        note:'Calculé sur les matchs de cet appareil.', result:'Résultats',
+        share:'📤 Partager le bilan', sh_w:'Coups gagnants', sh_f:'Fautes', sh_p:'Points gagnés', sh_sub:'Statistiques de beach tennis', sh_dur:'Durée', sh_txt:'Mon match, suivi avec BeachStats', sh_ok:'Image enregistrée' },
   en: { title:'Trends', follow:'Follow', wins:'Wins', wpm:'Winners / match', fpm:'Faults / match', net:'Balance (winners − faults)',
         vs:'vs previous matches', last:'Latest matches', win:'W', loss:'L', lw:'Winners', lf:'Faults',
         need:'Play at least 2 matches with the same team to see your progress.', locked:'Trends are available with the Advanced and Pro plans.', unlock:'My account',
-        note:'Based on the matches stored on this device.', result:'Results' },
+        note:'Based on the matches stored on this device.', result:'Results',
+        share:'📤 Share summary', sh_w:'Winners', sh_f:'Faults', sh_p:'Points won', sh_sub:'Beach tennis stats', sh_dur:'Duration', sh_txt:'My match, tracked with BeachStats', sh_ok:'Image saved' },
   pt: { title:'Tendências', follow:'Acompanhar', wins:'Vitórias', wpm:'Winners / partida', fpm:'Erros / partida', net:'Saldo (winners − erros)',
         vs:'vs partidas anteriores', last:'Últimas partidas', win:'V', loss:'D', lw:'Winners', lf:'Erros',
         need:'Jogue pelo menos 2 partidas com a mesma equipe para ver sua evolução.', locked:'As tendências estão disponíveis nos planos Avançado e Pro.', unlock:'Minha conta',
-        note:'Calculado com as partidas deste aparelho.', result:'Resultados' }
+        note:'Calculado com as partidas deste aparelho.', result:'Resultados',
+        share:'📤 Compartilhar resumo', sh_w:'Winners', sh_f:'Erros', sh_p:'Pontos ganhos', sh_sub:'Estatísticas de beach tennis', sh_dur:'Duração', sh_txt:'Minha partida, registrada com o BeachStats', sh_ok:'Imagem salva' }
 };
 function tt(k){ return (TRN[currentLang] || TRN.fr)[k] || TRN.fr[k] || k; }
 
@@ -844,6 +849,124 @@ function trendsHTML(hist) {
     <label class="tr-pick">${tt('follow')} <select onchange="setTrendTeam(this.value)">${opts}</select></label>${body}</div></details>`;
 }
 
+
+// ── PARTAGE DU BILAN EN IMAGE ─────────────────────────────────────────────
+// Dessine une carte 1080×1350 (format portrait des réseaux) et la partage via
+// la feuille de partage du téléphone, ou la télécharge à défaut.
+let _shareFontReady = null;
+function loadShareFont() {
+  if (_shareFontReady) return _shareFontReady;
+  _shareFontReady = (async () => {
+    try {
+      const f = new FontFace('BSShare', 'url(data:font/ttf;base64,' + BARLOW_BLACK_B64 + ')');
+      await f.load(); document.fonts.add(f);
+    } catch (e) { /* police de secours */ }
+  })();
+  return _shareFontReady;
+}
+
+function drawShareCard(m) {
+  const W = 1080, H = 1350;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const FONT = '"BSShare","Barlow Condensed","Arial Narrow",Impact,sans-serif';
+  const GOLD = '#f5c518', BLUE = '#6aa0ff', TXT = '#e8eefb', MUTED = '#8ba3c7', ORANGE = '#f97316', GREEN = '#22c55e';
+  const rr = (px, py, w, h, r) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); };
+  const spacing = v => { if ('letterSpacing' in x) x.letterSpacing = v; };
+  const fit = (txt, maxW, size, weight) => { do { x.font = (weight || '') + ' ' + size + 'px ' + FONT; size -= 2; } while (x.measureText(txt).width > maxW && size > 24); };
+
+  // fond
+  const bg = x.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0b1a33'); bg.addColorStop(1, '#070e1d');
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  const glow = x.createRadialGradient(W * 0.85, 120, 10, W * 0.85, 120, 620);
+  glow.addColorStop(0, 'rgba(59,130,246,0.28)'); glow.addColorStop(1, 'rgba(59,130,246,0)');
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  x.fillStyle = GOLD; x.fillRect(0, 0, W, 10);
+
+  x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  // marque
+  spacing('14px'); x.font = '900 46px ' + FONT;
+  const b1 = 'BEACH', b2 = '/', b3 = 'STATS';
+  const w1 = x.measureText(b1).width, w2 = x.measureText(b2).width, w3 = x.measureText(b3).width;
+  let bx = (W - (w1 + w2 + w3)) / 2; x.textAlign = 'left';
+  x.fillStyle = GOLD; x.fillText(b1, bx, 110); x.fillStyle = BLUE; x.fillText(b2, bx + w1, 110); x.fillStyle = GOLD; x.fillText(b3, bx + w1 + w2, 110);
+  x.textAlign = 'center'; spacing('4px');
+  x.font = '900 26px ' + FONT; x.fillStyle = MUTED; x.fillText(tt('sh_sub').toUpperCase(), W / 2, 156);
+  spacing('0px');
+
+  // date
+  const d = new Date(m.date);
+  const loc = currentLang === 'en' ? 'en-US' : currentLang === 'pt' ? 'pt-BR' : 'fr-FR';
+  x.font = '600 34px ' + FONT; x.fillStyle = MUTED;
+  x.fillText(d.toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric' }), W / 2, 235);
+
+  // équipes
+  const aWon = m.winner === m.nameA;
+  const team = (name, won, y) => {
+    fit(name, 900, 92, '900'); x.fillStyle = won ? GOLD : 'rgba(232,238,251,0.72)'; x.fillText(name, W / 2, y);
+  };
+  team(m.nameA, aWon, 360);
+  x.font = '900 40px ' + FONT; x.fillStyle = BLUE; spacing('8px'); x.fillText('VS', W / 2, 425); spacing('0px');
+  team(m.nameB, !aWon, 515);
+
+  // score
+  fit(String(m.sets), 900, 300, '900'); x.fillStyle = GOLD; x.fillText(String(m.sets), W / 2, 765);
+  if (m.setDetail) { fit(String(m.setDetail).replace(/\s+/g, '   '), 900, 56, '900'); x.fillStyle = MUTED; x.fillText(String(m.setDetail).replace(/\s+/g, '   '), W / 2, 845); }
+
+  // statistiques
+  const st = m.stats || {};
+  const rows = [
+    { l: tt('sh_w'), a: +st.wA || 0, b: +st.wB || 0, ca: GREEN },
+    { l: tt('sh_f'), a: +st.fA || 0, b: +st.fB || 0, ca: ORANGE }
+  ];
+  if ((+st.pA || 0) + (+st.pB || 0) > 0) rows.push({ l: tt('sh_p'), a: +st.pA || 0, b: +st.pB || 0, ca: BLUE });
+  let y = 930; const BAR_W = 350, GAP = 12;
+  rows.forEach(r => {
+    const tot = Math.max(1, r.a + r.b);
+    x.textAlign = 'center'; x.font = '900 30px ' + FONT; x.fillStyle = MUTED; spacing('3px');
+    x.fillText(r.l.toUpperCase(), W / 2, y); spacing('0px');
+    x.font = '900 76px ' + FONT; x.fillStyle = TXT;
+    x.textAlign = 'left'; x.fillText(String(r.a), 70, y + 62);
+    x.textAlign = 'right'; x.fillText(String(r.b), W - 70, y + 62);
+    // barres centrées, proportionnelles à la part de chaque équipe
+    const by = y + 28, bh = 22;
+    x.fillStyle = 'rgba(255,255,255,0.08)'; rr(W / 2 - BAR_W - GAP / 2, by, BAR_W, bh, 11); x.fill(); rr(W / 2 + GAP / 2, by, BAR_W, bh, 11); x.fill();
+    const wa = Math.round(BAR_W * r.a / tot), wb = Math.round(BAR_W * r.b / tot);
+    x.fillStyle = r.ca;
+    if (wa > 0) { rr(W / 2 - GAP / 2 - wa, by, wa, bh, 11); x.fill(); }
+    if (wb > 0) { x.globalAlpha = 0.55; rr(W / 2 + GAP / 2, by, wb, bh, 11); x.fill(); x.globalAlpha = 1; }
+    y += 125;
+  });
+
+  // pied
+  x.textAlign = 'center'; x.font = '600 30px ' + FONT; x.fillStyle = MUTED;
+  const foot = [m.duration ? tt('sh_dur') + ' ' + m.duration : '', location.host].filter(Boolean).join('   ·   ');
+  x.fillText(foot, W / 2, H - 70);
+  return c;
+}
+
+async function shareMatch(id, btn) {
+  const m = loadHistory().find(h => h.id === id);
+  if (!m) return;
+  if (btn) btn.disabled = true;
+  try {
+    await loadShareFont();
+    const canvas = drawShareCard(m);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'BeachStats-bilan.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: tt('sh_txt') }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'BeachStats-bilan.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } finally { if (btn) btn.disabled = false; }
+}
+
 function setTrendTeam(name) {
   trendTeam = name;
   try { localStorage.setItem('beachstats_trend_team', name); } catch(e) {}
@@ -876,6 +999,7 @@ function render() {
           <span>${t('winners_short')} ${m.stats.wA}-${m.stats.wB} · ${t('faults_short')} ${m.stats.fA}-${m.stats.fB}</span>
         </div>
         <button class="btn-pdf" onclick="generatePDF(${m.id})">${t('btn_download_pdf')}</button>
+        <button class="btn-share" onclick="shareMatch(${m.id}, this)">${tt('share')}</button>
       </div>`;
   }).join('') + '</div>';
 }
