@@ -103,9 +103,26 @@ async function purgeOldAttempts(env) {
 }
 
 // ── Sessions ─────────────────────────────────────────────────────────────
-async function startSession(env, userId) {
+// Nombre maximal d'appareils connectés en même temps sur un même compte.
+// Au-delà, la connexion la plus ancienne est fermée (elle devra se reconnecter).
+const MAX_DEVICES = 4;
+
+async function startSession(env, userId, request) {
   const token = randomHex(32);
   const now = Date.now();
+  // Se reconnecter depuis un appareil déjà connecté remplace sa session au lieu d'en ajouter une.
+  const current = request ? readSessionToken(request) : null;
+  if (current) {
+    await env.DB.prepare("DELETE FROM sessions WHERE token_hash = ?1 AND user_id = ?2").bind(await sha256Hex(current), userId).run();
+  }
+  // On garde les (MAX_DEVICES - 1) sessions valides les plus récentes, la nouvelle fait le compte.
+  await env.DB
+    .prepare(
+      "DELETE FROM sessions WHERE user_id = ?1 AND (expires_at <= ?2 OR token_hash NOT IN (" +
+      "SELECT token_hash FROM sessions WHERE user_id = ?1 AND expires_at > ?2 ORDER BY created_at DESC LIMIT ?3))"
+    )
+    .bind(userId, now, MAX_DEVICES - 1)
+    .run();
   await env.DB
     .prepare("INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?1, ?2, ?3, ?4)")
     .bind(await sha256Hex(token), userId, now, now + SESSION_DAYS * 86400000)
@@ -450,7 +467,7 @@ export async function handleAuth(request, env, ctx, url) {
       throw e;
     }
     await sendVerification(env, ctx, url.origin, email);
-    const cookie = await startSession(env, userId);
+    const cookie = await startSession(env, userId, request);
     return json({ ok: true, email, verified: false }, 200, { "Set-Cookie": cookie });
   }
 
@@ -510,7 +527,7 @@ export async function handleAuth(request, env, ctx, url) {
       await recordAttempt(env, ipKey);
       return json({ error: "Email ou mot de passe incorrect." }, 401);
     }
-    const cookie = await startSession(env, user.id);
+    const cookie = await startSession(env, user.id, request);
     return json({ ok: true, email }, 200, { "Set-Cookie": cookie });
   }
 
