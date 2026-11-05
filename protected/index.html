@@ -239,6 +239,7 @@ input:checked+.slider:before{transform:translateX(26px)}
 .seo summary{cursor:pointer;font-size:14px;font-weight:500;opacity:1}
 .seo details p{margin-top:.5rem}
 .seo-foot{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center;font-size:12px;opacity:.6}
+.clear-names{display:block;margin:2px auto 12px;background:none;border:0;color:var(--muted,#8ba3c7);font:inherit;font-size:13px;padding:8px 12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 </style>
 
 <script>
@@ -303,22 +304,23 @@ if ('serviceWorker' in navigator) {
     <p class="bt-title"><i class="ti ti-users"></i><span data-i18n="title_teams">Equipes &amp;</span> <span class="hl" data-i18n="title_players">Joueurs</span></p>
     <div class="team-label a">
       <span data-i18n="team_a">Equipe A</span>
-      <input type="text" id="teamA" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+      <input type="text" id="teamA" autocomplete="off" spellcheck="false" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
     </div>
     <div class="names-grid">
-      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" data-i18n-placeholder="player1" placeholder="Joueur 1"></div>
-      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" data-i18n-placeholder="player2" placeholder="Joueur 2"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j1" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" data-i18n-placeholder="player1" placeholder="Joueur 1"></div>
+      <div class="player-slot"><i class="ti ti-user"></i><input id="j2" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" data-i18n-placeholder="player2" placeholder="Joueur 2"></div>
     </div>
     <div class="vs-divider"><span>VS</span></div>
     <div class="team-label b">
       <span data-i18n="team_b">Equipe B</span>
-      <input type="text" id="teamB" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
+      <input type="text" id="teamB" autocomplete="off" spellcheck="false" class="team-name-input" data-i18n-placeholder="team_name_placeholder" placeholder="Nom d'équipe (optionnel)" maxlength="24">
     </div>
     <div class="names-grid">
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" data-i18n-placeholder="player3" placeholder="Joueur 3"></div>
-      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" data-i18n-placeholder="player4" placeholder="Joueur 4"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j3" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" data-i18n-placeholder="player3" placeholder="Joueur 3"></div>
+      <div class="player-slot team-b"><i class="ti ti-user"></i><input id="j4" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" data-i18n-placeholder="player4" placeholder="Joueur 4"></div>
     </div>
 
+    <button type="button" class="clear-names" id="btnClearNames" onclick="clearNames()"><i class="ti ti-eraser"></i> <span data-i18n="clear_names">Effacer les noms</span></button>
     <div class="mode-selector">
       <div class="mode-label-wrap">
         <span class="mode-label" id="modeText" data-i18n="mode_player">Stats par Joueur</span>
@@ -469,6 +471,12 @@ function getParams() {
   return `j1=${encodeURIComponent(j1)}&j2=${encodeURIComponent(j2)}&j3=${encodeURIComponent(j3)}&j4=${encodeURIComponent(j4)}&mode=${mode}&teamA=${encodeURIComponent(teamA)}&teamB=${encodeURIComponent(teamB)}`;
 }
 
+// Vide tous les noms et oublie ceux mémorisés sur cet appareil.
+function clearNames() {
+  ['j1','j2','j3','j4','teamA','teamB'].forEach(k => { const el = document.getElementById(k); if (el) el.value = ''; });
+  try { localStorage.removeItem('beachstats_last_names'); } catch(e) {}
+}
+
 // Pré-remplit les champs avec les derniers noms utilisés, s'ils existent.
 function restoreLastNames() {
   try {
@@ -537,6 +545,7 @@ const I18N = {
     title_teams: "Equipes &", title_players: "Joueurs",
     team_a: "Equipe A", team_b: "Equipe B",
     team_name_placeholder: "Nom d'équipe (optionnel)",
+    clear_names: "Effacer les noms",
     player1: "Joueur 1", player2: "Joueur 2", player3: "Joueur 3", player4: "Joueur 4",
     mode_team: "Stats par Équipe", mode_player: "Stats par Joueur",
     mode_info_team_title: "Par Équipe :",
@@ -570,6 +579,7 @@ const I18N = {
     title_teams: "Teams &", title_players: "Players",
     team_a: "Team A", team_b: "Team B",
     team_name_placeholder: "Team name (optional)",
+    clear_names: "Clear names",
     player1: "Player 1", player2: "Player 2", player3: "Player 3", player4: "Player 4",
     mode_team: "Team Stats", mode_player: "Player Stats",
     mode_info_team_title: "By Team:",
@@ -603,6 +613,7 @@ const I18N = {
     title_teams: "Equipes e", title_players: "Jogadores",
     team_a: "Equipe A", team_b: "Equipe B",
     team_name_placeholder: "Nome da equipe (opcional)",
+    clear_names: "Apagar os nomes",
     player1: "Jogador 1", player2: "Jogador 2", player3: "Jogador 3", player4: "Jogador 4",
     mode_team: "Stats por Equipe", mode_player: "Stats por Jogador",
     mode_info_team_title: "Por Equipe:",

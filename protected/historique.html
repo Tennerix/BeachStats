@@ -145,6 +145,32 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 }
 .empty-cta:hover{opacity:.85}
 
+
+/* ── Tendances ── */
+.trends{width:100%;max-width:580px;margin:0 0 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.trends summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.trends summary::-webkit-details-marker{display:none}
+.trends summary:after{content:"▾";font-size:16px;color:var(--muted,#8ba3c7)}
+.trends[open] summary:after{content:"▴"}
+.tr-body{padding:0 16px 16px}
+.tr-pick{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--muted,#8ba3c7)}
+.tr-pick select{flex:1;min-width:0;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font:inherit;font-size:14px}
+.tr-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.tr-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.tr-card .l{font-size:12px;color:var(--muted,#8ba3c7)}
+.tr-card .v{font-family:Barlow Condensed,sans-serif;font-size:30px;font-weight:800;line-height:1.1}
+.tr-card .d{font-size:12px;font-weight:700}
+.tr-up{color:var(--green)}.tr-down{color:var(--orange)}.tr-flat{color:var(--muted,#8ba3c7)}
+.tr-sub{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#8ba3c7);margin:4px 0 6px}
+.tr-chart{width:100%;height:auto;display:block}
+.tr-legend{display:flex;gap:14px;font-size:12px;color:var(--muted,#8ba3c7);margin:4px 0 12px}
+.tr-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tr-form{display:flex;gap:6px;flex-wrap:wrap}
+.tr-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#08110c}
+.tr-dot.w{background:var(--green)}.tr-dot.l{background:var(--orange)}
+.tr-note{font-size:12px;color:var(--muted,#8ba3c7);margin-top:12px}
+.tr-lock{padding:0 16px 16px;font-size:14px;color:var(--muted,#8ba3c7)}
+.tr-lock a{color:var(--gold);font-weight:700}
 .match-list{width:100%;max-width:580px;display:flex;flex-direction:column;gap:12px}
 .match-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.1rem 1.3rem;
   position:relative}
@@ -707,6 +733,124 @@ function formatDate(iso) {
 
 window.addEventListener('bs-history-updated', function(){ render(); });
 
+
+// ── TENDANCES (évolution match après match) ────────────────────────────────
+const TRN = {
+  fr: { title:'Tendances', follow:'Suivre', wins:'Victoires', wpm:'Coups gagnants / match', fpm:'Fautes / match', net:'Solde (gagnants − fautes)',
+        vs:'vs matchs précédents', last:'Derniers matchs', win:'V', loss:'D', lw:'Coups gagnants', lf:'Fautes',
+        need:'Joue au moins 2 matchs avec la même équipe pour voir ta progression.', locked:'Les tendances sont disponibles avec les abonnements Avancées et Pro.', unlock:'Voir mon compte',
+        note:'Calculé sur les matchs de cet appareil.', result:'Résultats' },
+  en: { title:'Trends', follow:'Follow', wins:'Wins', wpm:'Winners / match', fpm:'Faults / match', net:'Balance (winners − faults)',
+        vs:'vs previous matches', last:'Latest matches', win:'W', loss:'L', lw:'Winners', lf:'Faults',
+        need:'Play at least 2 matches with the same team to see your progress.', locked:'Trends are available with the Advanced and Pro plans.', unlock:'My account',
+        note:'Based on the matches stored on this device.', result:'Results' },
+  pt: { title:'Tendências', follow:'Acompanhar', wins:'Vitórias', wpm:'Winners / partida', fpm:'Erros / partida', net:'Saldo (winners − erros)',
+        vs:'vs partidas anteriores', last:'Últimas partidas', win:'V', loss:'D', lw:'Winners', lf:'Erros',
+        need:'Jogue pelo menos 2 partidas com a mesma equipe para ver sua evolução.', locked:'As tendências estão disponíveis nos planos Avançado e Pro.', unlock:'Minha conta',
+        note:'Calculado com as partidas deste aparelho.', result:'Resultados' }
+};
+function tt(k){ return (TRN[currentLang] || TRN.fr)[k] || TRN.fr[k] || k; }
+
+let userTier = null;
+let userTierChecked = false;
+let trendsOpen = false;
+let trendTeam = null;
+try { trendTeam = localStorage.getItem('beachstats_trend_team'); } catch(e) {}
+
+function trendRows(hist, team) {
+  // Un match par ligne, du point de vue de l'équipe suivie, du plus ancien au plus récent.
+  return hist.slice().sort((a,b) => a.id - b.id).map(m => {
+    const side = m.nameA === team ? 'A' : m.nameB === team ? 'B' : null;
+    if (!side || !m.stats) return null;
+    const w = +m.stats['w' + side] || 0, f = +m.stats['f' + side] || 0;
+    return { id: m.id, date: m.date, win: m.winner === team, w, f, net: w - f };
+  }).filter(Boolean);
+}
+const avgOf = (rows, k) => rows.length ? rows.reduce((t, r) => t + r[k], 0) / rows.length : 0;
+const fmt1 = n => (Math.round(n * 10) / 10).toString().replace('.', currentLang === 'en' ? '.' : ',');
+
+function trendCard(label, rows, k, goodWhenUp) {
+  const v = avgOf(rows, k);
+  let delta = '';
+  const n = Math.min(3, Math.floor(rows.length / 2));
+  if (n >= 1) {
+    const diff = avgOf(rows.slice(-n), k) - avgOf(rows.slice(0, -n), k);
+    const rounded = Math.round(diff * 10) / 10;
+    const cls = rounded === 0 ? 'tr-flat' : ((rounded > 0) === goodWhenUp ? 'tr-up' : 'tr-down');
+    const arrow = rounded === 0 ? '→' : rounded > 0 ? '▲' : '▼';
+    delta = `<div class="d ${cls}">${arrow} ${rounded > 0 ? '+' : ''}${fmt1(rounded)} <span style="font-weight:400;color:var(--muted,#8ba3c7)">${tt('vs')}</span></div>`;
+  }
+  return `<div class="tr-card"><div class="l">${label}</div><div class="v">${fmt1(v)}</div>${delta}</div>`;
+}
+
+function trendChart(rows) {
+  const last = rows.slice(-12);
+  const W = 320, H = 150, L = 28, R = 20, T = 10, B = 22;
+  const max = Math.max(5, ...last.map(r => Math.max(r.w, r.f)));
+  const x = i => last.length === 1 ? (L + W - R) / 2 : L + (W - L - R) * i / (last.length - 1);
+  const y = v => T + (H - T - B) * (1 - v / max);
+  const line = (k, color) => {
+    const pts = last.map((r, i) => x(i).toFixed(1) + ',' + y(r[k]).toFixed(1)).join(' ');
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+      last.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="3.5" fill="${color}"/>`).join('');
+  };
+  const grid = [0, 0.5, 1].map(f => {
+    const v = Math.round(max * f), yy = y(v).toFixed(1);
+    return `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--border)" stroke-width="1"/><text x="${L - 6}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted,#8ba3c7)">${v}</text>`;
+  }).join('');
+  const labels = last.map((r, i) => {
+    if (last.length > 6 && i % 2 === 1 && i !== last.length - 1) return '';
+    const d = new Date(r.date);
+    return `<text x="${x(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="9" fill="var(--muted,#8ba3c7)">${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}</text>`;
+  }).join('');
+  return `<svg class="tr-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${tt('last')}">${grid}${line('w','var(--green)')}${line('f','var(--orange)')}${labels}</svg>`;
+}
+
+function trendsHTML(hist) {
+  if (hist.length < 2) return '';
+  if (!userTierChecked) return '';
+  if (userTier !== 'avancees' && userTier !== 'pro') {
+    return `<details class="trends"><summary>📈 ${tt('title')} 🔒</summary><div class="tr-lock">${tt('locked')}<br><a href="/compte">${tt('unlock')}</a></div></details>`;
+  }
+  // Équipes présentes dans l'historique, la plus fréquente par défaut
+  const count = {};
+  hist.forEach(m => { [m.nameA, m.nameB].forEach(n => { if (n) count[n] = (count[n] || 0) + 1; }); });
+  const teams = Object.keys(count).sort((a, b) => count[b] - count[a]);
+  if (!trendTeam || !count[trendTeam]) trendTeam = teams[0];
+  const rows = trendRows(hist, trendTeam);
+  const opts = teams.map(n => `<option value="${escapeHtml(n)}"${n === trendTeam ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('');
+  let body;
+  if (rows.length < 2) {
+    body = `<div class="tr-note">${tt('need')}</div>`;
+  } else {
+    const wins = rows.filter(r => r.win).length;
+    const pct = Math.round(100 * wins / rows.length);
+    const form = rows.slice(-12).map(r => `<span class="tr-dot ${r.win ? 'w' : 'l'}" title="${formatDate(r.date)}">${r.win ? tt('win') : tt('loss')}</span>`).join('');
+    body = `
+      <div class="tr-cards">
+        <div class="tr-card"><div class="l">${tt('wins')}</div><div class="v">${wins}/${rows.length}</div><div class="d tr-flat">${pct} %</div></div>
+        ${trendCard(tt('net'), rows, 'net', true)}
+        ${trendCard(tt('wpm'), rows, 'w', true)}
+        ${trendCard(tt('fpm'), rows, 'f', false)}
+      </div>
+      <div class="tr-sub">${tt('last')}</div>
+      ${trendChart(rows)}
+      <div class="tr-legend"><span><i style="background:var(--green)"></i>${tt('lw')}</span><span><i style="background:var(--orange)"></i>${tt('lf')}</span></div>
+      <div class="tr-sub">${tt('result')}</div>
+      <div class="tr-form">${form}</div>
+      <div class="tr-note">${tt('note')}</div>`;
+  }
+  return `<details class="trends"${trendsOpen ? ' open' : ''} ontoggle="trendsOpen=this.open"><summary>📈 ${tt('title')}</summary><div class="tr-body">
+    <label class="tr-pick">${tt('follow')} <select onchange="setTrendTeam(this.value)">${opts}</select></label>${body}</div></details>`;
+}
+
+function setTrendTeam(name) {
+  trendTeam = name;
+  try { localStorage.setItem('beachstats_trend_team', name); } catch(e) {}
+  trendsOpen = true;
+  render();
+}
+
 function render() {
   const hist = loadHistory();
   const content = document.getElementById('content');
@@ -714,7 +858,7 @@ function render() {
     content.innerHTML = `<div class="empty"><div class="empty-icon">🏖️</div><div class="empty-title">${t('empty_title')}</div><div class="empty-text">${t('empty_text')}</div><a class="empty-cta" href="/">${t('empty_cta')}</a></div>`;
     return;
   }
-  content.innerHTML = '<div class="match-list">' + hist.map(m => {
+  content.innerHTML = trendsHTML(hist) + '<div class="match-list">' + hist.map(m => {
     const aWon = m.winner === m.nameA;
     return `
       <div class="match-card">
@@ -2092,7 +2236,7 @@ function goToInProgressMatch() {
 
 // ── THÈMES ────────────────────────────────────────────────────────────────
 const PRO_THEMES = ['neon', 'sunset', 'lagoon', 'eclat', 'glacier'];
-let userTier = null;
+
 
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
 
@@ -2196,7 +2340,9 @@ async function checkTier() {
   } catch (e) {
     userTier = null;
   }
+  userTierChecked = true;
   updateThemeLockUI();
+  render();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
