@@ -71,6 +71,8 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
     </form>
     <a class="nextlink hide" id="nextLink" href="/">Aller à la page débloquée →</a>
     <button class="secondary" id="btnOut" type="button">Se déconnecter</button>
+    <button class="secondary" id="btnOthers" type="button">Déconnecter mes autres appareils</button>
+    <p class="center small" id="devInfo"></p>
     <div class="datazone">
       <h2>Mes données</h2>
       <a class="secondary" id="btnExport" href="/api/auth/export" download>Télécharger mes données</a>
@@ -259,6 +261,8 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
     $('whoEmail').textContent = d.email;
     $('whoTier').textContent = TIER_LABEL[d.tier] || 'Version gratuite';
     $('verifyNote').classList.toggle('hide', d.verified !== false);
+    if (d.devices) $('devInfo').textContent = 'Appareils connectés : ' + d.devices + ' sur ' + (d.maxDevices || 4) + ' maximum.';
+    $('btnOthers').classList.toggle('hide', !(d.devices > 1));
     $('licLabel').textContent = d.tier ? 'Ajouter un autre code d\'accès' : 'Tu as un code d\'accès ?';
   }
 
@@ -295,6 +299,17 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
       else { el.textContent = r.data.error || 'Envoi impossible.'; el.style.color = '#f97316'; }
       el.classList.remove('hide');
     }).catch(function () { busy($('btnResend'), false); });
+  };
+
+  $('btnOthers').onclick = function () {
+    busy($('btnOthers'), true);
+    api('/api/auth/logout-others').then(function (r) {
+      busy($('btnOthers'), false);
+      if (r.ok) {
+        $('devInfo').textContent = 'Appareils connectés : 1 sur 4 maximum. Les autres ont été déconnectés.';
+        $('btnOthers').classList.add('hide');
+      }
+    }).catch(function () { busy($('btnOthers'), false); });
   };
 
   $('btnOut').onclick = function () {
