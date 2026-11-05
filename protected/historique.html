@@ -148,6 +148,15 @@ body{font-family:Barlow,sans-serif;min-height:100vh;background:var(--bg);color:v
 
 .btn-share{width:100%;margin-top:8px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:12px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
 .btn-share:disabled{opacity:.6}
+.sh-ov{position:fixed;inset:0;z-index:9999;background:#030812;display:flex;flex-direction:column;align-items:center;padding:14px 16px calc(14px + env(safe-area-inset-bottom));overflow:auto}
+.sh-ov img{width:auto;max-width:100%;max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.sh-x{align-self:flex-end;background:none;border:0;color:var(--text);font-size:26px;line-height:1;padding:4px 8px;cursor:pointer}
+.sh-actions{width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.sh-actions button{border-radius:12px;padding:14px;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
+.sh-primary{background:var(--gold);color:#1a1400;border:0}
+.sh-second{background:transparent;color:var(--text);border:1px solid var(--border)}
+.sh-link{background:none;border:0;color:var(--muted,#8ba3c7);font-size:13px;text-decoration:underline;padding:6px;cursor:pointer}
+.sh-hint{font-size:12px;color:var(--muted,#8ba3c7);text-align:center;margin-top:8px;max-width:420px}
 /* ── Tendances ── */
 .trends{width:100%;max-width:580px;margin:0 0 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
 .trends summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
@@ -742,17 +751,17 @@ const TRN = {
         vs:'vs matchs précédents', last:'Derniers matchs', win:'V', loss:'D', lw:'Coups gagnants', lf:'Fautes',
         need:'Joue au moins 2 matchs avec la même équipe pour voir ta progression.', locked:'Les tendances sont disponibles avec les abonnements Avancées et Pro.', unlock:'Voir mon compte',
         note:'Calculé sur les matchs de cet appareil.', result:'Résultats',
-        share:'📤 Partager le bilan', sh_w:'Coups gagnants', sh_f:'Fautes', sh_p:'Points gagnés', sh_sub:'Statistiques de beach tennis', sh_dur:'Durée', sh_txt:'Mon match, suivi avec BeachStats', sh_ok:'Image enregistrée' },
+        share:'📤 Partager le bilan', sh_w:'Coups gagnants', sh_f:'Fautes', sh_p:'Points gagnés', sh_sub:'Statistiques de beach tennis', sh_dur:'Durée', sh_txt:'Mon match, suivi avec BeachStats', sh_ok:'Image enregistrée', sh_save:'📷 Enregistrer dans les photos', sh_send:'📤 Partager', sh_dl:'Télécharger le fichier', sh_hint:'Astuce : maintiens ton doigt sur l\'image, puis « Enregistrer dans Photos ».', sh_close:'Fermer' },
   en: { title:'Trends', follow:'Follow', wins:'Wins', wpm:'Winners / match', fpm:'Faults / match', net:'Balance (winners − faults)',
         vs:'vs previous matches', last:'Latest matches', win:'W', loss:'L', lw:'Winners', lf:'Faults',
         need:'Play at least 2 matches with the same team to see your progress.', locked:'Trends are available with the Advanced and Pro plans.', unlock:'My account',
         note:'Based on the matches stored on this device.', result:'Results',
-        share:'📤 Share summary', sh_w:'Winners', sh_f:'Faults', sh_p:'Points won', sh_sub:'Beach tennis stats', sh_dur:'Duration', sh_txt:'My match, tracked with BeachStats', sh_ok:'Image saved' },
+        share:'📤 Share summary', sh_w:'Winners', sh_f:'Faults', sh_p:'Points won', sh_sub:'Beach tennis stats', sh_dur:'Duration', sh_txt:'My match, tracked with BeachStats', sh_ok:'Image saved', sh_save:'📷 Save to Photos', sh_send:'📤 Share', sh_dl:'Download file', sh_hint:'Tip: press and hold the image, then choose “Save to Photos”.', sh_close:'Close' },
   pt: { title:'Tendências', follow:'Acompanhar', wins:'Vitórias', wpm:'Winners / partida', fpm:'Erros / partida', net:'Saldo (winners − erros)',
         vs:'vs partidas anteriores', last:'Últimas partidas', win:'V', loss:'D', lw:'Winners', lf:'Erros',
         need:'Jogue pelo menos 2 partidas com a mesma equipe para ver sua evolução.', locked:'As tendências estão disponíveis nos planos Avançado e Pro.', unlock:'Minha conta',
         note:'Calculado com as partidas deste aparelho.', result:'Resultados',
-        share:'📤 Compartilhar resumo', sh_w:'Winners', sh_f:'Erros', sh_p:'Pontos ganhos', sh_sub:'Estatísticas de beach tennis', sh_dur:'Duração', sh_txt:'Minha partida, registrada com o BeachStats', sh_ok:'Imagem salva' }
+        share:'📤 Compartilhar resumo', sh_w:'Winners', sh_f:'Erros', sh_p:'Pontos ganhos', sh_sub:'Estatísticas de beach tennis', sh_dur:'Duração', sh_txt:'Minha partida, registrada com o BeachStats', sh_ok:'Imagem salva', sh_save:'📷 Salvar nas fotos', sh_send:'📤 Compartilhar', sh_dl:'Baixar o arquivo', sh_hint:'Dica: mantenha o dedo na imagem e escolha “Salvar em Fotos”.', sh_close:'Fechar' }
 };
 function tt(k){ return (TRN[currentLang] || TRN.fr)[k] || TRN.fr[k] || k; }
 
@@ -946,6 +955,22 @@ function drawShareCard(m) {
   return c;
 }
 
+let _shUrl = null;
+function closeSharePreview() {
+  const ov = document.getElementById('shareOv');
+  if (ov) ov.remove();
+  if (_shUrl) { URL.revokeObjectURL(_shUrl); _shUrl = null; }
+}
+
+function downloadShareImage(blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'BeachStats-bilan.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// Ouvre l'aperçu de l'image ; de là on l'enregistre dans les photos ou on la partage.
 async function shareMatch(id, btn) {
   const m = loadHistory().find(h => h.id === id);
   if (!m) return;
@@ -955,15 +980,36 @@ async function shareMatch(id, btn) {
     const canvas = drawShareCard(m);
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     const file = new File([blob], 'BeachStats-bilan.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], text: tt('sh_txt') }); return; }
-      catch (e) { if (e && e.name === 'AbortError') return; }
-    }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'BeachStats-bilan.png';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    const canShareFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+    closeSharePreview();
+    _shUrl = URL.createObjectURL(blob);
+    const ov = document.createElement('div');
+    ov.className = 'sh-ov'; ov.id = 'shareOv';
+    ov.innerHTML =
+      '<button class="sh-x" aria-label="' + tt('sh_close') + '">✕</button>' +
+      '<img alt="BeachStats" src="' + _shUrl + '">' +
+      '<div class="sh-actions">' +
+        (canShareFile
+          ? '<button class="sh-primary" data-act="save">' + tt('sh_save') + '</button>' +
+            '<button class="sh-second" data-act="send">' + tt('sh_send') + '</button>'
+          : '<button class="sh-primary" data-act="dl">' + tt('sh_dl') + '</button>') +
+        (canShareFile ? '<button class="sh-link" data-act="dl">' + tt('sh_dl') + '</button>' : '') +
+      '</div>' +
+      '<div class="sh-hint">' + tt('sh_hint') + '</div>';
+    ov.addEventListener('click', async e => {
+      if (e.target === ov || e.target.classList.contains('sh-x')) return closeSharePreview();
+      const act = e.target.dataset && e.target.dataset.act;
+      if (!act) return;
+      if (act === 'dl') return downloadShareImage(blob);
+      try {
+        // « Enregistrer » ouvre la feuille de partage du téléphone, qui propose
+        // « Enregistrer l'image » / Photos ; « Partager » y ajoute un petit texte.
+        await navigator.share(act === 'send' ? { files: [file], text: tt('sh_txt') } : { files: [file] });
+      } catch (err) {
+        if (!(err && err.name === 'AbortError')) downloadShareImage(blob);
+      }
+    });
+    document.body.appendChild(ov);
   } finally { if (btn) btn.disabled = false; }
 }
 
