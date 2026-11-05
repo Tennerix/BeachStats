@@ -362,7 +362,11 @@ export async function handleAuth(request, env, ctx, url) {
   if (path === "/api/auth/me" && request.method === "GET") {
     const account = await getAccount(request, env);
     if (!account) return json({ email: null, tier: null });
-    return json({ email: account.email, verified: !!account.verified_at, tier: await getAccountTier(env, account.id) });
+    const dev = await env.DB
+      .prepare("SELECT COUNT(*) AS n FROM sessions WHERE user_id = ?1 AND expires_at > ?2")
+      .bind(account.id, Date.now())
+      .first();
+    return json({ email: account.email, verified: !!account.verified_at, devices: dev ? dev.n : 1, maxDevices: MAX_DEVICES, tier: await getAccountTier(env, account.id) });
   }
 
   // ── Export des données du compte (droit d'accès / portabilité) ──
@@ -532,6 +536,18 @@ export async function handleAuth(request, env, ctx, url) {
   }
 
   // ── Déconnexion ──
+  // ── Déconnecter tous les AUTRES appareils (garde seulement celui-ci) ──
+  if (path === "/api/auth/logout-others") {
+    const account = await getAccount(request, env);
+    const token = readSessionToken(request);
+    if (!account || !token) return json({ error: "Connecte-toi d'abord." }, 401);
+    const res = await env.DB
+      .prepare("DELETE FROM sessions WHERE user_id = ?1 AND token_hash != ?2")
+      .bind(account.id, await sha256Hex(token))
+      .run();
+    return json({ ok: true, removed: (res.meta && res.meta.changes) || 0 });
+  }
+
   if (path === "/api/auth/logout") {
     const token = readSessionToken(request);
     if (token) {
