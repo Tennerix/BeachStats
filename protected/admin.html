@@ -22,6 +22,11 @@ input[type=search]{width:100%;background:var(--card);color:var(--text);border:1p
 .u .m{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-top:6px}
 .tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid var(--border)}
 .pro{color:var(--blue);border-color:var(--blue)}.avancees{color:var(--gold);border-color:var(--gold)}.free{color:var(--muted)}
+.u .a{display:flex;gap:8px;margin-top:10px}
+.u button{flex:1;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.u button.danger{color:var(--orange);border-color:var(--orange)}
+.u button:disabled{opacity:.5}
+.banned{color:var(--orange);border-color:var(--orange)}
 .ok{color:var(--green)}.no{color:var(--orange)}
 .err{padding:16px;color:var(--orange)}
 a{color:var(--gold)}
@@ -45,7 +50,7 @@ a{color:var(--gold)}
     var items = [
       ['Comptes', t.users], ['Confirmés', t.verified], ['Nouveaux (7 j)', t.new7],
       ['Pro', t.pro], ['Avancées', t.avancees], ['Appareils connectés', t.sessions],
-      ['Matchs en cloud', t.matches]
+      ['Matchs en cloud', t.matches], ['Suspendus', t.banned]
     ];
     var box = $('totals'); box.textContent = '';
     items.forEach(function (it) {
@@ -66,11 +71,35 @@ a{color:var(--gold)}
       m.appendChild(el('span', '', 'inscrit le ' + fmt(u.createdAt)));
       m.appendChild(el('span', '', u.devices + ' appareil' + (u.devices > 1 ? 's' : '')));
       m.appendChild(el('span', '', u.matches + ' match' + (u.matches > 1 ? 's' : '')));
-      c.appendChild(m); box.appendChild(c);
+      if (u.banned) m.insertBefore(el('span', 'tag banned', 'Suspendu'), m.firstChild);
+      c.appendChild(m);
+      if (!u.isAdmin) {
+        var a = el('div', 'a');
+        var bBan = el('button', '', u.banned ? 'Réactiver' : 'Suspendre');
+        bBan.onclick = function () {
+          if (!u.banned && !confirm('Suspendre ' + u.email + ' ? Il sera déconnecté et ne pourra plus se reconnecter.')) return;
+          act('/api/admin/ban', { email: u.email, banned: !u.banned }, bBan);
+        };
+        var bDel = el('button', 'danger', 'Supprimer');
+        bDel.onclick = function () {
+          if (!confirm('Supprimer définitivement ' + u.email + ', ses matchs et son accès ? Impossible à annuler.')) return;
+          act('/api/admin/delete', { email: u.email }, bDel);
+        };
+        a.appendChild(bBan); a.appendChild(bDel); c.appendChild(a);
+      }
+      box.appendChild(c);
     });
   }
 
-  fetch('/api/admin/stats', { credentials: 'same-origin' })
+  function act(path, body, btn) {
+    btn.disabled = true;
+    fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (r) { if (!r.ok) { alert(r.d.error || 'Erreur'); btn.disabled = false; return; } load(); })
+      .catch(function () { btn.disabled = false; alert('Erreur réseau'); });
+  }
+
+  function load() { fetch('/api/admin/stats', { credentials: 'same-origin' })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function (d) {
       users = d.users || [];
@@ -78,6 +107,8 @@ a{color:var(--gold)}
       renderTotals(d.totals); renderList();
     })
     .catch(function () { $('sub').textContent = ''; $('list').appendChild(el('div', 'err', 'Accès refusé ou erreur de chargement.')); });
+  }
+  load();
   $('q').addEventListener('input', renderList);
 })();
 </script>
