@@ -60,7 +60,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
       <button type="button" class="link" id="btnResend">Renvoyer le lien</button>
       <span class="ok hide" id="okResend" style="display:block;margin:6px 0 0">Lien renvoyé.</span>
     </div>
-    <p class="notice hide" id="legacyNote">Ton accès actuel est lié à cet appareil uniquement. Entre ton code ci-dessous pour le rattacher à ton compte : tu le retrouveras alors sur tous tes appareils.</p>
+    <p class="notice hide" id="legacyNote">Cet appareil a encore un ancien accès, désactivé tant que tu es connecté. Entre ton code ci-dessous pour le rattacher à ton compte : tu le retrouveras alors sur tous tes appareils.</p>
     <form id="fLic" novalidate class="licbox">
       <label for="lic" id="licLabel">Tu as un code d'accès ?</label>
       <input id="lic" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ton code d'accès">
@@ -373,7 +373,7 @@ a.back{display:block;text-align:center;margin-top:1rem;color:#8ba3c7;font-size:1
           // Accès encore lié à l'appareil (ancien cookie) : on invite à le rattacher au compte.
           fetch('/api/tier', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
-            .then(function (t) { if (t && t.tier) $('legacyNote').classList.remove('hide'); })
+            .then(function (t) { if (t && t.legacy) $('legacyNote').classList.remove('hide'); })
             .catch(function () {});
         }
       } else {
