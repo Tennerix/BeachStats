@@ -165,7 +165,7 @@ export async function getAccount(request, env) {
   const row = await env.DB
     .prepare(
       "SELECT u.id AS id, u.email AS email, u.email_verified_at AS verified_at FROM sessions s JOIN users u ON u.id = s.user_id " +
-      "WHERE s.token_hash = ?1 AND s.expires_at > ?2"
+      "WHERE s.token_hash = ?1 AND s.expires_at > ?2 AND u.banned_at IS NULL"
     )
     .bind(await sha256Hex(token), Date.now())
     .first();
@@ -517,7 +517,7 @@ export async function handleAuth(request, env, ctx, url) {
     }
 
     const user = email
-      ? await env.DB.prepare("SELECT id, password_hash, password_salt FROM users WHERE email = ?1").bind(email).first()
+      ? await env.DB.prepare("SELECT id, password_hash, password_salt, banned_at FROM users WHERE email = ?1").bind(email).first()
       : null;
 
     // Même travail de calcul que le compte existe ou non, pour ne pas
@@ -530,6 +530,9 @@ export async function handleAuth(request, env, ctx, url) {
       await recordAttempt(env, emailKey);
       await recordAttempt(env, ipKey);
       return json({ error: "Email ou mot de passe incorrect." }, 401);
+    }
+    if (user.banned_at) {
+      return json({ error: "Ce compte est suspendu. Contact : supportsbeachstats@gmail.com" }, 403);
     }
     const cookie = await startSession(env, user.id, request);
     return json({ ok: true, email }, 200, { "Set-Cookie": cookie });
@@ -597,8 +600,8 @@ export async function handleAuth(request, env, ctx, url) {
     await recordAttempt(env, ipKey);
     if (tooMany) return generic;
 
-    const user = await env.DB.prepare("SELECT id FROM users WHERE email = ?1").bind(email).first();
-    if (!user) return generic;
+    const user = await env.DB.prepare("SELECT id, banned_at FROM users WHERE email = ?1").bind(email).first();
+    if (!user || user.banned_at) return generic;
 
     const token = randomHex(32);
     await env.DB.prepare("DELETE FROM login_tokens WHERE email = ?1 AND purpose = 'reset'").bind(email).run();
