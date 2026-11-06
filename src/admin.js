@@ -3,7 +3,7 @@ import { getAccount } from "./auth.js";
 // Adresse(s) autorisée(s) à ouvrir la page d'administration.
 // Par défaut : l'adresse du propriétaire. Pour la changer sans toucher au code,
 // définir la variable ADMIN_EMAIL dans Cloudflare (plusieurs adresses : séparées par des virgules).
-const DEFAULT_ADMIN = "louis.bivaud@gmail.com";
+const DEFAULT_ADMIN = "supportsbeachstats@gmail.com";
 
 function adminList(env) {
   const raw = (env && env.ADMIN_EMAIL ? String(env.ADMIN_EMAIL) : DEFAULT_ADMIN);
