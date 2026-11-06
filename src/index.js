@@ -107,7 +107,7 @@ async function handleRequest(request, env, ctx) {
     // peu importe la page où il se trouve.
     if (url.pathname === "/api/tier") {
       const access = await readAccess(request, env);
-      return jsonResponse({ tier: access.tier, email: access.email });
+      return jsonResponse({ tier: access.tier, email: access.email, legacy: access.legacyTier });
     }
 
     // Comptes utilisateurs : inscription, connexion, mot de passe oublié...
@@ -282,20 +282,23 @@ async function handleVerify(request, env, url) {
 async function readAccess(request, env) {
   let email = null;
   let tier = null;
+  let connected = false;
   try {
     const account = await getAccount(request, env);
     if (account) {
+      connected = true;
       email = account.email;
       tier = await getAccountTier(env, account.id);
     }
   } catch (e) {
     // base indisponible ou non configurée : on retombe sur l'ancien cookie
   }
-  if (!tier) {
-    const legacy = await readSessionCookie(request, env);
-    if (legacy) tier = legacy.tier;
-  }
-  return { email, tier };
+  // L'ancien cookie ne sert que si personne n'est connecté : dès qu'on est connecté,
+  // seul le niveau du compte compte (changer de compte change donc bien l'accès).
+  const legacy = await readSessionCookie(request, env);
+  const legacyTier = legacy ? legacy.tier : null;
+  if (!connected && legacyTier) tier = legacyTier;
+  return { email, tier, legacyTier };
 }
 
 async function readSessionCookie(request, env) {
