@@ -1,5 +1,6 @@
 import { handleMatches } from "./matches.js";
 import { handleAuth, getAccount, getAccountTier, linkLicense } from "./auth.js";
+import { handleAdmin, getAdmin } from "./admin.js";
 
 // ── CONFIGURATION ────────────────────────────────────────────────────────
 const GUMROAD_PURCHASE_URL = "https://beachstats.gumroad.com/l/jlcqx";
@@ -108,6 +109,20 @@ async function handleRequest(request, env, ctx) {
     if (url.pathname === "/api/tier") {
       const access = await readAccess(request, env);
       return jsonResponse({ tier: access.tier, email: access.email, legacy: access.legacyTier });
+    }
+
+    // Administration (réservée au propriétaire) : la page et ses données renvoient
+    // un 404 à toute autre personne.
+    if (url.pathname.startsWith("/api/admin/")) {
+      return handleAdmin(request, env, url);
+    }
+    if (url.pathname === "/admin") {
+      if (!(await getAdmin(request, env))) return new Response("Page introuvable", { status: 404 });
+      const res = await env.ASSETS.fetch(new Request(new URL("/admin.html", request.url), request));
+      const h = new Headers(res.headers);
+      h.set("X-Robots-Tag", "noindex");
+      h.set("Cache-Control", "no-store");
+      return new Response(res.body, { status: res.status, headers: h });
     }
 
     // Comptes utilisateurs : inscription, connexion, mot de passe oublié...
